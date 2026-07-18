@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+
+  --color-forest: #123E25;
+  --color-forest-hover: #1E5C39;
+  --color-terracotta: #C85C32;
+  --color-terracotta-hover: #B04B23;
+  --color-cream-bg: #FCFAF7;
+  --color-cream-card: #FFFFFF;
+  --color-cream-tint: #F6F3ED;
+  --color-charcoal: #1C2421;
+  --color-warm-gray: #5F6E65;
+  --color-sage-light: #EBF0EC;
+  --color-sage-border: #E1E8E3;
+}
+
+/* Base resets and smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-cream-bg);
+  font-family: var(--font-sans);
+  color: var(--color-charcoal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom serif class for editorial accents */
+.editorial-serif {
+  font-family: var(--font-serif);
+}
+
+/* Scrollbar behaviors */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Accessible focus ring style */
+.focus-ring {
+  transition: box-shadow 0.15s ease-in-out;
+}
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-terracotta);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(200, 92, 50, 0.2);
+}
+
+/* Soft transitions */
+.transition-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+}
+
+/* Target minimum mobile touch heights */
+.touch-target {
+  min-height: 44px;
+}
