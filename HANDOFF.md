@@ -1,101 +1,107 @@
-# Loning Digital — Technical Hand-off Documentation
+# Loning Digital Technical Hand-off
 
-This document serves as the developer hand-off guide for the **Loning Digital** community directory and product showcase prototype for **Desa Loning, Kecamatan Petarukan, Kabupaten Pemalang**.
+Loning Digital is the Desa Loning public UMKM directory and product showcase. The public visual system remains the source of truth for the homepage, cards, dialogs, navigation, accessibility behavior, and direct WhatsApp inquiry flow.
 
----
+The declared Node.js support range is `>=20 <27`; this implementation was verified with Node.js `v26.4.0`, including native `argon2` and `sharp` installation.
 
-## 1. Prototype Purpose
+## Public Application
 
-The primary objective of this application is to serve as a high-fidelity visual and interactive prototype representing the **Sprint 1** deliverables of the digital transition for Desa Loning.
+The frontend remains at the repository root and uses Vite, React 19, TypeScript, Tailwind CSS, TanStack Query, React Router, Motion, and Lucide icons. `/` mounts the existing homepage. Public UMKM and product data is loaded from the Fastify API; filtering is server-backed and the existing detail dialog uses already-loaded collections without a request on open.
 
-It provides local citizens and outside visitors with an elegant, responsive, and highly readable directory to:
-- Discover local micro-businesses (UMKM) in Desa Loning.
-- Browse authentic product catalogs (crafts, agricultural yields, culinary items).
-- Initiate zero-commission personal transactions with owners via direct WhatsApp message compilation (eliminating complex in-app checkout/payment gateways).
+Editorial content such as `FAQS`, `BENEFIT_CARDS`, and `VILLAGE_ANNOUNCEMENTS` remains frontend static data. No business data or authentication token is stored in `localStorage` or `sessionStorage`.
 
----
+## Phase 2 Management Layer
 
-## 2. Sprint 1 Scope & Project Limitations
+The backend is an independent Fastify + TypeScript ESM service under `backend/`. PostgreSQL persistence uses Drizzle ORM. The additive Phase 2 migration adds:
 
-To maintain compliance with the project plan, this prototype represents **Sprint 1 (Visual Showcase & Directory Layout)** only:
+- `user_role` and `publication_status` enums;
+- `users` for active admin/owner accounts and Argon2id password hashes;
+- `sessions` for one-way hashed opaque sessions and CSRF hashes;
+- `audit_logs` for append-only privileged activity;
+- ownership and publication fields on `umkms` and `products`.
 
-- **Offline-First Direct Commerce:** No actual purchase transaction, cart checkout, payment gateway integration, or administrative database writing exists in this stage. All interactions direct the user to the merchant's personal WhatsApp.
-- **Visual-Only Filtering & Search:** The search input and category filtering operate purely client-side on local state as visual references for Sprint 2 behaviors. No server-side indexation, relational SQL queries, or ElasticSearch systems are used.
-- **Static Assets:** Product and merchant photography are sourced via high-quality, stable public Unsplash placeholders mapped directly in the local data model.
-- **Single-Screen Architecture:** Following strict scope discipline, the entirety of the application runs in a lightweight, unified layout without custom client-side router overhead or administrative panels.
+The Phase 1 migration is not rewritten. Existing deterministic UMKM/product UUIDs and display ordering remain intact, and the Phase 2 migration/seed keeps them published.
 
----
+## Roles
 
-## 3. Reusable Visual Components
+- Admins can manage users, owner assignment, all UMKMs/products, publication, archive/restore, and audit logs.
+- Owners can manage only assigned UMKMs and child products. They cannot access admin routes, assign accounts, or publish content.
+- UMKM creation and UMKM publication are admin-only by default.
+- Owner-created products start as drafts. Admin publication requires a published parent UMKM.
+- Archive and restore are soft state transitions. Restore returns content to draft.
 
-We have structured the codebase with modular, standalone React components styled with Tailwind CSS. They include:
+## Authentication and CSRF
 
-- **`Navbar`** (`/src/components/layout/Navbar.tsx`): Sticky responsive navigation bar with backdrop blur, smart scroll triggers, and mobile drawer adaptation.
-- **`Footer`** (`/src/components/layout/Footer.tsx`): Structured footer with site map navigation, brand information, and an explicit transactional disclaimer.
-- **`HeroSection`** (`/src/components/home/HeroSection.tsx`): Sophisticated visual header presenting the purpose of the platform, visual grid gallery, and quick-action access.
-- **`CategorySection`** (`/src/components/home/CategorySection.tsx`): Horizontally scrollable category selector with modern, interactive icons mapped from `lucide-react`.
-- **`ProductCard`** (`/src/components/product/ProductCard.tsx`): High-contrast layout showing product thumbnails, categorizations, denormalized UMKM owners, pricing, and active WhatsApp CTAs.
-- **`BusinessCard`** (`/src/components/business/BusinessCard.tsx`): Profile cards for local vendors presenting owner metadata, brief descriptions, and physical Dusun locations.
-- **`UMKMDetailDialog`** (`/src/components/shared/UMKMDetailDialog.tsx`): Accessible overlay modal utilizing `motion` (from `motion/react`) for entrance animations. Features focus trapping, body scroll locks, a simulated location visualizer, and tabbed navigation between vendor details and filtered product catalogs.
-- **`WhatsAppInquiryDialog`** (`/src/components/shared/WhatsAppInquiryDialog.tsx`): Accessible contact assistant that lets users input their name and custom questions, compiles the text into an encoded WhatsApp link, and previews the conversation starter with optional clipboard-copy capabilities.
+Authentication uses Argon2id and opaque random session tokens. Only a SHA-256 token hash is stored in PostgreSQL. The raw token is held by the browser only in the HTTP-only `loning_session` cookie with `SameSite=Lax`, `Secure` in production, path `/`, and an explicit expiry.
 
----
+Successful login and `/api/auth/session` return a raw CSRF token. The frontend holds it only in TanStack Query memory and sends it as `X-CSRF-Token` on authenticated mutations. Mutations also require the configured exact `Origin`. Logout and password changes revoke sessions as required. Login has both IP rate limiting and persisted account failure lockout.
 
-## 4. Routes and Screens Represented
+## Backend API Families
 
-This prototype operates as an elegant **Single Page Application (SPA)** with the following thematic layout sections:
-1.  `#home`: Welcoming hero stage and operational context.
-2.  `#categories`: Contextual filtering hub.
-3.  `#featured-products`: Grid list for browsing products.
-4.  `#umkm`: Grid list for identifying local providers.
-5.  `#about`: Historical storytelling section for Desa Loning and community benefits.
-6.  `#faq`: Accessible keyboard-friendly accordion panel list addressing transactional safety.
+- Public: `/api/health`, `/api/umkms`, `/api/products` and detail routes. Only published records and products with published parents are public.
+- Auth: `/api/auth/login`, `/api/auth/session`, `/api/auth/logout`, `/api/auth/change-password`.
+- Management: `/api/manage/umkms` and `/api/manage/products`, including detail, PATCH, publish/unpublish where authorized, soft DELETE archive, and restore.
+- Admin: `/api/admin/users` with create/update/reset/revoke-session actions and `/api/admin/audit-logs`.
 
----
+All responses use `{ data: ... }` or the shared error envelope. Request bodies use explicit validation allowlists; protected fields such as IDs, timestamps, publication state, ownership, and display order are not client-controlled.
 
-## 5. Dummy-Data & Mock State Storage Locations
+## Frontend Routes
 
-- **Data Models:** All static dataset variables are located at `/src/data.ts`.
-  - `INITIAL_UMKMS`: Explicit collection of local business records containing fields for names, owners, contact numbers, categories, public images, and working hours.
-  - `INITIAL_PRODUCTS`: Static catalog of items with denormalized business associations, specific units, and optional prices.
-  - `FAQS`: Descriptive QA strings matching local Indonesian commercial behavior.
-  - `BENEFIT_CARDS`: Editorial highlights for the narrative zone.
+- `/` public homepage
+- `/login` public login
+- `/change-password` authenticated forced or voluntary password change
+- `/dashboard` authenticated summary
+- `/dashboard/umkms` and `/dashboard/umkms/:id` authorized UMKM management; `/new` admin-only
+- `/dashboard/products` and `/dashboard/products/:id` authorized product management; `/new` admin/owner
+- `/dashboard/users`, `/dashboard/users/:id`, `/dashboard/users/new`, `/dashboard/audit` admin-only
 
-- **Local Storage Usage:**
-  - `getSavedUMKMs()` and `getSavedProducts()` store the initial array into the browser's `localStorage` (`loning_umkms` and `loning_products` keys) to simulate a local client-side persistence loop.
-  - This allows the user's browser to read from mock caches safely across refreshes.
+Protected and role guards run before sensitive screens render. A forced-password account is routed to `/change-password`; an unauthenticated dashboard request goes to `/login`.
 
----
+## Operations
 
-## 6. Production Integration Warnings
-
-If integrating this codebase with **Sprint 2** backend resources or databases:
-- **No Verification Endorsements:** The production schema does **not** support verified merchant flags or checkmark statuses (`is_verified` was completely removed). Ensure no verification badges are introduced to the UI.
-- **No Secret Key Leakage:** Do **not** inject Supabase/Firebase credentials or private Gemini API keys on the client-side (`import.meta.env`). Any future AI categorization or database writing must be handled behind server-side API routes (`/api/*`).
-- **Hydration Safe:** The local storage fallbacks check for `typeof window !== 'undefined'` before accessing global storage, keeping it safe for Node.js-based static site generator (SSG) or server-side rendering (SSR) environments.
-
----
-
-## 7. Execution and Development Commands
-
-Make sure all dependencies are installed before executing these scripts:
-
-### Dependency Installation
 ```bash
 npm install
+npm --prefix backend install
+npm run dev:all
+npm run typecheck
+npm run build:all
+npm run test:backend
+npm run test:frontend
+npm run test:integration
+npm run test:integration:local
+npm run test:e2e
+npm run test:e2e:local
+npm --prefix backend run db:migrate
+npm --prefix backend run db:seed
+npm --prefix backend run admin:create
+npm --prefix backend run sessions:cleanup
+npm --prefix backend run media:cleanup
 ```
 
-### Run Local Development Server (port 3000)
-```bash
-npm run dev
+The integration commands own their local PostgreSQL/backend lifecycle and preserve the PostgreSQL volume; no separately running backend is required.
+
+`admin:create` reads temporary `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`, and `BOOTSTRAP_ADMIN_DISPLAY_NAME` environment variables. It is not run automatically during migration, seed, or server startup.
+
+## Local Development Without Aiven
+
+```powershell
+Copy-Item backend\.env.example backend\.env
+npm run db:local:setup
+npm run dev:all
 ```
 
-### Run TypeScript & Validation Lints
-```bash
-npm run lint
-```
+Docker Compose runs PostgreSQL 16 locally at `localhost:5432` using database `loning_digital`, user `loning`, and password `loning_local_dev`. The setup waits for the database, applies migrations, and seeds safely. `npm run db:local:reset` removes the named volume and is destructive. Aiven is not required locally; switching later changes only `backend/.env`.
 
-### Compile Production Build
-```bash
-npm run build
-```
+`/api/health` is liveness and `/api/ready` is a bounded database readiness check. If `DATABASE_URL` is missing, the backend exits and the frontend keeps its honest retry/error state instead of serving mock data.
+
+The signed-out session contract is `GET /api/auth/session` returning a safe `401`; `useSession` normalizes that response to settled `null` without retrying. Transient `5xx` responses retry once, network/backend failures settle into a retryable guard state, and authenticated requests continue to clear protected caches on `401`.
+
+## Deployment Notes
+
+Use Aiven's complete PostgreSQL URL with `sslmode=require`. Deploy the frontend as a static SPA with `index.html` fallback for `/login` and `/dashboard/*`. Configure the backend with one exact frontend `CORS_ORIGIN`, credentialed CORS, and `COOKIE_SECURE=true` in production. Schedule `sessions:cleanup` through the hosting platform if desired.
+
+Managed media supports one primary UMKM/product image. Development uses ignored `backend/storage/`; production requires S3-compatible storage. Uploads are decoded, normalized to WebP card/thumbnail variants, metadata-stripped, bounded, and authorization-checked. Existing external URLs remain a fallback. This phase excludes registration, OAuth, MFA, password recovery, multi-image galleries, cropping, video/document uploads, automatic external downloads, commerce, payments, orders, shipping, inventory quantities, ratings, reviews, verification, commissions, analytics, notifications, and real-time features.
+
+## Verification Status
+
+Credential-independent typecheck, production builds, migration generation, static checks, and injected backend tests are required before release. Real migration/seed/auth/CRUD smoke testing requires a non-production `DATABASE_URL`; browser desktop/mobile acceptance requires browser tooling.

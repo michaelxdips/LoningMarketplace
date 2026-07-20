@@ -6,3 +6,11 @@ coverage/
 *.log
 .env*
 !.env.example
+!backend/.env.example
+backend/.env
+backend/.env.local
+backend/storage/
+storage/
+test-results/
+playwright-report/
+playwright/.auth/
