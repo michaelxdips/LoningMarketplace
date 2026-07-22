@@ -4,7 +4,9 @@
  */
 
 import React from 'react';
+import { Link } from 'react-router';
 import { Compass, HelpCircle } from 'lucide-react';
+import { brand } from '../../config/brand';
 
 interface FooterProps {
   onScrollToSection: (sectionId: string) => void;
@@ -22,8 +24,8 @@ export default function Footer({ onScrollToSection }: FooterProps) {
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-white">
               <Compass size={22} className="text-terracotta" />
-              <span className="font-sans font-extrabold uppercase tracking-wide text-base">
-                Loning<span className="text-terracotta">Digital</span>
+              <span className="font-sans font-extrabold uppercase tracking-wide text-base" aria-label={brand.name}>
+                Loning<span className="text-terracotta">Maju</span>
               </span>
             </div>
             <p className="text-xs text-cream-tint/70 leading-relaxed max-w-sm">
@@ -72,6 +74,15 @@ export default function Footer({ onScrollToSection }: FooterProps) {
                 FAQ
               </button>
             </div>
+            <div className="border-t border-white/10 pt-3">
+              <h6 className="text-[10px] font-semibold text-white uppercase tracking-widest">Akses Pengelola</h6>
+              <Link
+                to="/login"
+                className="focus-ring mt-2 inline-flex rounded px-1 py-1 text-xs text-cream-tint/70 transition-colors hover:text-white"
+              >
+                Masuk Dashboard
+              </Link>
+            </div>
           </div>
 
           {/* Column 3: Disclaimer & Notice */}
@@ -90,7 +101,7 @@ export default function Footer({ onScrollToSection }: FooterProps) {
         {/* Bottom copyright segment */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-cream-tint/40">
           <div>
-            &copy; {currentYear} Loning Digital. Seluruh Hak Cipta Dilindungi Undang-Undang.
+            &copy; {currentYear} {brand.name}. Seluruh Hak Cipta Dilindungi Undang-Undang.
           </div>
           <div className="flex gap-4">
             <span className="font-medium">Dikembangkan untuk Desa Loning Mandiri</span>

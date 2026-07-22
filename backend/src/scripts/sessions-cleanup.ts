@@ -1,5 +1,5 @@
 import { createDatabase } from '../db/client.js';
-import { createRepository } from '../routes/repository.js';
+import { createRepository } from '../db/repository.js';
 import { loadEnv } from '../config/env.js';
 
 const database = createDatabase();

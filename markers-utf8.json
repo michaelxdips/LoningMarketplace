@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "file": "backend\\src\\config\\env.ts",
     "line": 13,
@@ -12,7 +12,7 @@
   {
     "file": "backend\\src\\index.ts",
     "line": 12,
-    "content": "console.log(`Loning Digital API listening on ${env.HOST}:${env.PORT}`);"
+    "content": "console.log(`Loning Maju API listening on ${env.HOST}:${env.PORT}`);"
   },
   {
     "file": "backend\\src\\routes\\admin.ts",

@@ -1,6 +1,6 @@
 {
-  "name": "Loning Digital",
-  "description": "Platform direktori dan etalase digital resmi untuk mendukung dan memajukan Usaha Mikro, Kecil, dan Menengah (UMKM) warga Desa Loning, Pemalang.",
+  "name": "Loning Maju",
+  "description": "Direktori digital UMKM Desa Loning untuk menemukan produk lokal dan terhubung langsung dengan pelaku usaha.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

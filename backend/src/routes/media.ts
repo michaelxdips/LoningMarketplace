@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { AppEnv } from '../config/env.js';
 import { processImage, MediaProcessingError } from '../media/processor.js';
 import type { MediaStorage } from '../media/storage.js';
-import type { Repository } from './repository.js';
+import type { Repository } from '../db/repository.js';
 import type { ReturnTypeGuards } from './types.js';
 import { error, uuid } from './validation.js';
 

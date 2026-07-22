@@ -23,7 +23,6 @@ function getBaseUrl() {
   return value.replace(/\/+$/, '');
 }
 
-export function apiBaseUrl() { return getBaseUrl(); }
 
 async function fetchApi(url: string, options?: RequestInit) {
   try { return await fetch(url, options); }

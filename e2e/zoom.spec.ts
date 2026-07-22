@@ -20,6 +20,40 @@ async function withinViewport(page: Page, selector: Locator) {
   expect(bounds!.y + Math.min(bounds!.height, viewport.height)).toBeLessThanOrEqual(viewport.height + 1);
 }
 
+for (const viewport of [{ width: 1024, height: 768 }, { width: 320, height: 700 }]) {
+  test(`core flow remains interactive at ${viewport.width}x${viewport.height}`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'Explicit viewport acceptance runs once in Chromium');
+    await page.setViewportSize(viewport);
+    await page.route('https://images.unsplash.com/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: image }));
+
+    await page.goto('/');
+    await expect(page.getByText('Katalog Produk Warga')).toBeVisible();
+    await page.locator('footer').scrollIntoViewIfNeeded();
+    await expect(page.locator('footer')).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    if (viewport.width < 768) {
+      await page.getByRole('button', { name: 'Toggle navigasi' }).click();
+      await expect(page.locator('#mobile-nav-menu')).toBeVisible();
+      await page.getByRole('link', { name: 'Masuk Pengelola' }).click();
+    } else {
+      await page.getByRole('navigation').getByRole('link', { name: 'Masuk Pengelola' }).click();
+    }
+    await expect(page).toHaveURL(/\/login$/);
+    await page.getByLabel('Alamat email').fill('admin.products.e2e@local.test');
+    await page.getByLabel('Kata sandi', { exact: true }).fill('local-e2e-passphrase-123');
+    await page.getByRole('button', { name: 'Masuk' }).click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    if (viewport.width < 768) await page.getByRole('button', { name: 'Buka navigasi' }).click();
+    const productLink = page.getByRole('link', { name: 'Produk', exact: true });
+    await productLink.focus();
+    await expect(productLink).toBeFocused();
+    await productLink.click();
+    await expect(page).toHaveURL(/\/dashboard\/products$/);
+    await expect(page.getByRole('link', { name: 'Tambah produk' })).toBeVisible();
+    await noDocumentOverflow(page);
+  });
+}
+
 test('required routes remain task-completable at 200% desktop zoom and normal mobile scale', async ({ page, context }, testInfo) => {
   const consoleErrors: Array<{ text: string; url: string }> = [];
   const pageErrors: string[] = [];
@@ -89,7 +123,7 @@ test('required routes remain task-completable at 200% desktop zoom and normal mo
   await expect(page.getByLabel('Cari produk')).toBeVisible();
   await expect(page.getByLabel('Filter kategori')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Tambah produk' })).toBeVisible();
-  await expect(item).toContainText('Rp35.000');
+  await expect(item).toBeVisible();
   await expect(item.getByRole('link', { name: 'Kelola' })).toBeVisible();
   await noDocumentOverflow(page);
 

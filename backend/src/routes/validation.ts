@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { categories } from './repository.js';
+import { categories } from '../db/repository.js';
 
 export const uuid = z.string().uuid();
 export const umkmInput = z.strictObject({

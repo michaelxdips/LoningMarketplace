@@ -52,7 +52,7 @@ export default function AboutVillageSection() {
               Desa Loning yang bertempat di Kecamatan Petarukan, Pemalang, Jawa Tengah, memiliki keragaman potensi alam dan keterampilan kreatif. Mulai dari kebun pertanian kopi lereng, olahan kuliner rumahan, hingga keahlian anyaman bambu turun-temurun.
             </p>
             <p className="text-xs text-warm-gray leading-relaxed">
-              Platform Loning Digital dikembangkan sebagai wujud nyata gotong-royong untuk mempublikasikan etalase niaga lokal secara gratis, mandiri, dan berdaulat. Membantu memudahkan warga luar maupun sesama warga dalam menemukan produsen terdekat secara cepat.
+              Platform Loning Maju dikembangkan sebagai wujud nyata gotong-royong untuk mempublikasikan etalase niaga lokal secara gratis, mandiri, dan berdaulat. Membantu memudahkan warga luar maupun sesama warga dalam menemukan produsen terdekat secara cepat.
             </p>
 
             {/* Benefit Grid - replacing unverified numerical statistics */}

@@ -11,6 +11,7 @@ import {
   pageItems,
   type ManagedProduct,
   type ManagedUMKM,
+  type ManagedUser,
   type ProductCreateInput,
   type ProductUpdateInput,
   type UMKMInput,
@@ -144,8 +145,10 @@ export function UMKMFormPage() {
   const media = usePendingMedia(
     item.data && !item.data.imageAssetId ? item.data.imageUrl : undefined,
   );
-  const ownerParams = { role: "owner" as const, isActive: true, limit: 100 };
-  const owners = useManagedList(
+  const ownerParams = { role: "pelaku_umkm" as const, isActive: true, limit: 100 };
+  const owners = useManagedList<
+    Awaited<ReturnType<typeof managementApi.users.list>>
+  >(
     "admin",
     "users",
     ownerParams,
@@ -272,9 +275,9 @@ export function UMKMFormPage() {
                 defaultValue={value?.ownerUserId ?? ""}
               >
                 <option value="">Belum ditetapkan</option>
-                {pageItems(owners.data).map((user) => (
+                {pageItems<ManagedUser>(owners.data).map((user) => (
                   <option key={user.id} value={user.id}>
-                    {user.displayName} ({user.email})
+                    {user.displayName} (@{user.username})
                   </option>
                 ))}
               </Select>
@@ -662,12 +665,13 @@ export function UserFormPage() {
       "role",
       ...(editing ? [] : ["email", "temporaryPassword"]),
     ]);
-    if (!editing && text(data, "temporaryPassword").length < 12)
-      local.temporaryPassword = "Kata sandi sementara minimal 12 karakter.";
+    if (!editing && text(data, "temporaryPassword").length < 8)
+      local.temporaryPassword = "Kata sandi sementara minimal 8 karakter.";
     if (Object.keys(local).length) return setErrors(local);
     const fields = {
+      username: text(data, "username"),
       displayName: text(data, "displayName"),
-      role: text(data, "role") as "admin" | "owner",
+      role: text(data, "role") as "superadmin" | "admin" | "perangkat_desa" | "pelaku_umkm",
     };
     const input = editing
       ? {
@@ -715,9 +719,12 @@ export function UserFormPage() {
               defaultValue={value?.displayName}
             />
           </Field>
+          <Field label="Username" error={errors.username}>
+            <Input name="username" required defaultValue={value?.username} pattern="[a-z0-9._-]{3,30}" />
+          </Field>
           {editing ? (
             <Field label="Alamat email">
-              <Input value={value?.email} disabled />
+              <Input value={value?.email ?? "Tidak ditampilkan"} disabled />
             </Field>
           ) : (
             <Field label="Alamat email" error={errors.email}>
@@ -727,11 +734,13 @@ export function UserFormPage() {
           <Field label="Peran" error={errors.role}>
             <Select name="role" required defaultValue={value?.role}>
               <option value="">Pilih peran</option>
-              <option value="owner">Pemilik UMKM</option>
+              <option value="superadmin">Superadmin</option>
               <option value="admin">Admin</option>
+              <option value="perangkat_desa">Perangkat desa</option>
+              <option value="pelaku_umkm">Pelaku UMKM</option>
             </Select>
           </Field>
-          {editing ? (
+          {editing && (
             <label className="flex min-h-11 items-center gap-3 text-sm font-bold">
               <input
                 name="isActive"
@@ -741,20 +750,20 @@ export function UserFormPage() {
               />
               Akun aktif
             </label>
-          ) : (
-            <Field
-              label="Kata sandi sementara"
-              error={errors.temporaryPassword}
-              hint="Minimal 12 karakter; pengguna wajib menggantinya."
-            >
-              <Input
-                name="temporaryPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-              />
-            </Field>
           )}
+          <Field
+            label="Kata sandi sementara"
+            error={errors.temporaryPassword}
+            hint="Minimal 8 karakter; pengguna wajib menggantinya."
+          >
+            <Input
+              name="temporaryPassword"
+              type="password"
+              autoComplete="new-password"
+              required={!editing}
+              minLength={8}
+            />
+          </Field>
         </div>
         <FormActions
           pending={save.isPending}

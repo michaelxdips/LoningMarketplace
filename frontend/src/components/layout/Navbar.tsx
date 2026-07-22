@@ -4,7 +4,9 @@
  */
 
 import React, { useState } from 'react';
+import { Link } from 'react-router';
 import { Menu, X, Compass } from 'lucide-react';
+import { brand } from '../../config/brand';
 
 interface NavbarProps {
   onScrollToSection: (sectionId: string) => void;
@@ -17,7 +19,6 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
   const navItems = [
     { label: 'Beranda', id: 'home' },
     { label: 'Kategori', id: 'categories' },
-    { label: 'Produk Unggulan', id: 'featured-products' },
     { label: 'Profil UMKM', id: 'umkm' },
     { label: 'Tentang Desa', id: 'about' },
     { label: 'FAQ', id: 'faq' }
@@ -36,11 +37,12 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
           {/* Brand Logo Wordmark */}
           <button 
             onClick={() => onScrollToSection('home')}
+            aria-label={`${brand.name} — kembali ke beranda`}
             className="flex items-center gap-2 text-forest hover:opacity-90 focus-ring rounded-lg py-1 px-1.5 font-bold tracking-tight text-lg"
           >
             <Compass size={22} className="text-terracotta" />
             <span className="font-sans font-extrabold uppercase tracking-wide text-sm md:text-base">
-              Loning<span className="text-terracotta">Digital</span>
+              Loning<span className="text-terracotta">Maju</span>
             </span>
           </button>
 
@@ -58,6 +60,13 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
               </button>
             ))}
             
+            <Link
+              to="/login"
+              className="rounded-lg border border-terracotta px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-terracotta transition-colors hover:bg-terracotta hover:text-white focus-ring"
+            >
+              Masuk Pengelola
+            </Link>
+
             {/* Primary CTA */}
             <button
               onClick={() => handleNavItemClick('featured-products')}
@@ -100,6 +109,15 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
               {item.label}
             </button>
           ))}
+          <div className="border-t border-sage-border pt-2">
+            <Link
+              to="/login"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex w-full touch-target items-center justify-center rounded-lg border border-terracotta px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-terracotta transition-colors hover:bg-terracotta hover:text-white focus-ring"
+            >
+              Masuk Pengelola
+            </Link>
+          </div>
           <div className="pt-2">
             <button
               onClick={() => handleNavItemClick('featured-products')}

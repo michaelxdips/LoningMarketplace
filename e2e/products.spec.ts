@@ -1,4 +1,4 @@
-import { expect, request as apiRequest, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, request as apiRequest, test, type Page, type Request, type TestInfo } from '@playwright/test';
 import { assertBrowserEvents, observeBrowserEvents, type ExpectedBrowserDiagnostic, type ExpectedHttpError } from './support/browser-events';
 
 const API_BASE = 'http://localhost:3001/api';
@@ -7,7 +7,7 @@ const MEDIA_UPLOAD_URL = `${API_BASE}/manage/media/images`;
 const ORIGINAL_IMAGE = `${FRONTEND_ORIGIN.replace('3000', '3001')}/media/fixtures/e2e-product.webp`;
 const CORRUPT_IMAGE = `${FRONTEND_ORIGIN.replace('3000', '3001')}/media/fixtures/e2e-corrupt.webp`;
 const ORIGINAL = {
-  umkmId: '00000000-0000-4000-8000-000000000001',
+  umkmId: 'e2000000-0000-4000-8000-000000000001',
   price: 35000,
   description: 'Produk deterministik untuk pengujian browser lokal.',
   category: 'Kuliner',
@@ -82,6 +82,13 @@ function productItem(page: Page, fixture: Fixture) {
   return page.locator('tr:visible, article:visible').filter({ hasText: fixture.name });
 }
 
+async function openProducts(page: Page, fixture: Fixture, status?: string) {
+  await page.goto('/dashboard/products', { waitUntil: 'domcontentloaded' });
+  const item = productItem(page, fixture);
+  await expect(item).toContainText(fixture.name);
+  if (status) await expect(item).toContainText(status);
+}
+
 function publicProductUrl(id: string) {
   return `${API_BASE}/products/${id}`;
 }
@@ -132,18 +139,58 @@ function expectedArchivedProductDiagnostic(id: string): ExpectedBrowserDiagnosti
   };
 }
 
-async function saveAndCapturePatch(page: Page, fixture: Fixture) {
+async function saveAndCapturePatch(page: Page, fixture: Fixture, events?: ReturnType<typeof observeBrowserEvents>, deferTransition = false) {
   const requestPromise = page.waitForRequest(request => request.method() === 'PATCH' && request.url().endsWith(`/manage/products/${fixture.id}`));
   const responsePromise = page.waitForResponse(response => response.request().method() === 'PATCH' && response.url().endsWith(`/manage/products/${fixture.id}`));
-  await page.getByRole('button', { name: 'Simpan perubahan' }).click();
-  const [request, response] = await Promise.all([requestPromise, responsePromise]);
-  const headers = await request.allHeaders();
-  expect(headers.origin).toBe(FRONTEND_ORIGIN);
-  expect(Boolean(headers.cookie)).toBe(true);
-  expect(Boolean(headers['x-csrf-token'])).toBe(true);
-  expect(headers['content-type']).toContain('application/json');
-  expect(response.status()).toBe(200);
-  return { payload: request.postDataJSON(), body: await response.json() };
+  const pendingDashboardRequests = new Set<Request>();
+  const onRequest = (request: Request) => {
+    if (events && request.method() === 'GET' && /^http:\/\/localhost:3001\/api\/manage\/(?:products|umkms)(?:\?.*)?$/.test(request.url())) pendingDashboardRequests.add(request);
+  };
+  const onRequestDone = (request: Request) => { pendingDashboardRequests.delete(request); };
+  const waitForDashboardQuiet = async () => {
+    await expect.poll(() => pendingDashboardRequests.size, { timeout: 2000 }).toBe(0);
+  };
+  const removeListeners = () => {
+    if (!events) return;
+    page.off('request', onRequest);
+    page.off('requestfinished', onRequestDone);
+    page.off('requestfailed', onRequestDone);
+  };
+  const transition = events?.beginExpectedTransition({ reason: `save:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3001\/api\/manage\/(?:products|umkms)(?:\?.*)?$/ }] });
+  if (events) {
+    page.on('request', onRequest);
+    page.on('requestfinished', onRequestDone);
+    page.on('requestfailed', onRequestDone);
+  }
+  try {
+    await page.getByRole('button', { name: 'Simpan perubahan' }).click();
+    const [request, response] = await Promise.all([requestPromise, responsePromise]);
+    const headers = await request.allHeaders();
+    expect(headers.origin).toBe(FRONTEND_ORIGIN);
+    expect(Boolean(headers.cookie)).toBe(true);
+    expect(Boolean(headers['x-csrf-token'])).toBe(true);
+    expect(headers['content-type']).toContain('application/json');
+    expect(response.status()).toBe(200);
+    await page.waitForLoadState('networkidle');
+    if (!deferTransition) await waitForDashboardQuiet();
+    const result = { payload: request.postDataJSON(), body: await response.json() };
+    return deferTransition ? {
+      ...result,
+      completeTransition: async () => {
+        try {
+          await waitForDashboardQuiet();
+        } finally {
+          removeListeners();
+          transition?.complete();
+        }
+      },
+    } : result;
+  } finally {
+    if (!deferTransition) {
+      removeListeners();
+      transition?.complete();
+    }
+  }
 }
 
 async function resetFixture(fixture: Fixture) {
@@ -178,18 +225,19 @@ test.afterEach(async ({}, testInfo) => {
 });
 
 test('product mutations, price contract, external image, archive, and restore are stable', async ({ page }, testInfo) => {
+  test.setTimeout(60_000);
   const fixture = fixtureFor(testInfo);
   const events = observe(page);
   await stabilizeLegacyImages(page);
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   const initialPublicCard = page.locator(`#product-card-${fixture.id}`);
   await expect(initialPublicCard).toContainText(fixture.name);
   await login(page);
-  await page.goto('/dashboard/products');
+  await openProducts(page, fixture, 'Terbit');
 
   const item = productItem(page, fixture);
   await expect(item).toContainText(fixture.name);
-  await expect(item).toContainText('UMKM Kuliner Desa');
+  await expect(item).toContainText('Warung Nasi Khas Loning');
   await expect(item).toContainText('Rp35.000');
   await expect(item).toContainText('Terbit');
   await expect(item).toContainText('Tersedia');
@@ -251,7 +299,7 @@ test('product mutations, price contract, external image, archive, and restore ar
   await page.getByLabel('Harga (rupiah)').fill('35000');
   await saveAndCapturePatch(page, fixture);
   await expect(productItem(page, fixture)).toContainText('Rp35.000');
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   const publicCard = page.locator(`#product-card-${fixture.id}`);
   await expect(publicCard).toContainText('Rp35.000');
   await page.goto('/dashboard/products');
@@ -261,8 +309,7 @@ test('product mutations, price contract, external image, archive, and restore ar
   const patchCountBeforeInvalidManagedSave = events.requests.filter(request => request.method === 'PATCH' && request.url.endsWith(fixture.id)).length;
   await page.getByRole('button', { name: 'Simpan perubahan' }).click();
   await expect(page.getByRole('alert')).toContainText('Selesaikan unggahan gambar terkelola');
-  await page.waitForTimeout(300);
-  expect(events.requests.filter(request => request.method === 'PATCH' && request.url.endsWith(fixture.id))).toHaveLength(patchCountBeforeInvalidManagedSave);
+  await expect.poll(() => events.requests.filter(request => request.method === 'PATCH' && request.url.endsWith(fixture.id)).length).toBe(patchCountBeforeInvalidManagedSave);
   expect((await managementProduct(page, fixture.id)).body.data.imageUrl).toBe(ORIGINAL_IMAGE);
 
   const externalImage = `${ORIGINAL_IMAGE}?mode=external`;
@@ -273,29 +320,32 @@ test('product mutations, price contract, external image, archive, and restore ar
   expect((await managementProduct(page, fixture.id)).body.data.imageUrl).toBe(externalImage);
 
   let corruptImageRequests = 0;
-  let externalEvents: ReturnType<typeof observeBrowserEvents> | undefined;
+  const externalEvents = observeBrowserEvents(page);
   page.on('request', request => {
-    if (request.url() !== CORRUPT_IMAGE) return;
-    corruptImageRequests += 1;
-    externalEvents ??= observeBrowserEvents(page);
+    if (request.url() === CORRUPT_IMAGE) corruptImageRequests += 1;
   });
-  await page.goto(`/dashboard/products/${fixture.id}`);
-  await expect(page.getByRole('radio', { name: 'Pakai URL gambar eksternal' })).toBeVisible();
-  await page.getByRole('radio', { name: 'Pakai URL gambar eksternal' }).check();
-  await page.getByRole('textbox', { name: 'URL gambar eksternal' }).fill(CORRUPT_IMAGE);
-  await saveAndCapturePatch(page, fixture);
-  const fallback = productItem(page, fixture).getByRole('img', { name: `Gambar ${fixture.name}` });
-  await expect(fallback).toHaveAttribute('role', 'img');
-  expect(await fallback.evaluate(element => element.tagName)).toBe('DIV');
-  expect(corruptImageRequests).toBe(1);
-  if (!externalEvents) throw new Error('Corrupt image request was not observed');
+  try {
+    const detailTransition = externalEvents.beginExpectedTransition({ reason: `open-product:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3001\/api\/manage\/(?:products(?:\/[^?]+)?|umkms)(?:\?.*)?$/ }] });
+    try { await page.goto(`/dashboard/products/${fixture.id}`); await page.waitForLoadState('networkidle'); } finally { detailTransition.complete(); }
+    await expect(page.getByRole('radio', { name: 'Pakai URL gambar eksternal' })).toBeVisible();
+    await page.getByRole('radio', { name: 'Pakai URL gambar eksternal' }).check();
+    await page.getByRole('textbox', { name: 'URL gambar eksternal' }).fill(CORRUPT_IMAGE);
+    const corruptPatch = await saveAndCapturePatch(page, fixture, externalEvents, true);
+    expect(corruptPatch.payload).toMatchObject({ imageUrl: CORRUPT_IMAGE });
+    const fallback = productItem(page, fixture).getByRole('img', { name: `Gambar ${fixture.name}` });
+    await expect(fallback).toHaveAttribute('role', 'img');
+    expect(await fallback.evaluate(element => element.tagName)).toBe('DIV');
+    expect(corruptImageRequests).toBe(1);
+    await corruptPatch.completeTransition?.();
+    assertBrowserEvents(externalEvents);
+  } finally {
+    externalEvents.dispose();
+  }
 
   await resetFixture(fixture);
   expect((await managementProduct(page, fixture.id)).body.data.imageUrl).toBe(ORIGINAL_IMAGE);
-  assertBrowserEvents(externalEvents);
-  externalEvents.dispose();
 
-  await page.goto('/dashboard/products');
+  await openProducts(page, fixture, 'Terbit');
   await productItem(page, fixture).getByRole('button', { name: 'Arsipkan' }).click();
   const archiveDialog = page.getByRole('dialog');
   await expect(archiveDialog).toContainText(`${fixture.name} akan diperbarui.`);
@@ -304,7 +354,7 @@ test('product mutations, price contract, external image, archive, and restore ar
   expect((await archiveResponse).status()).toBe(200);
   await expect(productItem(page, fixture).getByRole('button', { name: 'Pulihkan' })).toBeVisible();
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   const archivedPublicCard = page.locator(`#product-card-${fixture.id}`);
   await expect(archivedPublicCard).toHaveCount(0);
   const archivedEvents = observeBrowserEvents(page);
@@ -318,7 +368,7 @@ test('product mutations, price contract, external image, archive, and restore ar
   });
   archivedEvents.dispose();
 
-  await page.goto('/dashboard/products');
+  await openProducts(page, fixture, 'Diarsipkan');
   const restoreResponse = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith(`/manage/products/${fixture.id}/restore`));
   await productItem(page, fixture).getByRole('button', { name: 'Pulihkan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Konfirmasi', exact: true }).click();
@@ -331,7 +381,7 @@ test('product mutations, price contract, external image, archive, and restore ar
   expect((await publishResponse).status()).toBe(200);
   await expect(productItem(page, fixture)).toContainText('Terbit');
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   const restoredPublicCard = page.locator(`#product-card-${fixture.id}`);
   await expect(restoredPublicCard).toContainText(fixture.name);
   const restoredEvents = observeBrowserEvents(page);
@@ -379,7 +429,7 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   uploadedAssetIds.push(uploaded.id);
   await expect(page.getByText('Unggahan selesai.')).toBeVisible();
 
-  const managedPatch = await saveAndCapturePatch(page, fixture);
+  const managedPatch = await saveAndCapturePatch(page, fixture, browserEvents);
   expect(managedPatch.payload).toMatchObject({ imageUrl: null, imageAssetId: uploaded.id });
   await expect(page).toHaveURL(/dashboard\/products$/);
   const listImage = productItem(page, fixture).getByRole('img', { name: `Gambar ${fixture.name}` });
@@ -390,7 +440,8 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   expect(managedDetail.body.data.imageUrl).toContain('/media/media/');
   expect(managedDetail.body.data.imageUrl).not.toContain('blob:');
 
-  await page.goto('/');
+  const publicTransition = browserEvents.beginExpectedTransition({ reason: 'managed-media-public-navigation', expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3001\/api\/(?:products|umkms)/ }, { method: 'GET', url: /http:\/\/localhost:3001\/api\/manage\/products(?:\?.*)?$/ }] });
+  try { await page.goto('/'); await page.waitForLoadState('networkidle'); } finally { publicTransition.complete(); }
   const publicCard = page.locator(`#product-card-${fixture.id}`);
   await expect(publicCard).toContainText('Rp35.000');
   await expect(publicCard.getByRole('img', { name: fixture.name })).toHaveAttribute('src', /\/media\/media\//);

@@ -1,8 +1,10 @@
-# Loning Digital Technical Hand-off
+# Loning Maju Technical Hand-off
 
-Loning Digital is the Desa Loning public UMKM directory and product showcase. The public visual system remains the source of truth for the homepage, cards, dialogs, navigation, accessibility behavior, and direct WhatsApp inquiry flow.
+Loning Maju is the Desa Loning public UMKM directory and product showcase. The public visual system remains the source of truth for the homepage, cards, dialogs, navigation, accessibility behavior, and direct WhatsApp inquiry flow.
 
 The declared Node.js support range is `>=20 <27`; this implementation was verified with Node.js `v26.4.0`, including native `argon2` and `sharp` installation.
+
+The public brand is **Loning Maju**. Internal or persistent compatibility identifiers remain `marketplace-loning-local`, `loning_digital`, `loning`, `loning_postgres_data`, `loning_session`, and `media/{uuid}`. These values belong to local infrastructure, database, authentication, and media contracts; they are not public branding.
 
 ## Public Application
 

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { categories, type Repository } from './repository.js';
+import { categories, type Repository } from '../db/repository.js';
 
 const querySchema = z.object({ category: z.enum(categories).optional(), q: z.string().trim().optional(), umkmId: z.string().uuid().optional(), limit: z.coerce.number().int().positive().max(100).default(100) });
 const idSchema = z.string().uuid();

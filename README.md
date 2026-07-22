@@ -1,6 +1,6 @@
-# Loning Digital
+# Loning Maju
 
-Loning Digital is a public directory and product showcase for UMKM in Desa Loning, Petarukan, Pemalang. Visitors discover local businesses and contact sellers directly through WhatsApp. This is not an e-commerce system: there is no cart, checkout, payment gateway, order, invoice, shipping, rating, or review model.
+Loning Maju is a public directory and product showcase for UMKM in Desa Loning, Petarukan, Pemalang. Visitors discover local businesses and contact sellers directly through WhatsApp. This is not an e-commerce system: there is no cart, checkout, payment gateway, order, invoice, shipping, rating, or review model.
 
 ## Architecture
 
@@ -10,6 +10,10 @@ Loning Digital is a public directory and product showcase for UMKM in Desa Lonin
 - TanStack Query loads public, authenticated-session, and management server state.
 - Public UMKM/product responses contain only published records. Products also require a published parent UMKM.
 - The public homepage retains its existing search, category, detail-dialog, and WhatsApp interaction model.
+
+### Compatibility identifiers
+
+The public brand is **Loning Maju**. The internal or persistent identifiers `marketplace-loning-local`, `loning_digital`, `loning`, `loning_postgres_data`, `loning_session`, and `media/{uuid}` intentionally remain unchanged to preserve Docker, database, authentication, and media compatibility. They are not public brand names.
 
 ## Roles and Security
 
@@ -88,7 +92,17 @@ npm --prefix backend run db:migrate
 npm --prefix backend run db:seed
 ```
 
-The existing five UMKMs and five products remain published with stable UUIDs and display order. Re-running the seed is idempotent.
+The development seed now provides 54 realistic products across the five UMKM categories: Kuliner, Kerajinan, Jasa, Sembako, and Pertanian. Product names, descriptions, prices, units, availability, and display ordering use Indonesian local-business examples rather than generic placeholders. Re-running the seed replaces only old development products in the deterministic `e3000000-...` ID namespace; manual records and E2E fixtures use different namespaces and remain untouched.
+
+All seeded UMKM and product images use deterministic local WebP fixtures under `backend/storage/media/`, served through the local backend media route. This keeps browser testing stable without external image URLs or internet access. The catalog includes controlled `draft`, `archived`, unavailable, and no-price products for management, filtering, visibility, and responsive UI testing.
+
+Run the development seed with:
+
+```bash
+npm run db:seed --workspace=backend
+```
+
+The existing deterministic users and UMKM UUIDs remain compatible with the local E2E fixtures.
 
 Create the first administrator once, using temporary environment variables only:
 

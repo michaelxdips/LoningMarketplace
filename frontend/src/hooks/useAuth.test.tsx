@@ -8,7 +8,7 @@ function SessionProbe() {
   const session = useSession();
   if (session.isPending) return <p>loading</p>;
   if (session.isError) return <p>error</p>;
-  return <p>{session.data ? session.data.user.email : 'signed-out'}</p>;
+  return <p>{session.data ? session.data.user.username : 'signed-out'}</p>;
 }
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });

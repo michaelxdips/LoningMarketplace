@@ -1,14 +1,17 @@
 import { spawn, spawnSync } from 'node:child_process';
 
 const root = process.cwd();
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npmCli = process.env.npm_execpath;
+if (!npmCli) throw new Error('npm_execpath is required for shell-free npm execution');
 const backendOutput = [];
 
 function run(command, args, options = {}) {
-  const result = spawnSync(command, args, { cwd: root, stdio: 'inherit', shell: process.platform === 'win32' && command.toLowerCase().endsWith('.cmd'), ...options });
+  const result = spawnSync(command, args, { cwd: root, stdio: 'inherit', shell: false, ...options });
   if (result.error) throw new Error(`${command} ${args.join(' ')} failed to start: ${result.error.message}`);
   if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} failed with exit code ${result.status}${result.signal ? ` and signal ${result.signal}` : ''}`);
 }
+
+function runNpm(args) { run(process.execPath, [npmCli, ...args]); }
 
 async function waitForReady(timeout = 120_000) {
   const deadline = Date.now() + timeout;
@@ -33,13 +36,13 @@ function stopOwnedBackend(child) {
 }
 
 async function main() {
-  run(npmCommand, ['run', 'db:local:up']);
-  run(npmCommand, ['run', 'db:local:wait']);
-  run(npmCommand, ['--prefix', 'backend', 'run', 'db:migrate']);
-  run(npmCommand, ['--prefix', 'backend', 'run', 'db:seed']);
-  run(npmCommand, ['--prefix', 'backend', 'run', 'e2e:setup']);
+  runNpm(['run', 'db:local:up']);
+  runNpm(['run', 'db:local:wait']);
+  runNpm(['--prefix', 'backend', 'run', 'db:migrate']);
+  runNpm(['--prefix', 'backend', 'run', 'db:seed']);
+  runNpm(['--prefix', 'backend', 'run', 'e2e:setup']);
 
-  const backend = spawn(npmCommand, ['--prefix', 'backend', 'run', 'dev'], { cwd: root, shell: process.platform === 'win32', env: process.env });
+  const backend = spawn(process.execPath, [npmCli, '--prefix', 'backend', 'run', 'dev'], { cwd: root, shell: false, env: process.env });
   backend.stdout.on('data', data => backendOutput.push(String(data)));
   backend.stderr.on('data', data => backendOutput.push(String(data)));
   try {

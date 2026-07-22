@@ -1,11 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { apiRequest } from './api';
 
-export type UserRole = 'admin' | 'owner';
+export type UserRole = 'superadmin' | 'admin' | 'perangkat_desa' | 'pelaku_umkm';
 export interface SessionUser {
   id: string;
+  username: string;
   displayName: string;
-  email: string;
   role: UserRole;
   isActive: boolean;
   mustChangePassword: boolean;
@@ -23,7 +23,7 @@ export function rememberSession(queryClient: QueryClient, session: Session | nul
 
 export const authApi = {
   session: () => apiRequest<Session>('/auth/session', { skipUnauthorizedHandler: true }),
-  login: (input: { email: string; password: string }) => apiRequest<Session>('/auth/login', { method: 'POST', body: JSON.stringify(input) }),
+  login: (input: { identifier: string; password: string }) => apiRequest<Session>('/auth/login', { method: 'POST', body: JSON.stringify(input) }),
   logout: (csrfToken?: string) => apiRequest<void>('/auth/logout', { method: 'POST', headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : undefined }),
   changePassword: (input: { currentPassword: string; newPassword: string }, csrfToken?: string) => apiRequest<PasswordChanged>('/auth/change-password', { method: 'POST', headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : undefined, body: JSON.stringify(input) }),
 };

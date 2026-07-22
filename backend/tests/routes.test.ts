@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import type { AppEnv } from '../src/config/env.js';
-import { categories, type PublicProduct, type PublicUMKM, type Repository } from '../src/routes/repository.js';
+import { categories, type PublicProduct, type PublicUMKM, type Repository } from '../src/db/repository.js';
 
 const env: AppEnv = { DATABASE_URL: 'postgresql://test:test@localhost/test', PORT: 3001, HOST: '127.0.0.1', CORS_ORIGIN: 'http://localhost:3000', NODE_ENV: 'test', SESSION_TTL_HOURS: 168, SESSION_RETENTION_DAYS: 30, SESSION_COOKIE_NAME: 'loning_session', LOGIN_MAX_ATTEMPTS: 5, LOGIN_LOCKOUT_MINUTES: 15, LOGIN_RATE_LIMIT_MAX: 10, LOGIN_RATE_LIMIT_WINDOW: '1 minute', RATE_LIMIT_MAX: 100, TRUST_PROXY: false, COOKIE_SECURE: false };
 const umkms: PublicUMKM[] = [

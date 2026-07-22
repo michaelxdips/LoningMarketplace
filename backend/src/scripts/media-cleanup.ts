@@ -1,6 +1,6 @@
 import { loadEnv, mediaConfig } from '../config/env.js';
 import { createDatabase } from '../db/client.js';
-import { createRepository } from '../routes/repository.js';
+import { createRepository } from '../db/repository.js';
 import { createMediaStorage } from '../media/storage.js';
 
 const env = loadEnv();

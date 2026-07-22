@@ -2,15 +2,16 @@ import { sql } from 'drizzle-orm';
 import { boolean, check, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 export const categoryEnum = pgEnum('category', ['Kuliner', 'Kerajinan', 'Jasa', 'Sembako', 'Pertanian']);
-export const userRoleEnum = pgEnum('user_role', ['admin', 'owner']);
+export const userRoleEnum = pgEnum('user_role', ['superadmin', 'admin', 'perangkat_desa', 'pelaku_umkm']);
 export const publicationStatusEnum = pgEnum('publication_status', ['draft', 'published', 'archived']);
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull(),
+  username: text('username').notNull(),
   displayName: text('display_name').notNull(),
   passwordHash: text('password_hash').notNull(),
-  role: userRoleEnum('role').notNull().default('owner'),
+  role: userRoleEnum('role').notNull().default('pelaku_umkm'),
   isActive: boolean('is_active').notNull().default(true),
   mustChangePassword: boolean('must_change_password').notNull().default(true),
   failedLoginCount: integer('failed_login_count').notNull().default(0),
@@ -20,8 +21,10 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   emailIdx: uniqueIndex('users_email_unique').on(table.email),
+  usernameIdx: uniqueIndex('users_username_lower_unique').on(sql`lower(${table.username})`),
   roleActiveIdx: index('users_role_is_active_idx').on(table.role, table.isActive),
   failedLoginCheck: check('users_failed_login_count_check', sql`${table.failedLoginCount} >= 0`),
+  usernameCheck: check('users_username_check', sql`${table.username} = lower(${table.username}) AND ${table.username} ~ '^[a-z0-9._-]{3,30}$'`),
 }));
 
 export const mediaAssets = pgTable('media_assets', {
@@ -37,7 +40,8 @@ export const umkms = pgTable('umkms', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   categoryIdx: index('umkms_category_idx').on(table.category), orderIdx: index('umkms_display_order_idx').on(table.displayOrder), ownerIdx: index('umkms_owner_user_id_idx').on(table.ownerUserId), statusIdx: index('umkms_publication_status_idx').on(table.publicationStatus),
-  phoneCheck: check('umkms_phone_digits_check', sql`${table.phone} ~ '^[0-9]+$'`), orderCheck: check('umkms_display_order_check', sql`${table.displayOrder} >= 0`), imageSourceCheck: check('umkms_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`), imageAssetIdx: index('umkms_image_asset_id_idx').on(table.imageAssetId),
+  phoneCheck: check('umkms_phone_digits_check', sql`${table.phone} ~ '^[0-9]+$'`), orderCheck: check('umkms_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('umkms_image_asset_id_idx').on(table.imageAssetId),
+  imageSourceCheck: check('umkms_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`),
 }));
 
 export const products = pgTable('products', {
@@ -47,7 +51,8 @@ export const products = pgTable('products', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   umkmIdx: index('products_umkm_id_idx').on(table.umkmId), categoryIdx: index('products_category_idx').on(table.category), orderIdx: index('products_display_order_idx').on(table.displayOrder), statusIdx: index('products_publication_status_idx').on(table.publicationStatus), parentStatusOrderIdx: index('products_umkm_status_order_idx').on(table.umkmId, table.publicationStatus, table.displayOrder),
-  priceCheck: check('products_price_check', sql`${table.price} IS NULL OR ${table.price} >= 0`), orderCheck: check('products_display_order_check', sql`${table.displayOrder} >= 0`), imageSourceCheck: check('products_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`), imageAssetIdx: index('products_image_asset_id_idx').on(table.imageAssetId),
+  priceCheck: check('products_price_check', sql`${table.price} IS NULL OR ${table.price} >= 0`), orderCheck: check('products_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('products_image_asset_id_idx').on(table.imageAssetId),
+  imageSourceCheck: check('products_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`),
 }));
 
 export const sessions = pgTable('sessions', {

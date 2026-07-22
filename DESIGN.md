@@ -1,4 +1,4 @@
-# Loning Digital — Visual System Hand-off Documentation
+# Loning Maju — Visual System Hand-off Documentation
 **Design Theme:** Modern Indonesian Local Commerce (Sophisticated Light)
 
 This document describes the design tokens, layout guidelines, accessibility patterns, and UX structures implemented within the digital directory and product showcase prototype of **Desa Loning, Pemalang**.
@@ -45,7 +45,7 @@ We use two highly intentional typefaces to convey a blend of rural authenticity 
 
 Following strict **Scope Discipline**, the showcase application utilizes a clean, single-screen structural layout avoiding unnecessary secondary tabs or heavy administrative sidebars.
 
-1.  **Sticky Compact Navigation:** Features a clean local wordmark (`LoningDigital`) alongside semantic scroll triggers.
+1.  **Sticky Compact Navigation:** Features a clean local wordmark (`LoningMaju`) alongside semantic scroll triggers.
 2.  **Hero Section:** Defines the platform's role instantly: "Temukan Produk Lokal dari Desa Loning." It includes a prominent notice explaining that transactions proceed directly through WhatsApp.
 3.  **Category Discovery Filter:** Uses clear iconography for rapid filtering (Kuliner, Kerajinan, Pertanian, Sembako, Jasa). Includes a responsive horizontal scrolling container for mobile viewport widths.
 4.  **Product Catalog:** Responsive grid layout showcasing local items. Displays pricing under the neutral "Harga" description, and replaces "Beli" buttons with conversational "Tanya Produk" action triggers.
@@ -63,3 +63,7 @@ To ensure the system remains usable for non-technical community members and assi
 *   **Focus Trapping & Focus Rings:** Modal dialogs (`UMKMDetailDialog`, `WhatsAppInquiryDialog`) trap active keyboard focus and support the `Esc` key to dismiss. Focused interactive elements exhibit a distinct forest green focus ring (`focus-ring`).
 *   **Accessible Input Labels:** Every search input is accompanied by screen-reader specific labels (`sr-only`) to support vocalized navigation software.
 *   **Clean Icons:** All iconography is derived strictly from `lucide-react` for a consistent stroke weight and style.
+
+## 5. Compatibility Identifiers
+
+The public brand is **Loning Maju**. The internal or persistent identifiers `marketplace-loning-local`, `loning_digital`, `loning`, `loning_postgres_data`, `loning_session`, and `media/{uuid}` remain unchanged to preserve local infrastructure, database, authentication, and media contracts.
