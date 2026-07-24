@@ -2,6 +2,16 @@ import type { QueryClient } from '@tanstack/react-query';
 import { apiRequest } from './api';
 
 export type UserRole = 'superadmin' | 'admin' | 'perangkat_desa' | 'pelaku_umkm';
+export type SupportedUserRole = 'admin' | 'pelaku_umkm';
+export type Capability = 'accessDashboard' | 'manageOwnUmkms' | 'manageAllUmkms' | 'manageUsers' | 'viewAuditLogs' | 'viewInquiryAnalytics' | 'verifyOwnContact' | 'verifyAnyContact' | 'revokeSessions' | 'resetPasswords';
+const capabilities: Record<UserRole, readonly Capability[]> = {
+  admin: ['accessDashboard', 'manageOwnUmkms', 'manageAllUmkms', 'manageUsers', 'viewAuditLogs', 'viewInquiryAnalytics', 'verifyOwnContact', 'verifyAnyContact', 'revokeSessions', 'resetPasswords'],
+  pelaku_umkm: ['accessDashboard', 'manageOwnUmkms', 'verifyOwnContact'],
+  superadmin: [],
+  perangkat_desa: [],
+};
+export const hasCapability = (role: UserRole, capability: Capability) => capabilities[role].includes(capability);
+export const isSupportedUserRole = (role: UserRole): role is SupportedUserRole => role === 'admin' || role === 'pelaku_umkm';
 export interface SessionUser {
   id: string;
   username: string;

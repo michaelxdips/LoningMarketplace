@@ -5,7 +5,7 @@ import { useLogout, useSession } from '../../hooks/useAuth';
 import { brand } from '../../config/brand';
 
 const sharedNav = [{ to: '/dashboard', label: 'Ringkasan', icon: Home }, { to: '/dashboard/umkms', label: 'UMKM', icon: Store }, { to: '/dashboard/products', label: 'Produk', icon: Package }];
-const adminNav = [{ to: '/dashboard/users', label: 'Pengguna', icon: Users }, { to: '/dashboard/audit', label: 'Audit log', icon: ClipboardList }];
+const adminNav = [{ to: '/dashboard/users', label: 'Pengguna', icon: Users }, { to: '/dashboard/audit', label: 'Audit log', icon: ClipboardList }, { to: '/dashboard/analytics', label: 'Insight inquiry', icon: ClipboardList }];
 
 export default function DashboardShell() {
   const [open, setOpen] = useState(false); const session = useSession().data!; const logout = useLogout(); const navigate = useNavigate();

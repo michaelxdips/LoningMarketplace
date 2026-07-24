@@ -1,9 +1,10 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { E2E_FIXTURES, loginFixture } from './support/fixtures';
 
 const API_BASE = 'http://localhost:3001/api';
 const FRONTEND_ORIGIN = 'http://localhost:3000';
-const desktopProduct = { id: 'e2000000-0000-4000-8000-000000000001', name: 'E2E Produk Stabilization Desktop' };
-const mobileProduct = { id: 'e2000000-0000-4000-8000-000000000002', name: 'E2E Produk Stabilization Mobile' };
+const desktopProduct = E2E_FIXTURES.products.desktop;
+const mobileProduct = E2E_FIXTURES.products.mobile;
 const image = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
 async function noDocumentOverflow(page: Page) {
@@ -39,8 +40,8 @@ for (const viewport of [{ width: 1024, height: 768 }, { width: 320, height: 700 
       await page.getByRole('navigation').getByRole('link', { name: 'Masuk Pengelola' }).click();
     }
     await expect(page).toHaveURL(/\/login$/);
-    await page.getByLabel('Alamat email').fill('admin.products.e2e@local.test');
-    await page.getByLabel('Kata sandi', { exact: true }).fill('local-e2e-passphrase-123');
+    await page.getByLabel('Email atau username').fill(loginFixture.identifier);
+    await page.getByLabel('Kata sandi', { exact: true }).fill(loginFixture.password);
     await page.getByRole('button', { name: 'Masuk' }).click();
     await expect(page).toHaveURL(/\/dashboard$/);
     if (viewport.width < 768) await page.getByRole('button', { name: 'Buka navigasi' }).click();
@@ -101,15 +102,15 @@ test('required routes remain task-completable at 200% desktop zoom and normal mo
   const sessionResponse = page.waitForResponse(response => response.url() === `${API_BASE}/auth/session`);
   await page.goto('/login');
   expect((await sessionResponse).status()).toBe(401);
-  await expect(page.getByLabel('Alamat email')).toBeVisible();
+  await expect(page.getByLabel('Email atau username')).toBeVisible();
   await expect(page.getByLabel('Kata sandi', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Tampilkan kata sandi' })).toBeVisible();
-  await page.getByLabel('Alamat email').focus();
-  await expect(page.getByLabel('Alamat email')).toBeFocused();
+  await page.getByLabel('Email atau username').focus();
+  await expect(page.getByLabel('Email atau username')).toBeFocused();
   await noDocumentOverflow(page);
 
-  await page.getByLabel('Alamat email').fill('admin.products.e2e@local.test');
-  await page.getByLabel('Kata sandi', { exact: true }).fill('local-e2e-passphrase-123');
+  await page.getByLabel('Email atau username').fill(loginFixture.identifier);
+  await page.getByLabel('Kata sandi', { exact: true }).fill(loginFixture.password);
   await page.getByRole('button', { name: 'Masuk' }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole('heading', { name: /Selamat datang/ })).toBeVisible();

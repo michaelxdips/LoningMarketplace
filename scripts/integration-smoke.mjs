@@ -1,8 +1,8 @@
 const baseUrl = (process.env.API_BASE_URL ?? 'http://localhost:3001/api').replace(/\/+$/, '');
 const frontendOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:3000';
-const fixtureId = 'e2000000-0000-4000-8000-000000000001';
-const testEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin.products.e2e@local.test';
-const testPassword = process.env.E2E_ADMIN_PASSWORD ?? 'local-e2e-passphrase-123';
+const fixtureId = 'e3000000-0000-4000-8000-000000000001';
+const testIdentifier = process.env.E2E_ADMIN_EMAIL ?? 'admin1@local.test';
+const testPassword = process.env.E2E_ADMIN_PASSWORD ?? 'loning_local_dev';
 
 async function request(path, options = {}, expected = [200]) {
   const response = await fetch(`${baseUrl}${path}`, options);
@@ -47,7 +47,7 @@ if (!allowedHeaders.includes('x-csrf-token')) throw new Error('Product PATCH pre
 const login = await request('/auth/login', {
   method: 'POST',
   headers: { Origin: frontendOrigin, 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email: testEmail, password: testPassword }),
+  body: JSON.stringify({ identifier: testIdentifier, password: testPassword }),
 });
 const cookie = cookieFrom(login.response);
 const session = await request('/auth/session', { headers: { Cookie: cookie } });
@@ -71,10 +71,11 @@ const patched = await request(`/manage/products/${fixtureId}`, {
   body: JSON.stringify(patchPayload),
 });
 if (patched.body.data.description !== patchPayload.description || patched.body.data.price !== 35001) throw new Error('PATCH response did not reflect persisted product fields');
-if (patched.body.data.imageUrl !== beforeProduct.imageUrl || patched.body.data.imageAssetId !== beforeProduct.imageAssetId) throw new Error('Unrelated PATCH changed the product image');
+if (patched.body.data.imageAssetId !== beforeProduct.imageAssetId) throw new Error('Unrelated PATCH changed the product image asset');
 
 const after = await request(`/manage/products/${fixtureId}`, { headers: { Cookie: cookie } });
 if (after.body.data.description !== patchPayload.description || after.body.data.price !== 35001) throw new Error('Management detail did not persist PATCH fields');
+if (after.body.data.imageUrl !== beforeProduct.imageUrl || after.body.data.imageAssetId !== beforeProduct.imageAssetId) throw new Error('Management detail did not preserve the product image');
 const publicAfter = await request(`/products/${fixtureId}`);
 if (publicAfter.body.data.price !== 35001 || publicAfter.body.data.description !== patchPayload.description) throw new Error('Public product detail did not reflect the published update');
 

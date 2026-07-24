@@ -16,6 +16,7 @@ interface FeaturedProductsSectionProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onInquireProduct: (product: Product) => void;
+  onViewProduct: (product: Product, trigger: HTMLElement, source: 'homepage_featured') => void;
   onViewMerchant: (merchantId: string) => void;
   isLoading: boolean;
   isError: boolean;
@@ -28,6 +29,7 @@ export default function FeaturedProductsSection({
   searchQuery,
   onSearchChange,
   onInquireProduct,
+  onViewProduct,
   onViewMerchant, isLoading, isError, onRetry
 }: FeaturedProductsSectionProps) {
   return (
@@ -106,6 +108,7 @@ export default function FeaturedProductsSection({
                 key={product.id}
                 product={product}
                 onInquire={onInquireProduct}
+                onViewProduct={onViewProduct}
                 onViewMerchant={onViewMerchant}
               />
             ))}

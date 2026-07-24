@@ -14,3 +14,4 @@ storage/
 test-results/
 playwright-report/
 playwright/.auth/
+.phase0-runtime/

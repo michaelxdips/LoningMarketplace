@@ -17,6 +17,8 @@
     "admin:create": "tsx src/scripts/admin-create.ts",
     "sessions:cleanup": "tsx src/scripts/sessions-cleanup.ts",
     "media:cleanup": "tsx src/scripts/media-cleanup.ts",
+    "analytics:retention": "tsx src/scripts/public-events-retention.ts",
+    "analytics:retention:apply": "tsx src/scripts/public-events-retention.ts --apply",
     "e2e:setup": "tsx src/scripts/e2e-setup.ts",
     "db:audit": "tsx src/scripts/db-audit.ts",
     "db:seed-hash": "tsx src/scripts/seed-hash.ts"

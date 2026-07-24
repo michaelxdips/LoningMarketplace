@@ -1,5 +1,6 @@
 import { expect, request as apiRequest, test, type Page, type Request, type TestInfo } from '@playwright/test';
 import { assertBrowserEvents, observeBrowserEvents, type ExpectedBrowserDiagnostic, type ExpectedHttpError } from './support/browser-events';
+import { loginFixture, E2E_FIXTURES } from './support/fixtures';
 
 const API_BASE = 'http://localhost:3001/api';
 const FRONTEND_ORIGIN = 'http://localhost:3000';
@@ -7,7 +8,7 @@ const MEDIA_UPLOAD_URL = `${API_BASE}/manage/media/images`;
 const ORIGINAL_IMAGE = `${FRONTEND_ORIGIN.replace('3000', '3001')}/media/fixtures/e2e-product.webp`;
 const CORRUPT_IMAGE = `${FRONTEND_ORIGIN.replace('3000', '3001')}/media/fixtures/e2e-corrupt.webp`;
 const ORIGINAL = {
-  umkmId: 'e2000000-0000-4000-8000-000000000001',
+  umkmId: E2E_FIXTURES.umkm.primaryId,
   price: 35000,
   description: 'Produk deterministik untuk pengujian browser lokal.',
   category: 'Kuliner',
@@ -16,10 +17,7 @@ const ORIGINAL = {
   isAvailable: true,
   unit: 'Pcs',
 };
-const FIXTURES = {
-  desktop: { id: 'e2000000-0000-4000-8000-000000000001', name: 'E2E Produk Stabilization Desktop' },
-  mobile: { id: 'e2000000-0000-4000-8000-000000000002', name: 'E2E Produk Stabilization Mobile' },
-} as const;
+const FIXTURES = E2E_FIXTURES.products;
 const validPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 const uploadedAssetIds: string[] = [];
 
@@ -67,7 +65,7 @@ function observe(page: Page): NetworkEvents {
 async function login(page: Page) {
   const response = await page.request.post(`${API_BASE}/auth/login`, {
     headers: { Origin: FRONTEND_ORIGIN },
-    data: { email: 'admin.products.e2e@local.test', password: 'local-e2e-passphrase-123' },
+    data: { identifier: loginFixture.identifier, password: loginFixture.password },
   });
   expect(response.status()).toBe(200);
   await page.goto('/dashboard');
@@ -139,7 +137,7 @@ function expectedArchivedProductDiagnostic(id: string): ExpectedBrowserDiagnosti
   };
 }
 
-async function saveAndCapturePatch(page: Page, fixture: Fixture, events?: ReturnType<typeof observeBrowserEvents>, deferTransition = false) {
+async function saveAndCapturePatch(page: Page, fixture: Fixture, events?: ReturnType<typeof observeBrowserEvents>, deferTransition = false, additionalTransitionRequests: RegExp[] = []) {
   const requestPromise = page.waitForRequest(request => request.method() === 'PATCH' && request.url().endsWith(`/manage/products/${fixture.id}`));
   const responsePromise = page.waitForResponse(response => response.request().method() === 'PATCH' && response.url().endsWith(`/manage/products/${fixture.id}`));
   const pendingDashboardRequests = new Set<Request>();
@@ -156,7 +154,7 @@ async function saveAndCapturePatch(page: Page, fixture: Fixture, events?: Return
     page.off('requestfinished', onRequestDone);
     page.off('requestfailed', onRequestDone);
   };
-  const transition = events?.beginExpectedTransition({ reason: `save:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3001\/api\/manage\/(?:products|umkms)(?:\?.*)?$/ }] });
+  const transition = events?.beginExpectedTransition({ reason: `save:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3001\/api\/manage\/(?:products|umkms)(?:\?.*)?$/ }, ...additionalTransitionRequests.map(url => ({ method: 'GET' as const, url }))] });
   if (events) {
     page.on('request', onRequest);
     page.on('requestfinished', onRequestDone);
@@ -198,7 +196,7 @@ async function resetFixture(fixture: Fixture) {
   try {
     const loginResponse = await api.post('auth/login', {
       headers: { Origin: FRONTEND_ORIGIN },
-      data: { email: 'admin.products.e2e@local.test', password: 'local-e2e-passphrase-123' },
+      data: { identifier: loginFixture.identifier, password: loginFixture.password },
     });
     if (!loginResponse.ok()) throw new Error(`Fixture cleanup login returned ${loginResponse.status()}`);
     const csrf = (await loginResponse.json()).data.csrfToken as string;
@@ -212,7 +210,10 @@ async function resetFixture(fixture: Fixture) {
     if (!restoreResponse.ok()) throw new Error(`Fixture cleanup PATCH returned ${restoreResponse.status()}`);
     if (current?.publicationStatus === 'archived') await api.post(`manage/products/${fixture.id}/restore`, { headers });
     if (current?.publicationStatus !== 'published') await api.post(`manage/products/${fixture.id}/publish`, { headers });
-    for (const assetId of uploadedAssetIds.splice(0)) await api.delete(`manage/media/images/${assetId}`, { headers }).catch(() => undefined);
+    for (const assetId of uploadedAssetIds.splice(0)) {
+      const deleteResponse = await api.delete(`manage/media/images/${assetId}`, { headers });
+      if (!deleteResponse.ok()) throw new Error(`Fixture media cleanup DELETE ${assetId} returned ${deleteResponse.status()}: ${await deleteResponse.text()}`);
+    }
   } finally {
     await api.dispose();
   }
@@ -429,7 +430,9 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   uploadedAssetIds.push(uploaded.id);
   await expect(page.getByText('Unggahan selesai.')).toBeVisible();
 
-  const managedPatch = await saveAndCapturePatch(page, fixture, browserEvents);
+  const productListRefresh = page.waitForResponse(response => response.request().method() === 'GET' && response.url() === `${API_BASE}/manage/products?limit=100`);
+  const managedPatch = await saveAndCapturePatch(page, fixture, browserEvents, true, [/http:\/\/localhost:3001\/api\/(?:products|umkms)$/]);
+  expect((await productListRefresh).status()).toBe(200);
   expect(managedPatch.payload).toMatchObject({ imageUrl: null, imageAssetId: uploaded.id });
   await expect(page).toHaveURL(/dashboard\/products$/);
   const listImage = productItem(page, fixture).getByRole('img', { name: `Gambar ${fixture.name}` });
@@ -440,9 +443,8 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   expect(managedDetail.body.data.imageUrl).toContain('/media/media/');
   expect(managedDetail.body.data.imageUrl).not.toContain('blob:');
 
-  const publicTransition = browserEvents.beginExpectedTransition({ reason: 'managed-media-public-navigation', expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3001\/api\/(?:products|umkms)/ }, { method: 'GET', url: /http:\/\/localhost:3001\/api\/manage\/products(?:\?.*)?$/ }] });
-  try { await page.goto('/'); await page.waitForLoadState('networkidle'); } finally { publicTransition.complete(); }
   const publicCard = page.locator(`#product-card-${fixture.id}`);
+  try { await page.goto('/'); await page.waitForLoadState('networkidle'); } finally { await managedPatch.completeTransition?.(); }
   await expect(publicCard).toContainText('Rp35.000');
   await expect(publicCard.getByRole('img', { name: fixture.name })).toHaveAttribute('src', /\/media\/media\//);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);

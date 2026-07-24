@@ -92,9 +92,9 @@ npm --prefix backend run db:migrate
 npm --prefix backend run db:seed
 ```
 
-The development seed now provides 54 realistic products across the five UMKM categories: Kuliner, Kerajinan, Jasa, Sembako, and Pertanian. Product names, descriptions, prices, units, availability, and display ordering use Indonesian local-business examples rather than generic placeholders. Re-running the seed replaces only old development products in the deterministic `e3000000-...` ID namespace; manual records and E2E fixtures use different namespaces and remain untouched.
+The development seed provides 52 realistic products across five UMKM categories: Kuliner, Kerajinan, Jasa, Sembako, and Pertanian. Product names, descriptions, prices, units, availability, and display ordering use Indonesian local-business examples rather than generic placeholders. Fifteen fictional UMKM profiles use natural names, owner details, descriptions, and local-style addresses while preserving controlled `draft`, `archived`, unavailable, no-price, and no-product cases. Re-running the seed replaces only development products in the deterministic `e3000000-...` ID namespace; manual records and E2E fixtures use different namespaces and remain untouched.
 
-All seeded UMKM and product images use deterministic local WebP fixtures under `backend/storage/media/`, served through the local backend media route. This keeps browser testing stable without external image URLs or internet access. The catalog includes controlled `draft`, `archived`, unavailable, and no-price products for management, filtering, visibility, and responsive UI testing.
+The 52 product photos and 15 UMKM profile photos are original AI-generated illustrations of fictional products, people, and businesses; they do not depict or endorse the named businesses or owners. Source fixtures live under `assets/seed-source/`. The seed converts them into deterministic local WebP card and thumbnail variants under ignored `backend/storage/media/`, served through the backend media route. Runtime catalog rendering therefore requires no external image URLs or internet access.
 
 Run the development seed with:
 

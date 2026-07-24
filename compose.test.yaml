@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DISPOSABLE_DB_NAME:-loning_phase0_test}
+      POSTGRES_USER: loning_test
+      POSTGRES_PASSWORD: loning_disposable_only
+    ports:
+      - "127.0.0.1:${DISPOSABLE_DB_PORT:-55432}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loning_test -d ${DISPOSABLE_DB_NAME:-loning_phase0_test}"]
+      interval: 1s
+      timeout: 3s
+      retries: 60

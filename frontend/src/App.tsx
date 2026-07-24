@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { UMKM, Product, Category } from './types';
 import { useUMKMs } from './hooks/useUMKMs';
 import { useProducts } from './hooks/useProducts';
@@ -25,6 +25,8 @@ import FinalCtaSection from './components/home/FinalCtaSection';
 // Dialog Components
 import WhatsAppInquiryDialog from './components/shared/WhatsAppInquiryDialog';
 import UMKMDetailDialog from './components/shared/UMKMDetailDialog';
+import ProductDetailDialog from './components/shared/ProductDetailDialog';
+import { trackPublicEvent } from './lib/analytics';
 
 export default function App() {
   // Page section highlights
@@ -55,6 +57,14 @@ export default function App() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedUMKMDetail, setSelectedUMKMDetail] = useState<UMKM | null>(null);
 
+  // Product Detail Dialog States
+  const [isProductDetailOpen, setIsProductDetailOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const productTriggerRef = useRef<HTMLElement | null>(null);
+  const [inquirySource, setInquirySource] = useState<'homepage_featured' | 'umkm_detail' | 'product_detail'>('homepage_featured');
+  const inquiryFocusRef = useRef<HTMLElement | null>(null);
+
+
   // Section scroll handler
   const handleScrollToSection = (sectionId: string) => {
     setActiveSection(sectionId);
@@ -74,18 +84,55 @@ export default function App() {
   };
 
   // Trigger WhatsApp dialogue for a specific product
-  const handleInquireProduct = (product: Product) => {
-    // Find associated business to pass along the phone number
+  const handleInquireProduct = (product: Product, source: 'homepage_featured' | 'umkm_detail' | 'product_detail') => {
     const parentUMKM = allUmkms.find((u) => u.id === product.umkmId);
+    setIsProductDetailOpen(false);
+    setSelectedProduct(null);
     setInquiryProduct(product);
     setInquiryUMKM(parentUMKM);
+    setInquirySource(source);
     setIsWhatsAppOpen(true);
   };
 
-  // Trigger WhatsApp dialogue for a business directly
+  const handleInquiryClose = () => {
+    setIsWhatsAppOpen(false);
+    setInquiryProduct(undefined);
+    setInquiryUMKM(undefined);
+    requestAnimationFrame(() => inquiryFocusRef.current?.focus());
+  };
+
+  const handleViewProduct = (product: Product, trigger: HTMLElement, source: 'homepage_featured') => {
+    productTriggerRef.current = trigger;
+    inquiryFocusRef.current = trigger;
+    setIsWhatsAppOpen(false);
+    setIsDetailOpen(false);
+    setSelectedUMKMDetail(null);
+    setSelectedProduct(product);
+    setIsProductDetailOpen(true);
+    trackPublicEvent({ eventType: 'product_view', productId: product.id, umkmId: product.umkmId, source });
+  };
+
+  const handleCloseProductDetail = () => {
+    setIsProductDetailOpen(false);
+    setSelectedProduct(null);
+    requestAnimationFrame(() => productTriggerRef.current?.focus());
+  };
+
+  const handleProductDetailInquiry = () => {
+    if (!selectedProduct) return;
+    const trigger = productTriggerRef.current;
+    setIsProductDetailOpen(false);
+    setSelectedProduct(null);
+    inquiryFocusRef.current = trigger;
+    requestAnimationFrame(() => handleInquireProduct(selectedProduct, 'product_detail'));
+  };
+
   const handleInquireUMKM = (umkm: UMKM) => {
+    setIsProductDetailOpen(false);
+    setSelectedProduct(null);
     setInquiryProduct(undefined);
     setInquiryUMKM(umkm);
+    setInquirySource('umkm_detail');
     setIsWhatsAppOpen(true);
   };
 
@@ -136,7 +183,8 @@ export default function App() {
           selectedCategory={selectedCategory}
           searchQuery={productSearchQuery}
           onSearchChange={setProductSearchQuery}
-          onInquireProduct={handleInquireProduct}
+          onInquireProduct={(product) => handleInquireProduct(product, 'homepage_featured')}
+          onViewProduct={handleViewProduct}
           onViewMerchant={handleViewUMKMById}
           isLoading={productsQuery.isPending}
           isError={productsQuery.isError}
@@ -177,13 +225,22 @@ export default function App() {
       {/* 11. Footer segment */}
       <Footer onScrollToSection={handleScrollToSection} />
 
-      {/* Shared Inquiry dialog overlay */}
-      <WhatsAppInquiryDialog 
+      <WhatsAppInquiryDialog
         isOpen={isWhatsAppOpen}
-        onClose={() => setIsWhatsAppOpen(false)}
+        onClose={handleInquiryClose}
         product={inquiryProduct}
         umkm={inquiryUMKM}
+        source={inquirySource}
       />
+
+      {selectedProduct && (
+        <ProductDetailDialog
+          isOpen={isProductDetailOpen}
+          product={selectedProduct}
+          onClose={handleCloseProductDetail}
+          onInquire={handleProductDetailInquiry}
+        />
+      )}
 
       {/* Shared UMKM detail dialog overlay */}
       {selectedUMKMDetail && (
@@ -195,7 +252,7 @@ export default function App() {
           }}
           umkm={selectedUMKMDetail}
           products={allProducts}
-          onInquireProduct={handleInquireProduct}
+          onInquireProduct={(product) => handleInquireProduct(product, 'umkm_detail')}
           onInquireUMKM={handleInquireUMKM}
         />
       )}

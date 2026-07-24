@@ -44,6 +44,12 @@ const categoryNames: Category[] = [
   "Sembako",
   "Pertanian",
 ];
+const CONTACT_VERIFICATION_DAYS = 90;
+const contactStatus = (item?: ManagedUMKM) => {
+  if (!item?.contactVerifiedAt) return 'Belum diverifikasi';
+  const fresh = item.isContactVerificationFresh ?? Date.now() - new Date(item.contactVerifiedAt).getTime() < CONTACT_VERIFICATION_DAYS * 86_400_000;
+  return fresh ? 'Kontak terverifikasi' : 'Perlu diverifikasi ulang';
+};
 const text = (data: FormData, key: string) =>
   String(data.get(key) ?? "").trim();
 const required = (data: FormData, keys: string[]) =>
@@ -165,6 +171,12 @@ export function UMKMFormPage() {
         : managementApi.umkms.create(input, csrf),
     "umkms",
   );
+  const verify = useManagedMutation<string, ManagedUMKM>(
+    "manage",
+    "umkms",
+    (umkmId, csrf) => managementApi.umkms.verifyContact(umkmId, csrf),
+    "umkms",
+  );
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -248,6 +260,8 @@ export function UMKMFormPage() {
         title={editing ? "Kelola UMKM" : "Tambah UMKM"}
         description="Perubahan data disimpan sebagai data kelola; gunakan aksi publikasi secara terpisah."
       />
+      {editing && value && <section className="mb-5 flex flex-col gap-3 rounded-2xl border border-sage-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-extrabold text-charcoal">{contactStatus(value)}</p><p className="mt-1 text-xs text-warm-gray">Verifikasi memastikan nomor WhatsApp usaha masih dapat digunakan.</p></div><PendingButton id="verify-umkm-contact" type="button" pending={verify.isPending} disabled={!value.isContactValid} onClick={() => id && verify.mutate(id)}>{verify.isPending ? 'Memverifikasi...' : 'Verifikasi kontak sekarang'}</PendingButton></section>}
+      {verify.isError && <div className="mb-5"><ErrorNotice error={verify.error} /></div>}
       <form
         className="space-y-6 rounded-2xl border border-sage-border bg-white p-5 sm:p-7"
         onSubmit={submit}

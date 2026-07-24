@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { assertBrowserEvents, observeBrowserEvents, type ExpectedBrowserDiagnostic, type ExpectedHttpError } from './support/browser-events';
+import { E2E_FIXTURES } from './support/fixtures';
 
 const API_BASE = 'http://localhost:3001/api';
 const AUTH_SESSION_URL = 'http://localhost:3001/api/auth/session';
@@ -156,8 +157,8 @@ test('login route is reachable and keyboard accessible', async ({ page }) => {
   expect(await response.json()).toEqual({ error: { message: 'Authentication required', code: 'UNAUTHENTICATED' } });
   await expect(page.getByRole('heading', { name: 'Masuk ke dashboard' })).toBeVisible();
   if (page.viewportSize()?.width !== 390) await expect(page.getByRole('link', { name: `${BRAND_NAME} — beranda` })).toBeVisible();
-  await page.getByLabel('Alamat email').focus();
-  await expect(page.getByLabel('Alamat email')).toBeFocused();
+  await page.getByLabel('Email atau username').focus();
+  await expect(page.getByLabel('Email atau username')).toBeFocused();
   assertUnauthenticatedEvents(events);
   events.dispose();
 });
@@ -165,8 +166,8 @@ test('login route is reachable and keyboard accessible', async ({ page }) => {
 test('admin login settles and enforces password change', async ({ page, context }) => {
   const events = observeBrowserEvents(page);
   await gotoWithExpectedTransition(events, page, '/login');
-  await page.getByLabel('Alamat email').fill('admin.e2e@local.test');
-  await page.getByLabel('Kata sandi', { exact: true }).fill('local-e2e-passphrase-123');
+  await page.getByLabel('Email atau username').fill(E2E_FIXTURES.credentials.adminMustChangePassword.identifier);
+  await page.getByLabel('Kata sandi', { exact: true }).fill(E2E_FIXTURES.credentials.adminMustChangePassword.password);
   await runExpectedAction(events, page, 'admin-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/change-password$/); }, /http:\/\/localhost:3001\/api\/(?:auth\/session|auth\/me)/);
   const cookies = await context.cookies();
   expect(cookies.find((cookie) => cookie.name === 'loning_session')?.httpOnly).toBe(true);
@@ -178,8 +179,8 @@ test('admin login settles and enforces password change', async ({ page, context 
 test('owner is blocked from admin routes and can logout', async ({ page }) => {
   const events = observeBrowserEvents(page);
   await gotoWithExpectedTransition(events, page, '/login');
-  await page.getByLabel('Alamat email').fill('owner.e2e@local.test');
-  await page.getByLabel('Kata sandi', { exact: true }).fill('local-e2e-passphrase-123');
+  await page.getByLabel('Email atau username').fill(E2E_FIXTURES.credentials.owner.identifier);
+  await page.getByLabel('Kata sandi', { exact: true }).fill(E2E_FIXTURES.credentials.owner.password);
   await runExpectedAction(events, page, 'owner-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/dashboard$/); }, /http:\/\/localhost:3001\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
   if (page.viewportSize()?.width === 390) await page.getByRole('button', { name: 'Buka navigasi' }).click();
   await expect(page.getByRole('link', { name: `${BRAND_NAME} — beranda` })).toBeVisible();

@@ -1,0 +1,18 @@
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { managementApi } from '../lib/management';
+import { ErrorNotice, EmptyPanel, LoadingPanel, PageHeader } from '../components/dashboard/Ui';
+
+const labels: Record<string, string> = { umkm_view: 'Detail UMKM', product_view: 'Detail produk', inquiry_started: 'Dialog inquiry', message_copied: 'Pesan disalin', whatsapp_opened: 'WhatsApp dibuka' };
+const today = new Date();
+const initialFrom = new Date(today.getTime() - 30 * 86_400_000).toISOString().slice(0, 10);
+const initialTo = today.toISOString().slice(0, 10);
+export default function InquiryAnalyticsPage() {
+  const [from, setFrom] = useState(initialFrom); const [to, setTo] = useState(initialTo);
+  const query = useQuery({ queryKey: ['admin', 'analytics', from, to], queryFn: ({ signal }) => managementApi.analytics.get(from, to, signal), enabled: Boolean(from && to) });
+  const data = query.data;
+  return <><PageHeader title="Insight inquiry" description="Indikator penggunaan katalog dan upaya menghubungi UMKM. Tidak mengukur pesan terkirim atau penjualan." />
+    <section className="mb-6 grid gap-3 rounded-2xl border border-sage-border bg-white p-5 sm:grid-cols-2" aria-label="Filter tanggal"><label className="text-xs font-bold text-warm-gray">Dari<input id="analytics-from" type="date" value={from} onChange={e => setFrom(e.target.value)} className="mt-1 block min-h-11 w-full rounded-xl border border-sage-border px-3 text-sm text-charcoal" /></label><label className="text-xs font-bold text-warm-gray">Sampai<input id="analytics-to" type="date" value={to} onChange={e => setTo(e.target.value)} className="mt-1 block min-h-11 w-full rounded-xl border border-sage-border px-3 text-sm text-charcoal" /></label></section>
+    {query.isPending ? <LoadingPanel /> : query.isError ? <ErrorNotice error={query.error} /> : !data ? <EmptyPanel>Pilih rentang tanggal untuk melihat insight.</EmptyPanel> : <><section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{Object.entries(data.totals).map(([key, value]) => <article key={key} className="rounded-2xl border border-sage-border bg-white p-5"><p className="text-xs font-bold text-warm-gray">{labels[key] ?? key}</p><p className="mt-2 text-3xl font-extrabold text-forest">{value}</p></article>)}<article className="rounded-2xl border border-sage-border bg-white p-5"><p className="text-xs font-bold text-warm-gray">Inquiry start rate</p><p className="mt-2 text-3xl font-extrabold text-forest">{(data.inquiryStartRate * 100).toFixed(1)}%</p></article><article className="rounded-2xl border border-sage-border bg-white p-5"><p className="text-xs font-bold text-warm-gray">WhatsApp open rate</p><p className="mt-2 text-3xl font-extrabold text-forest">{(data.whatsappOpenRate * 100).toFixed(1)}%</p></article></section><section className="mt-6 overflow-x-auto rounded-2xl border border-sage-border bg-white"><table className="w-full min-w-[680px] text-left text-sm"><caption className="p-5 text-left text-base font-extrabold">Rincian target</caption><thead className="border-y border-sage-border bg-cream-bg text-xs text-warm-gray"><tr><th className="p-3">UMKM</th><th className="p-3">Produk</th><th className="p-3">Event</th><th className="p-3">Jumlah</th></tr></thead><tbody>{data.breakdown.map((row, index) => <tr key={`${row.umkmId}-${row.productId}-${row.eventType}-${index}`} className="border-b border-sage-border"><td className="p-3">{row.umkmName ?? '—'}</td><td className="p-3">{row.productName ?? '—'}</td><td className="p-3">{labels[row.eventType] ?? row.eventType}</td><td className="p-3 font-bold">{row.count}</td></tr>)}</tbody></table>{!data.breakdown.length && <EmptyPanel>Belum ada event pada rentang ini.</EmptyPanel>}</section></>}
+  </>;
+}

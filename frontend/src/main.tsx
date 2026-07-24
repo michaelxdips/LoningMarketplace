@@ -3,7 +3,7 @@ import {createRoot} from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import App from './App.tsx';
-import { PasswordGuard, ProtectedGuard, PublicOnlyGuard, RoleGuard } from './components/dashboard/Guards.tsx';
+import { PasswordGuard, ProtectedGuard, PublicOnlyGuard, RoleGuard, UnsupportedRolePage } from './components/dashboard/Guards.tsx';
 import { LoadingPanel } from './components/dashboard/Ui.tsx';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx'));
@@ -14,6 +14,7 @@ const UMKMListPage = lazy(() => import('./pages/ManagementLists.tsx').then(modul
 const ProductListPage = lazy(() => import('./pages/ManagementLists.tsx').then(module => ({ default: module.ProductListPage })));
 const UserListPage = lazy(() => import('./pages/ManagementLists.tsx').then(module => ({ default: module.UserListPage })));
 const AuditListPage = lazy(() => import('./pages/ManagementLists.tsx').then(module => ({ default: module.AuditListPage })));
+const InquiryAnalyticsPage = lazy(() => import('./pages/InquiryAnalyticsPage.tsx'));
 const UMKMFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.UMKMFormPage })));
 const ProductFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.ProductFormPage })));
 const UserFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.UserFormPage })));
@@ -43,6 +44,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<App />} />
           <Route element={<PublicOnlyGuard />}><Route path="/login" element={<LoginPage />} /></Route>
           <Route element={<ProtectedGuard />}>
+            <Route path="/unsupported-role" element={<UnsupportedRolePage />} />
             <Route element={<PasswordGuard />}>
               <Route path="/change-password" element={<ChangePasswordPage />} />
               <Route path="/dashboard" element={<DashboardShell />}>
@@ -58,6 +60,7 @@ createRoot(document.getElementById('root')!).render(
                    <Route path="users/new" element={<UserFormPage />} />
                    <Route path="users/:id" element={<UserFormPage />} />
                    <Route path="audit" element={<AuditListPage />} />
+                   <Route path="analytics" element={<InquiryAnalyticsPage />} />
                 </Route>
               </Route>
             </Route>

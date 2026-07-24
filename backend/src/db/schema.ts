@@ -4,6 +4,7 @@ import { boolean, check, index, integer, jsonb, pgEnum, pgTable, text, timestamp
 export const categoryEnum = pgEnum('category', ['Kuliner', 'Kerajinan', 'Jasa', 'Sembako', 'Pertanian']);
 export const userRoleEnum = pgEnum('user_role', ['superadmin', 'admin', 'perangkat_desa', 'pelaku_umkm']);
 export const publicationStatusEnum = pgEnum('publication_status', ['draft', 'published', 'archived']);
+export const publicEventTypeEnum = pgEnum('public_event_type', ['umkm_view', 'product_view', 'inquiry_started', 'message_copied', 'whatsapp_opened']);
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -37,6 +38,7 @@ export const umkms = pgTable('umkms', {
   phone: text('phone').notNull(), category: categoryEnum('category').notNull(), imageUrl: text('image_url'), imageAssetId: uuid('image_asset_id').references(() => mediaAssets.id, { onDelete: 'set null' }), address: text('address').notNull(),
   workingHours: text('working_hours'), ownerUserId: uuid('owner_user_id').references(() => users.id, { onDelete: 'set null' }), displayOrder: integer('display_order').notNull().default(0),
   publicationStatus: publicationStatusEnum('publication_status').notNull().default('draft'), publishedAt: timestamp('published_at', { withTimezone: true }),
+  contactVerifiedAt: timestamp('contact_verified_at', { withTimezone: true }), catalogUpdatedAt: timestamp('catalog_updated_at', { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   categoryIdx: index('umkms_category_idx').on(table.category), orderIdx: index('umkms_display_order_idx').on(table.displayOrder), ownerIdx: index('umkms_owner_user_id_idx').on(table.ownerUserId), statusIdx: index('umkms_publication_status_idx').on(table.publicationStatus),
@@ -53,6 +55,20 @@ export const products = pgTable('products', {
   umkmIdx: index('products_umkm_id_idx').on(table.umkmId), categoryIdx: index('products_category_idx').on(table.category), orderIdx: index('products_display_order_idx').on(table.displayOrder), statusIdx: index('products_publication_status_idx').on(table.publicationStatus), parentStatusOrderIdx: index('products_umkm_status_order_idx').on(table.umkmId, table.publicationStatus, table.displayOrder),
   priceCheck: check('products_price_check', sql`${table.price} IS NULL OR ${table.price} >= 0`), orderCheck: check('products_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('products_image_asset_id_idx').on(table.imageAssetId),
   imageSourceCheck: check('products_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`),
+}));
+
+export const publicEvents = pgTable('public_events', {
+  id: uuid('id').primaryKey().defaultRandom(), eventType: publicEventTypeEnum('event_type').notNull(),
+  umkmId: uuid('umkm_id').references(() => umkms.id, { onDelete: 'set null' }), productId: uuid('product_id').references(() => products.id, { onDelete: 'set null' }),
+  source: text('source').notNull(), anonymousSessionId: uuid('anonymous_session_id').notNull(), eventVersion: integer('event_version').notNull().default(1),
+  dedupeBucket: timestamp('dedupe_bucket', { withTimezone: true }).notNull(), createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  createdIdx: index('public_events_created_at_idx').on(table.createdAt), typeCreatedIdx: index('public_events_type_created_idx').on(table.eventType, table.createdAt), umkmIdx: index('public_events_umkm_id_idx').on(table.umkmId), productIdx: index('public_events_product_id_idx').on(table.productId),
+  umkmDedupeIdx: uniqueIndex('public_events_umkm_dedupe_unique').on(table.anonymousSessionId, table.eventType, table.umkmId, table.source, table.dedupeBucket).where(sql`${table.umkmId} IS NOT NULL AND ${table.productId} IS NULL`),
+  productDedupeIdx: uniqueIndex('public_events_product_dedupe_unique').on(table.anonymousSessionId, table.eventType, table.productId, table.source, table.dedupeBucket).where(sql`${table.productId} IS NOT NULL`),
+  targetCheck: check('public_events_target_check', sql`(${table.umkmId} IS NOT NULL AND ${table.productId} IS NULL) OR ${table.productId} IS NOT NULL`),
+  sourceCheck: check('public_events_source_check', sql`${table.source} IN ('homepage_featured','homepage_catalog','umkm_detail','product_detail','search_results')`),
+  versionCheck: check('public_events_version_check', sql`${table.eventVersion} = 1`),
 }));
 
 export const sessions = pgTable('sessions', {

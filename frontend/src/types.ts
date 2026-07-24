@@ -17,6 +17,12 @@ export interface UMKM {
   altText?: string | null;
   address: string;
   workingHours?: string;
+  contactVerifiedAt?: string | null;
+  catalogUpdatedAt?: string;
+  isContactValid?: boolean;
+  isContactVerified?: boolean;
+  isContactVerificationFresh?: boolean;
+  contactVerificationExpiresAt?: string | null;
 }
 
 export interface Product {

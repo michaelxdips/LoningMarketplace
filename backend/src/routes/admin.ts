@@ -1,13 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { passwordSetterSchema, userRoleSchema, usernameSchema } from '../auth/policy.js';
+import { assignableUserRoleSchema, passwordSetterSchema, userRoleSchema, usernameSchema } from '../auth/policy.js';
 import type { Security } from '../auth/security.js';
 import type { Repository } from '../db/repository.js';
 import type { ReturnTypeGuards } from './types.js';
 import { error, uuid } from './validation.js';
 
-const createSchema = z.strictObject({ email: z.string().trim().toLowerCase().email(), username: usernameSchema, displayName: z.string().trim().min(1).max(200), temporaryPassword: passwordSetterSchema, role: userRoleSchema });
-const updateSchema = z.strictObject({ username: usernameSchema.optional(), displayName: z.string().trim().min(1).max(200).optional(), role: userRoleSchema.optional(), isActive: z.boolean().optional() }).refine((v) => Object.keys(v).length > 0);
+const createSchema = z.strictObject({ email: z.string().trim().toLowerCase().email(), username: usernameSchema, displayName: z.string().trim().min(1).max(200), temporaryPassword: passwordSetterSchema, role: assignableUserRoleSchema });
+const updateSchema = z.strictObject({ username: usernameSchema.optional(), displayName: z.string().trim().min(1).max(200).optional(), role: assignableUserRoleSchema.optional(), isActive: z.boolean().optional() }).refine((v) => Object.keys(v).length > 0);
 const requestInfo = (r: { ip: string; headers: Record<string, unknown> }) => ({ ipAddress: r.ip, userAgent: typeof r.headers['user-agent'] === 'string' ? r.headers['user-agent'] : undefined });
 export async function adminRoutes(app: FastifyInstance, repository: Repository, guards: ReturnTypeGuards, crypto: Security, now: () => Date) {
   app.get('/admin/users', { preHandler: [guards.authenticate, guards.admin] }, async (request, reply) => { const p = z.object({ q: z.string().trim().optional(), role: userRoleSchema.optional(), isActive: z.enum(['true', 'false']).transform((v) => v === 'true').optional(), limit: z.coerce.number().int().positive().max(100).default(100) }).safeParse(request.query); if (!p.success) return reply.code(400).send(error('Invalid query parameters', 'VALIDATION_ERROR')); return { data: await repository.listUsers(p.data) }; });

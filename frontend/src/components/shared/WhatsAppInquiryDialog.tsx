@@ -7,18 +7,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, MessageSquare, Send, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, UMKM } from '../../types';
+import { trackPublicEvent } from '../../lib/analytics';
 
 interface WhatsAppInquiryDialogProps {
   isOpen: boolean;
   onClose: () => void;
   product?: Product;
   umkm?: UMKM;
+  source: 'homepage_featured' | 'umkm_detail' | 'product_detail';
 }
 
-export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm }: WhatsAppInquiryDialogProps) {
+export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, source }: WhatsAppInquiryDialogProps) {
   const merchantName = product ? product.umkmName : (umkm ? umkm.name : 'Nama UMKM');
   const ownerName = umkm ? umkm.owner : (product ? 'Penjual' : 'Pelaku UMKM');
-  const phoneNumber = umkm ? umkm.phone : '6281234567890'; // standard indonesian placeholder fallback
+  const phoneNumber = umkm?.phone;
+  const hasContact = Boolean(phoneNumber && umkm?.isContactValid !== false);
 
   const [visitorName, setVisitorName] = useState('');
   const [visitorQuestion, setVisitorQuestion] = useState('');
@@ -27,18 +30,17 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm }
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll lock & Focus trap
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       closeButtonRef.current?.focus();
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
+    } else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && hasContact) trackPublicEvent({ eventType: 'inquiry_started', source, umkmId: umkm?.id, productId: product?.id });
+  }, [isOpen, hasContact, product?.id, source, umkm?.id]);
 
   // Escape to close
   useEffect(() => {
@@ -65,17 +67,21 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm }
 
   const finalMessage = `${introPart}${senderPart}${questionPart}\n\nTerima kasih!`;
   const encodedMessage = encodeURIComponent(finalMessage);
-  const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+  const whatsappUrl = phoneNumber ? `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}` : '';
 
   const handleSend = () => {
+    if (!phoneNumber) return;
+    trackPublicEvent({ eventType: 'whatsapp_opened', source, umkmId: umkm?.id, productId: product?.id });
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     onClose();
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(finalMessage);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+    void navigator.clipboard.writeText(finalMessage).then(() => {
+      trackPublicEvent({ eventType: 'message_copied', source, umkmId: umkm?.id, productId: product?.id });
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }).catch(() => undefined);
   };
 
   return (
@@ -204,8 +210,10 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm }
             </button>
             <button
               id="wa-dialog-submit"
+              disabled={!hasContact}
+              title={!hasContact ? 'Nomor WhatsApp UMKM belum tersedia.' : undefined}
               onClick={handleSend}
-              className="flex-1 px-4 py-2.5 bg-forest hover:bg-forest-hover text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 shadow-sm hover:shadow active:scale-98 transition-all focus-ring"
+              className="flex-1 px-4 py-2.5 bg-forest hover:bg-forest-hover text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 shadow-sm hover:shadow active:scale-98 transition-all focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send size={13} />
               <span>Kirim Pertanyaan</span>
