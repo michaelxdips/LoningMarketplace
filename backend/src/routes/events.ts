@@ -4,7 +4,7 @@ import type { Repository } from '../db/repository.js';
 import { error, uuid } from './validation.js';
 
 const eventTypes = ['umkm_view', 'product_view', 'inquiry_started', 'message_copied', 'whatsapp_opened'] as const;
-const sources = ['homepage_featured', 'homepage_catalog', 'umkm_detail', 'product_detail', 'search_results'] as const;
+const sources = ['homepage_featured', 'homepage_catalog', 'umkm_detail', 'product_detail', 'product_page', 'umkm_page', 'search_results'] as const;
 const eventInput = z.strictObject({ eventType: z.enum(eventTypes), source: z.enum(sources), anonymousSessionId: uuid, umkmId: uuid.optional(), productId: uuid.optional() });
 
 export async function eventRoutes(app: FastifyInstance, repository: Repository, now: () => Date) {

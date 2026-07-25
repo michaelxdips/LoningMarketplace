@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { Store, ArrowRight, MapPin } from 'lucide-react';
+import { Link } from 'react-router';
+import { Store, ArrowRight, MapPin, Eye } from 'lucide-react';
 import { UMKM } from '../../types';
 
 interface BusinessCardProps {
@@ -57,16 +58,15 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
         </div>
 
         {/* Footer Action */}
-        <div className="pt-3 border-t border-sage-border/60">
-          <button
+        <div className="flex gap-2 pt-3 border-t border-sage-border/60">
+          <button type="button" onClick={() => onViewDetails(umkm)} aria-label={`Lihat ringkasan ${umkm.name}`} className="focus-ring touch-target inline-flex items-center justify-center rounded-lg border border-sage-border px-3 text-forest hover:bg-sage-light"><Eye size={14}/></button>
+          <Link
             id={`business-cta-${umkm.id}`}
-            onClick={() => onViewDetails(umkm)}
-            className="w-full py-2 bg-cream-bg hover:bg-sage-light text-forest text-[11px] font-bold uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-colors border border-sage-border focus-ring touch-target"
+            to={`/umkm/${encodeURIComponent(umkm.slug)}`}
+            className="focus-ring touch-target flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-sage-border bg-cream-bg text-[11px] font-bold uppercase tracking-wider text-forest transition-colors hover:bg-sage-light"
           >
-            <Store size={12} />
-            <span>Kunjungi Profil</span>
-            <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
-          </button>
+            <Store size={12} /><span>Kunjungi Profil</span><ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
       </div>
     </div>

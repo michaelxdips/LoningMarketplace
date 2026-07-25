@@ -48,3 +48,9 @@ export const FAQS = [
     answer: 'Pendaftaran pelaku usaha dan katalog produk baru sepenuhnya dikelola dan diverifikasi oleh Administrator Desa (Balai Desa Loning) melalui panel kelola khusus pada sistem backend internal. Aplikasi publik ini tidak menyediakan pendaftaran mandiri demi menjaga keaslian data.'
   }
 ];
+
+export const GUIDE_STEPS = [
+  { number: '01', title: 'Temukan yang dicari', description: 'Telusuri kategori, produk, atau nama usaha warga Desa Loning.' },
+  { number: '02', title: 'Baca informasi', description: 'Pelajari produk, profil usaha, alamat, dan jam operasional yang tersedia.' },
+  { number: '03', title: 'Hubungi langsung', description: 'Kirim pertanyaan melalui WhatsApp dan sepakati kebutuhan langsung dengan pelaku usaha.' }
+] as const;

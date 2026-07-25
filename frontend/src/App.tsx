@@ -16,10 +16,8 @@ import HeroSection from './components/home/HeroSection';
 import CategorySection from './components/home/CategorySection';
 import FeaturedProductsSection from './components/home/FeaturedProductsSection';
 import FeaturedBusinessesSection from './components/home/FeaturedBusinessesSection';
-import HowItWorksSection from './components/home/HowItWorksSection';
-import AboutVillageSection from './components/home/AboutVillageSection';
 import MissionSection from './components/home/MissionSection';
-import FaqSection from './components/home/FaqSection';
+import EditorialTeasers from './components/home/EditorialTeasers';
 import FinalCtaSection from './components/home/FinalCtaSection';
 
 // Dialog Components
@@ -27,8 +25,10 @@ import WhatsAppInquiryDialog from './components/shared/WhatsAppInquiryDialog';
 import UMKMDetailDialog from './components/shared/UMKMDetailDialog';
 import ProductDetailDialog from './components/shared/ProductDetailDialog';
 import { trackPublicEvent } from './lib/analytics';
+import { defaultMetadata, usePageMetadata } from './lib/seo';
 
 export default function App() {
+  usePageMetadata(defaultMetadata);
   // Page section highlights
   const [activeSection, setActiveSection] = useState('home');
 
@@ -39,10 +39,14 @@ export default function App() {
   const debouncedProductSearchQuery = useDebouncedValue(productSearchQuery);
   const debouncedUmkmSearchQuery = useDebouncedValue(umkmSearchQuery);
   const apiCategory = selectedCategory === 'Semua' ? undefined : selectedCategory;
-  const productsQuery = useProducts({ category: apiCategory, q: debouncedProductSearchQuery });
+  const hasProductFilters = Boolean(apiCategory || debouncedProductSearchQuery.trim());
+  const hasUmkmFilters = Boolean(apiCategory || debouncedUmkmSearchQuery.trim());
+  const filteredProductsQuery = useProducts({ category: apiCategory, q: debouncedProductSearchQuery }, { enabled: hasProductFilters });
   const allProductsQuery = useProducts();
-  const umkmsQuery = useUMKMs({ category: apiCategory, q: debouncedUmkmSearchQuery });
+  const filteredUmkmsQuery = useUMKMs({ category: apiCategory, q: debouncedUmkmSearchQuery }, { enabled: hasUmkmFilters });
   const allUmkmsQuery = useUMKMs();
+  const productsQuery = hasProductFilters ? filteredProductsQuery : allProductsQuery;
+  const umkmsQuery = hasUmkmFilters ? filteredUmkmsQuery : allUmkmsQuery;
   const umkms = umkmsQuery.data ?? [];
   const products = productsQuery.data ?? [];
   const allProducts = allProductsQuery.data ?? [];
@@ -61,6 +65,7 @@ export default function App() {
   const [isProductDetailOpen, setIsProductDetailOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const productTriggerRef = useRef<HTMLElement | null>(null);
+  const umkmTriggerRef = useRef<HTMLElement | null>(null);
   const [inquirySource, setInquirySource] = useState<'homepage_featured' | 'umkm_detail' | 'product_detail'>('homepage_featured');
   const inquiryFocusRef = useRef<HTMLElement | null>(null);
 
@@ -136,18 +141,15 @@ export default function App() {
     setIsWhatsAppOpen(true);
   };
 
-  // View specific UMKM details
-  const handleViewUMKMDetails = (umkm: UMKM) => {
+  const handleViewUMKMDetails = (umkm: UMKM, trigger?: HTMLElement) => {
+    if (trigger) umkmTriggerRef.current = trigger;
     setSelectedUMKMDetail(umkm);
     setIsDetailOpen(true);
   };
 
-  // View UMKM details by product click
   const handleViewUMKMById = (umkmId: string) => {
     const umkmObj = allUmkms.find((u) => u.id === umkmId);
-    if (umkmObj) {
-      handleViewUMKMDetails(umkmObj);
-    }
+    if (umkmObj) handleViewUMKMDetails(umkmObj);
   };
 
   return (
@@ -202,17 +204,11 @@ export default function App() {
           onRetry={() => void umkmsQuery.refetch()}
         />
 
-        {/* 6. Simple Three-step User Journey */}
-        <HowItWorksSection />
-
-        {/* 7. About Desa Loning */}
-        <AboutVillageSection />
-
-        {/* 8. Local Economic-Support Statement (Mission) */}
+        {/* 6. Local Economic-Support Statement (Mission) */}
         <MissionSection />
 
-        {/* 9. FAQ Accordions */}
-        <FaqSection />
+        {/* 7. Editorial route teasers */}
+        <EditorialTeasers />
 
         {/* 10. Final Call to Action */}
         <FinalCtaSection 
@@ -222,8 +218,8 @@ export default function App() {
 
       </main>
 
-      {/* 11. Footer segment */}
-      <Footer onScrollToSection={handleScrollToSection} />
+      {/* Footer segment */}
+      <Footer />
 
       <WhatsAppInquiryDialog
         isOpen={isWhatsAppOpen}
@@ -239,12 +235,13 @@ export default function App() {
           product={selectedProduct}
           onClose={handleCloseProductDetail}
           onInquire={handleProductDetailInquiry}
+          returnFocusRef={productTriggerRef}
         />
       )}
 
       {/* Shared UMKM detail dialog overlay */}
       {selectedUMKMDetail && (
-        <UMKMDetailDialog 
+        <UMKMDetailDialog
           isOpen={isDetailOpen}
           onClose={() => {
             setIsDetailOpen(false);
@@ -254,6 +251,7 @@ export default function App() {
           products={allProducts}
           onInquireProduct={(product) => handleInquireProduct(product, 'umkm_detail')}
           onInquireUMKM={handleInquireUMKM}
+          returnFocusRef={umkmTriggerRef}
         />
       )}
 

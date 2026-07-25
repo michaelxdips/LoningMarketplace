@@ -15,7 +15,7 @@ const repository = createRepository(database.db);
 const password = 'local-e2e-passphrase-123';
 const umkmId = UMKMS.kuliner1;
 const storageRoot = path.resolve(process.env.MEDIA_FILESYSTEM_ROOT ?? './storage');
-const imageUrl = 'http://localhost:3001/media/fixtures/e2e-product.webp';
+const imageUrl = `${(process.env.MEDIA_PUBLIC_BASE_URL ?? 'http://localhost:3001/media').replace(/\/+$/, '')}/fixtures/e2e-product.webp`;
 const fixtures = [
   { id: 'e3000000-0000-4000-8000-000000000001', name: 'E2E Produk Stabilization Desktop', displayOrder: 9000 },
   { id: 'e3000000-0000-4000-8000-000000000002', name: 'E2E Produk Stabilization Mobile', displayOrder: 9001 },
@@ -43,7 +43,7 @@ try {
   await repository.assignUMKMOwner(umkmId, ownerId);
   for (const fixture of fixtures) {
     const previous = (await database.db.select({ imageAssetId: products.imageAssetId }).from(products).where(eq(products.id, fixture.id)).limit(1))[0];
-    await database.db.insert(products).values({ id: fixture.id, umkmId, name: fixture.name, price: 35000, description: 'Produk deterministik untuk pengujian browser lokal.', category: 'Kuliner', imageUrl, isAvailable: true, unit: 'Pcs', displayOrder: fixture.displayOrder, publicationStatus: 'published', publishedAt: new Date() }).onConflictDoUpdate({ target: products.id, set: { umkmId, name: fixture.name, price: 35000, description: 'Produk deterministik untuk pengujian browser lokal.', category: 'Kuliner', imageUrl, imageAssetId: null, isAvailable: true, unit: 'Pcs', displayOrder: fixture.displayOrder, publicationStatus: 'published', publishedAt: new Date(), updatedAt: sql`now()` } });
+    await database.db.insert(products).values({ id: fixture.id, umkmId, name: fixture.name, slug: fixture.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), price: 35000, description: 'Produk deterministik untuk pengujian browser lokal.', category: 'Kuliner', imageUrl, isAvailable: true, unit: 'Pcs', displayOrder: fixture.displayOrder, publicationStatus: 'published', publishedAt: new Date() }).onConflictDoUpdate({ target: products.id, set: { umkmId, name: fixture.name, slug: fixture.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), price: 35000, description: 'Produk deterministik untuk pengujian browser lokal.', category: 'Kuliner', imageUrl, imageAssetId: null, isAvailable: true, unit: 'Pcs', displayOrder: fixture.displayOrder, publicationStatus: 'published', publishedAt: new Date(), updatedAt: sql`now()` } });
     await repository.refreshMediaOrphans([previous?.imageAssetId]);
   }
   console.log('Local E2E accounts are ready.');

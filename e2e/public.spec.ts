@@ -2,8 +2,8 @@ import { test, expect, type Page } from '@playwright/test';
 import { assertBrowserEvents, observeBrowserEvents, type ExpectedBrowserDiagnostic, type ExpectedHttpError } from './support/browser-events';
 import { E2E_FIXTURES } from './support/fixtures';
 
-const API_BASE = 'http://localhost:3001/api';
-const AUTH_SESSION_URL = 'http://localhost:3001/api/auth/session';
+const API_BASE = process.env.E2E_API_BASE_URL ?? 'http://localhost:3001/api';
+const AUTH_SESSION_URL = `${API_BASE}/auth/session`;
 const BRAND_NAME = 'Loning Maju';
 const LEGACY_BRAND_NAME = 'Loning Digital';
 const BRAND_TITLE = 'Loning Maju — Direktori UMKM Desa Loning';
@@ -42,7 +42,7 @@ async function stabilizeLegacyImages(page: Page) {
   await page.route('https://images.unsplash.com/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: validPng }));
 }
 
-async function gotoWithExpectedTransition(events: ReturnType<typeof observeBrowserEvents>, page: Page, path: string, apiPattern: RegExp = /http:\/\/localhost:3001\/api\/(?:products|umkms|auth\/session)/) {
+async function gotoWithExpectedTransition(events: ReturnType<typeof observeBrowserEvents>, page: Page, path: string, apiPattern: RegExp = /http:\/\/localhost:3(?:001|101)\/api\/(?:products|umkms|auth\/session)/) {
   const escapedPath = path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const transition = events.beginExpectedTransition({ reason: `navigate:${path}`, expectedRequests: [{ method: 'GET', url: new RegExp(`${escapedPath}(?:\\?.*)?$`) }, { method: 'GET', url: apiPattern }] });
   try { await page.goto(path); await page.waitForLoadState('networkidle'); } finally { transition.complete(); }
@@ -63,7 +63,7 @@ test('public homepage loads the directory shell and core interactions', async ({
   await gotoWithExpectedTransition(events, page, '/');
   await expect(page.locator('main')).toBeVisible();
   await expect(page.getByText('Katalog Produk Warga')).toBeVisible();
-  await expect(page.getByRole('button', { name: `${BRAND_NAME} — kembali ke beranda` })).toBeVisible();
+  await expect(page.getByRole('link', { name: `${BRAND_NAME} — kembali ke beranda` })).toBeVisible();
   await expect(page.getByText(LEGACY_BRAND_NAME, { exact: true })).toHaveCount(0);
   await expect(page).toHaveTitle(BRAND_TITLE);
   expect(await page.locator('html').getAttribute('lang')).toBe('id');
@@ -72,18 +72,17 @@ test('public homepage loads the directory shell and core interactions', async ({
   await expect(featuredSection).toBeAttached();
 
   if ((page.viewportSize()?.width ?? 0) >= 768) {
-    const navigation = page.getByRole('navigation');
-    const desktopMenuLabels = ['Beranda', 'Kategori', 'Profil UMKM', 'Tentang Desa', 'FAQ'];
-    const desktopMenuItems = desktopMenuLabels.map((name) => navigation.getByRole('button', { name, exact: true }));
+    const navigation = page.getByRole('navigation', { name: 'Navigasi utama' });
+    const desktopMenuLabels = ['Produk', 'Profil UMKM', 'Tentang Desa', 'FAQ'];
+    const desktopMenuItems = desktopMenuLabels.map((name) => navigation.getByRole('link', { name, exact: true }));
     for (const item of desktopMenuItems) await expect(item).toBeVisible();
-    await expect(navigation.getByRole('button', { name: 'Produk Unggulan', exact: true })).toHaveCount(0);
     await expect(navigation.getByRole('link', { name: 'Masuk Pengelola' })).toHaveAttribute('href', '/login');
 
     const menuBoxes = await Promise.all(desktopMenuItems.map((item) => item.boundingBox()));
     expect(menuBoxes.every((box) => box !== null)).toBe(true);
     expect(menuBoxes.slice(1).every((box, index) => box!.x > menuBoxes[index]!.x)).toBe(true);
 
-    const desktopCta = navigation.getByRole('button', { name: 'Jelajahi Produk', exact: true });
+    const desktopCta = navigation.getByRole('link', { name: 'Jelajahi Produk', exact: true });
     await expect(desktopCta).toBeVisible();
     await expect(desktopCta).toBeEnabled();
     await desktopCta.focus();
@@ -95,17 +94,16 @@ test('public homepage loads the directory shell and core interactions', async ({
     await expect(featuredSection).toBeInViewport();
     await expectNoHorizontalOverflow(page);
   } else {
-    const toggle = page.getByRole('button', { name: 'Toggle navigasi' });
+    const toggle = page.getByRole('button', { name: 'Buka atau tutup navigasi' });
     await toggle.click();
     const mobileMenu = page.locator('#mobile-nav-menu');
     await expect(mobileMenu).toBeVisible();
 
-    const mobileMenuLabels = ['Beranda', 'Kategori', 'Profil UMKM', 'Tentang Desa', 'FAQ'];
-    const mobileMenuItems = mobileMenuLabels.map((name) => mobileMenu.getByRole('button', { name, exact: true }));
+    const mobileMenuLabels = ['Produk', 'Profil UMKM', 'Tentang Desa', 'FAQ'];
+    const mobileMenuItems = mobileMenuLabels.map((name) => mobileMenu.getByRole('link', { name, exact: true }));
     for (const item of mobileMenuItems) await expect(item).toBeVisible();
-    await expect(mobileMenu.getByRole('button', { name: 'Produk Unggulan', exact: true })).toHaveCount(0);
 
-    const mobileCta = mobileMenu.getByRole('button', { name: 'Jelajahi Produk', exact: true });
+    const mobileCta = mobileMenu.getByRole('link', { name: 'Jelajahi Produk', exact: true });
     await expect(mobileCta).toBeVisible();
     await expect(mobileCta).toBeEnabled();
     await mobileCta.click();
@@ -114,7 +112,7 @@ test('public homepage loads the directory shell and core interactions', async ({
 
     await toggle.click();
     await expect(mobileMenu).toBeVisible();
-    const reopenedMobileCta = mobileMenu.getByRole('button', { name: 'Jelajahi Produk', exact: true });
+    const reopenedMobileCta = mobileMenu.getByRole('link', { name: 'Jelajahi Produk', exact: true });
     await reopenedMobileCta.focus();
     await expect(reopenedMobileCta).toBeFocused();
     await reopenedMobileCta.press('Enter');
@@ -124,13 +122,9 @@ test('public homepage loads the directory shell and core interactions', async ({
   }
 
   const footer = page.locator('footer');
-  await expect(footer.getByRole('heading', { name: 'Akses Pengelola' })).toBeVisible();
-  await expect(footer.getByRole('link', { name: 'Masuk Dashboard' })).toHaveAttribute('href', '/login');
-  const faqTrigger = page.getByRole('button', { name: 'Apakah pembelian dilakukan melalui website ini?' });
-  await expect(faqTrigger).toHaveAttribute('aria-expanded', 'true');
-  await faqTrigger.click();
-  await expect(faqTrigger).toHaveAttribute('aria-expanded', 'false');
-  const profileTrigger = page.locator('[id^="business-card-"]').first().getByRole('button', { name: /Kunjungi Profil/ });
+  await expect(footer.getByRole('heading', { name: 'Peta Situs' })).toBeVisible();
+  await expect(footer.getByRole('link', { name: 'Pengelola' })).toHaveAttribute('href', '/login');
+  const profileTrigger = page.locator('[id^="business-card-"]').first().getByRole('button', { name: /Lihat ringkasan/ });
   await profileTrigger.click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
@@ -146,6 +140,25 @@ test('public homepage loads the directory shell and core interactions', async ({
   await expectNoHorizontalOverflow(page);
   assertBrowserEvents(events);
   events.dispose();
+});
+
+test('public detail URLs replace legacy UUIDs with canonical slugs', async ({ page }) => {
+  await stabilizeLegacyImages(page);
+  const product = E2E_FIXTURES.products.desktop;
+  const productSlug = 'e2e-produk-stabilization-desktop';
+  await page.goto('/');
+  await expect(page.locator(`#product-card-${product.id}`).getByRole('link', { name: `Buka halaman ${product.name}` })).toHaveAttribute('href', `/produk/${productSlug}`);
+
+  await page.goto(`/produk/${product.id}`);
+  await expect(page).toHaveURL(new RegExp(`/produk/${productSlug}$`));
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new RegExp(`/produk/${productSlug}$`));
+
+  const umkmResponse = await page.request.get(`${API_BASE}/umkms/${E2E_FIXTURES.umkm.primaryId}`);
+  expect(umkmResponse.ok()).toBe(true);
+  const umkmSlug = (await umkmResponse.json()).data.slug as string;
+  await page.goto(`/umkm/${E2E_FIXTURES.umkm.primaryId}`);
+  await expect(page).toHaveURL(new RegExp(`/umkm/${umkmSlug}$`));
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new RegExp(`/umkm/${umkmSlug}$`));
 });
 
 test('login route is reachable and keyboard accessible', async ({ page }) => {
@@ -168,7 +181,7 @@ test('admin login settles and enforces password change', async ({ page, context 
   await gotoWithExpectedTransition(events, page, '/login');
   await page.getByLabel('Email atau username').fill(E2E_FIXTURES.credentials.adminMustChangePassword.identifier);
   await page.getByLabel('Kata sandi', { exact: true }).fill(E2E_FIXTURES.credentials.adminMustChangePassword.password);
-  await runExpectedAction(events, page, 'admin-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/change-password$/); }, /http:\/\/localhost:3001\/api\/(?:auth\/session|auth\/me)/);
+  await runExpectedAction(events, page, 'admin-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/change-password$/); }, /http:\/\/localhost:3(?:001|101)\/api\/(?:auth\/session|auth\/me)/);
   const cookies = await context.cookies();
   expect(cookies.find((cookie) => cookie.name === 'loning_session')?.httpOnly).toBe(true);
   expect(await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length }))).toEqual({ local: 0, session: 0 });
@@ -181,14 +194,14 @@ test('owner is blocked from admin routes and can logout', async ({ page }) => {
   await gotoWithExpectedTransition(events, page, '/login');
   await page.getByLabel('Email atau username').fill(E2E_FIXTURES.credentials.owner.identifier);
   await page.getByLabel('Kata sandi', { exact: true }).fill(E2E_FIXTURES.credentials.owner.password);
-  await runExpectedAction(events, page, 'owner-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/dashboard$/); }, /http:\/\/localhost:3001\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
+  await runExpectedAction(events, page, 'owner-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/dashboard$/); }, /http:\/\/localhost:3(?:001|101)\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
   if (page.viewportSize()?.width === 390) await page.getByRole('button', { name: 'Buka navigasi' }).click();
   await expect(page.getByRole('link', { name: `${BRAND_NAME} — beranda` })).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  await gotoWithExpectedTransition(events, page, '/dashboard/users', /http:\/\/localhost:3001\/api\/manage\/(?:products|umkms)/);
+  await gotoWithExpectedTransition(events, page, '/dashboard/users', /http:\/\/localhost:3(?:001|101)\/api\/manage\/(?:products|umkms)/);
   await expect(page).toHaveURL(/\/dashboard$/);
   if (page.viewportSize()?.width === 390) await page.getByRole('button', { name: 'Buka navigasi' }).click();
-  await runExpectedAction(events, page, 'owner-logout-redirect', async () => { await page.getByRole('button', { name: 'Keluar' }).click(); await expect(page).toHaveURL(/\/login$/); }, /http:\/\/localhost:3001\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
+  await runExpectedAction(events, page, 'owner-logout-redirect', async () => { await page.getByRole('button', { name: 'Keluar' }).click(); await expect(page).toHaveURL(/\/login$/); }, /http:\/\/localhost:3(?:001|101)\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
   assertUnauthenticatedEvents(events);
   events.dispose();
 });

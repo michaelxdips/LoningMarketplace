@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { MessageSquare, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router';
+import { MessageSquare, Eye, ArrowRight } from 'lucide-react';
 import { Product } from '../../types';
 import { formatPrice } from '../../lib/price';
 import { ProductImage } from './ProductImage';
@@ -20,8 +21,8 @@ type ProductCardProps = {
 const ProductCard: React.FC<ProductCardProps> = ({ product, onInquire, onViewMerchant, onViewProduct }) => {
   const openDetail = (event: React.MouseEvent<HTMLButtonElement>) => onViewProduct(product, event.currentTarget, 'homepage_featured');
   return (
-    <article id={`product-card-${product.id}`} className="bg-cream-card border border-sage-border rounded-xl overflow-hidden flex flex-col transition-card hover:border-forest/30 hover:shadow-md group h-[340px]">
-      <button type="button" aria-label={`Lihat detail ${product.name}`} onClick={openDetail} className="focus-ring block min-h-0 flex-1 cursor-pointer text-left">
+    <article id={`product-card-${product.id}`} className="self-start bg-cream-card border border-sage-border rounded-xl overflow-hidden flex flex-col transition-card hover:border-forest/30 hover:shadow-md group">
+      <button type="button" aria-label={`Lihat detail ${product.name}`} onClick={openDetail} className="focus-ring block w-full cursor-pointer text-left">
         <div className="h-44 w-full overflow-hidden bg-cream-tint relative">
           <ProductImage src={product.imageUrl} alt={product.altText || product.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-103" />
           {product.unit && <span className="absolute top-3 right-3 bg-charcoal/85 text-white text-[9px] font-semibold tracking-wider px-2 py-0.5 rounded uppercase">/ {product.unit}</span>}
@@ -36,12 +37,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onInquire, onViewMer
           </div>
         </div>
       </button>
-      <div className="px-4 pb-4 flex items-center justify-between gap-2.5">
-        <button type="button" onClick={() => onViewMerchant(product.umkmId)} className="text-[11px] text-warm-gray font-medium flex items-center gap-1 hover:text-forest focus-ring rounded" aria-label={`Lihat UMKM ${product.umkmName}`}>
-          <span>Oleh: {product.umkmName}</span><ExternalLink size={10} className="shrink-0" />
-        </button>
-        <button id={`product-cta-${product.id}`} type="button" onClick={() => onInquire(product)} className="px-3.5 py-2 bg-forest hover:bg-forest-hover text-white text-[10px] font-bold uppercase tracking-wider rounded-lg flex items-center gap-1 transition-colors focus-ring touch-target shrink-0">
-          <MessageSquare size={12} /><span>Tanya Produk</span>
+      <div className="mt-auto px-4 pb-4 flex items-center gap-2.5">
+        <Link to={`/produk/${encodeURIComponent(product.slug)}`} className="focus-ring touch-target inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-sage-border text-forest transition-colors hover:border-forest/30 hover:bg-cream-tint" aria-label={`Buka halaman ${product.name}`}>
+          <Eye size={14} aria-hidden="true" />
+        </Link>
+        <button id={`product-cta-${product.id}`} type="button" onClick={() => onInquire(product)} className="focus-ring touch-target flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-forest px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-forest-hover">
+          <MessageSquare size={12} aria-hidden="true" />
+          <span>Tanya Produk</span>
+          <ArrowRight size={12} aria-hidden="true" />
         </button>
       </div>
     </article>
