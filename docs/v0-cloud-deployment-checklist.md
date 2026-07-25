@@ -52,7 +52,13 @@ Provider-neutral operational checklist. Application code siap menerima konfigura
 - [ ] Run `npm audit --omit=dev`; production audit must report zero vulnerabilities.
 - [ ] Keep development-only audit findings documented and out of runtime bundles.
 - [ ] Keep a prior release artifact and pre-migration backup available.
+- [ ] Verify the V1.2 slug migration against the existing database without running development seeds.
+- [ ] Verify clean seeds only in a separate disposable PostgreSQL database.
 - [ ] Confirm rollback does not require destructive migration rollback.
+
+> [!WARNING]
+> After slug URLs become public, removing `umkms.slug`, `products.slug`, or their unique indexes is unsafe. Shared links, bookmarks, and indexed search results depend on them. Roll back application code while retaining the additive slug schema and UUID-or-slug resolution.
+
 - [ ] Document DNS/CDN rollback and cache purge steps.
 
 > [!IMPORTANT]

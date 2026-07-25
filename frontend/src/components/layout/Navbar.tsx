@@ -3,131 +3,45 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { Link } from 'react-router';
+import { useState, type MouseEvent } from 'react';
+import { Link, useLocation } from 'react-router';
 import { Menu, X, Compass } from 'lucide-react';
 import { brand } from '../../config/brand';
 
 interface NavbarProps {
-  onScrollToSection: (sectionId: string) => void;
-  activeSection: string;
+  onScrollToSection?: (sectionId: string) => void;
+  activeSection?: string;
 }
+
+const navItems = [
+  { label: 'Produk', href: '/#featured-products' },
+  { label: 'Profil UMKM', href: '/#umkm' },
+  { label: 'Tentang Desa', href: '/tentang-desa' },
+  { label: 'FAQ', href: '/faq' }
+] as const;
 
 export default function Navbar({ onScrollToSection, activeSection }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const navItems = [
-    { label: 'Beranda', id: 'home' },
-    { label: 'Kategori', id: 'categories' },
-    { label: 'Profil UMKM', id: 'umkm' },
-    { label: 'Tentang Desa', id: 'about' },
-    { label: 'FAQ', id: 'faq' }
-  ];
-
-  const handleNavItemClick = (sectionId: string) => {
+  const location = useLocation();
+  const goHomeSection = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
     setIsMobileMenuOpen(false);
-    onScrollToSection(sectionId);
+    if (location.pathname === '/' && onScrollToSection && href.includes('#')) {
+      event.preventDefault();
+      onScrollToSection(href.split('#')[1]);
+    }
   };
 
-  return (
-    <nav className="sticky top-0 z-30 w-full bg-cream-card/95 backdrop-blur-md border-b border-sage-border shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          
-          {/* Brand Logo Wordmark */}
-          <button 
-            onClick={() => onScrollToSection('home')}
-            aria-label={`${brand.name} — kembali ke beranda`}
-            className="flex items-center gap-2 text-forest hover:opacity-90 focus-ring rounded-lg py-1 px-1.5 font-bold tracking-tight text-lg"
-          >
-            <Compass size={22} className="text-terracotta" />
-            <span className="font-sans font-extrabold uppercase tracking-wide text-sm md:text-base">
-              Loning<span className="text-terracotta">Maju</span>
-            </span>
-          </button>
-
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleNavItemClick(item.id)}
-                className={`text-xs font-semibold uppercase tracking-wider transition-colors hover:text-forest focus-ring rounded px-2 py-1 ${
-                  activeSection === item.id ? 'text-forest font-bold' : 'text-warm-gray'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-            
-            <Link
-              to="/login"
-              className="rounded-lg border border-terracotta px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-terracotta transition-colors hover:bg-terracotta hover:text-white focus-ring"
-            >
-              Masuk Pengelola
-            </Link>
-
-            {/* Primary CTA */}
-            <button
-              onClick={() => handleNavItemClick('featured-products')}
-              className="px-4 py-2 bg-forest hover:bg-forest-hover text-white text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors focus-ring shadow-xs"
-            >
-              Jelajahi Produk
-            </button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <button
-              id="mobile-menu-toggle"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-expanded={isMobileMenuOpen}
-              aria-controls="mobile-nav-menu"
-              aria-label="Toggle navigasi"
-              className="p-1.5 rounded-lg text-warm-gray hover:bg-sage-light hover:text-charcoal transition-colors focus-ring touch-target"
-            >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Menu Drawer */}
-      {isMobileMenuOpen && (
-        <div 
-          id="mobile-nav-menu"
-          className="md:hidden bg-cream-card border-b border-sage-border transition-all duration-300 ease-in-out px-4 pt-2 pb-6 space-y-2.5 shadow-lg"
-        >
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleNavItemClick(item.id)}
-              className={`block w-full text-left py-2 px-3 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-sage-light ${
-                activeSection === item.id ? 'text-forest bg-sage-light/60 font-bold' : 'text-warm-gray'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-          <div className="border-t border-sage-border pt-2">
-            <Link
-              to="/login"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex w-full touch-target items-center justify-center rounded-lg border border-terracotta px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-terracotta transition-colors hover:bg-terracotta hover:text-white focus-ring"
-            >
-              Masuk Pengelola
-            </Link>
-          </div>
-          <div className="pt-2">
-            <button
-              onClick={() => handleNavItemClick('featured-products')}
-              className="w-full text-center py-2.5 bg-forest hover:bg-forest-hover text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm focus-ring"
-            >
-              Jelajahi Produk
-            </button>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
+  return <nav aria-label="Navigasi utama" className="sticky top-0 z-30 w-full border-b border-sage-border bg-cream-card/95 backdrop-blur-md">
+    <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <Link to="/" aria-label={`${brand.name} — kembali ke beranda`} className="focus-ring flex items-center gap-2 rounded-lg px-1.5 py-1 text-forest">
+        <Compass size={22} className="text-terracotta"/><span className="text-sm font-extrabold uppercase tracking-wide md:text-base">Loning<span className="text-terracotta">Maju</span></span>
+      </Link>
+      <div className="hidden items-center gap-5 md:flex">{navItems.map((item) => {
+        const active = item.href.startsWith('/#') ? location.pathname === '/' && activeSection === item.href.split('#')[1] : location.pathname === item.href;
+        return item.href.startsWith('/#') ? <a key={item.href} href={item.href} onClick={(event) => goHomeSection(event, item.href)} className={`focus-ring rounded px-2 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors hover:text-forest ${active ? 'text-forest' : 'text-warm-gray'}`}>{item.label}</a> : <Link key={item.href} to={item.href} className={`focus-ring rounded px-2 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors hover:text-forest ${active ? 'text-forest' : 'text-warm-gray'}`}>{item.label}</Link>;
+      })}<Link to="/login" className="focus-ring rounded-lg border border-terracotta px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-terracotta transition-colors hover:bg-terracotta hover:text-white">Masuk Pengelola</Link><a href="/#featured-products" onClick={(event) => goHomeSection(event, '/#featured-products')} className="focus-ring rounded-lg bg-forest px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-forest-hover">Jelajahi Produk</a></div>
+      <button id="mobile-menu-toggle" onClick={() => setIsMobileMenuOpen((open) => !open)} aria-expanded={isMobileMenuOpen} aria-controls="mobile-nav-menu" aria-label="Buka atau tutup navigasi" className="focus-ring touch-target rounded-lg p-2 text-warm-gray md:hidden">{isMobileMenuOpen ? <X size={20}/> : <Menu size={20}/>}</button>
+    </div>
+    {isMobileMenuOpen && <div id="mobile-nav-menu" className="border-t border-sage-border bg-cream-card px-4 py-4 shadow-lg md:hidden">{navItems.map((item) => item.href.startsWith('/#') ? <a key={item.href} href={item.href} onClick={(event) => goHomeSection(event, item.href)} className="focus-ring touch-target flex items-center rounded-lg px-3 text-xs font-bold uppercase tracking-wider text-warm-gray hover:bg-sage-light">{item.label}</a> : <Link key={item.href} to={item.href} onClick={() => setIsMobileMenuOpen(false)} className="focus-ring touch-target flex items-center rounded-lg px-3 text-xs font-bold uppercase tracking-wider text-warm-gray hover:bg-sage-light">{item.label}</Link>)}<div className="mt-3 grid gap-2 border-t border-sage-border pt-3"><Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="focus-ring touch-target flex items-center justify-center rounded-lg border border-terracotta text-xs font-bold uppercase tracking-wider text-terracotta">Masuk Pengelola</Link><a href="/#featured-products" onClick={(event) => goHomeSection(event, '/#featured-products')} className="focus-ring touch-target flex items-center justify-center rounded-lg bg-forest text-xs font-bold uppercase tracking-wider text-white">Jelajahi Produk</a></div></div>}
+  </nav>;
 }

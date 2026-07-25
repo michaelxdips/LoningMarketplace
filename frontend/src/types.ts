@@ -7,6 +7,7 @@ export type Category = 'Kuliner' | 'Kerajinan' | 'Jasa' | 'Sembako' | 'Pertanian
 
 export interface UMKM {
   id: string;
+  slug: string;
   name: string;
   owner: string;
   description: string;
@@ -27,6 +28,7 @@ export interface UMKM {
 
 export interface Product {
   id: string;
+  slug: string;
   umkmId: string;
   umkmName: string; // Denormalized for convenience
   name: string;
@@ -38,4 +40,8 @@ export interface Product {
   altText?: string | null;
   isAvailable: boolean;
   unit?: string; // e.g., "250g", "Pcs", "Porsi"
+}
+
+export interface ProductDetail extends Omit<Product, 'umkmName'> {
+  umkm: Pick<UMKM, 'id' | 'slug' | 'name' | 'phone'>;
 }

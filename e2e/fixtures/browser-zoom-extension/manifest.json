@@ -1,0 +1,10 @@
+﻿{
+  "manifest_version": 3,
+  "name": "Loning Native Zoom Test",
+  "version": "1.0.0",
+  "description": "Test-only native Chromium tab zoom controller.",
+  "permissions": ["tabs"],
+  "background": {
+    "service_worker": "service-worker.js"
+  }
+}

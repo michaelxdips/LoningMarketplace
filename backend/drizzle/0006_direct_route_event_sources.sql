@@ -1,0 +1,2 @@
+ALTER TABLE "public_events" DROP CONSTRAINT "public_events_source_check";--> statement-breakpoint
+ALTER TABLE "public_events" ADD CONSTRAINT "public_events_source_check" CHECK ("source" IN ('homepage_featured','homepage_catalog','umkm_detail','product_detail','product_page','umkm_page','search_results'));

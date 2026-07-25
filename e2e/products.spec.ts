@@ -2,11 +2,12 @@ import { expect, request as apiRequest, test, type Page, type Request, type Test
 import { assertBrowserEvents, observeBrowserEvents, type ExpectedBrowserDiagnostic, type ExpectedHttpError } from './support/browser-events';
 import { loginFixture, E2E_FIXTURES } from './support/fixtures';
 
-const API_BASE = 'http://localhost:3001/api';
-const FRONTEND_ORIGIN = 'http://localhost:3000';
+const API_BASE = process.env.E2E_API_BASE_URL ?? 'http://localhost:3001/api';
+const FRONTEND_ORIGIN = process.env.E2E_FRONTEND_ORIGIN ?? 'http://localhost:3000';
+const BACKEND_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
 const MEDIA_UPLOAD_URL = `${API_BASE}/manage/media/images`;
-const ORIGINAL_IMAGE = `${FRONTEND_ORIGIN.replace('3000', '3001')}/media/fixtures/e2e-product.webp`;
-const CORRUPT_IMAGE = `${FRONTEND_ORIGIN.replace('3000', '3001')}/media/fixtures/e2e-corrupt.webp`;
+const ORIGINAL_IMAGE = `${BACKEND_ORIGIN}/media/fixtures/e2e-product.webp`;
+const CORRUPT_IMAGE = `${BACKEND_ORIGIN}/media/fixtures/e2e-corrupt.webp`;
 const ORIGINAL = {
   umkmId: E2E_FIXTURES.umkm.primaryId,
   price: 35000,
@@ -142,7 +143,7 @@ async function saveAndCapturePatch(page: Page, fixture: Fixture, events?: Return
   const responsePromise = page.waitForResponse(response => response.request().method() === 'PATCH' && response.url().endsWith(`/manage/products/${fixture.id}`));
   const pendingDashboardRequests = new Set<Request>();
   const onRequest = (request: Request) => {
-    if (events && request.method() === 'GET' && /^http:\/\/localhost:3001\/api\/manage\/(?:products|umkms)(?:\?.*)?$/.test(request.url())) pendingDashboardRequests.add(request);
+    if (events && request.method() === 'GET' && /^http:\/\/localhost:3(?:001|101)\/api\/manage\/(?:products|umkms)(?:\?.*)?$/.test(request.url())) pendingDashboardRequests.add(request);
   };
   const onRequestDone = (request: Request) => { pendingDashboardRequests.delete(request); };
   const waitForDashboardQuiet = async () => {
@@ -154,7 +155,7 @@ async function saveAndCapturePatch(page: Page, fixture: Fixture, events?: Return
     page.off('requestfinished', onRequestDone);
     page.off('requestfailed', onRequestDone);
   };
-  const transition = events?.beginExpectedTransition({ reason: `save:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3001\/api\/manage\/(?:products|umkms)(?:\?.*)?$/ }, ...additionalTransitionRequests.map(url => ({ method: 'GET' as const, url }))] });
+  const transition = events?.beginExpectedTransition({ reason: `save:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3(?:001|101)\/api\/manage\/(?:products|umkms)(?:\?.*)?$/ }, ...additionalTransitionRequests.map(url => ({ method: 'GET' as const, url }))] });
   if (events) {
     page.on('request', onRequest);
     page.on('requestfinished', onRequestDone);
@@ -326,7 +327,7 @@ test('product mutations, price contract, external image, archive, and restore ar
     if (request.url() === CORRUPT_IMAGE) corruptImageRequests += 1;
   });
   try {
-    const detailTransition = externalEvents.beginExpectedTransition({ reason: `open-product:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3001\/api\/manage\/(?:products(?:\/[^?]+)?|umkms)(?:\?.*)?$/ }] });
+    const detailTransition = externalEvents.beginExpectedTransition({ reason: `open-product:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3(?:001|101)\/api\/manage\/(?:products(?:\/[^?]+)?|umkms)(?:\?.*)?$/ }] });
     try { await page.goto(`/dashboard/products/${fixture.id}`); await page.waitForLoadState('networkidle'); } finally { detailTransition.complete(); }
     await expect(page.getByRole('radio', { name: 'Pakai URL gambar eksternal' })).toBeVisible();
     await page.getByRole('radio', { name: 'Pakai URL gambar eksternal' }).check();
@@ -431,7 +432,7 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   await expect(page.getByText('Unggahan selesai.')).toBeVisible();
 
   const productListRefresh = page.waitForResponse(response => response.request().method() === 'GET' && response.url() === `${API_BASE}/manage/products?limit=100`);
-  const managedPatch = await saveAndCapturePatch(page, fixture, browserEvents, true, [/http:\/\/localhost:3001\/api\/(?:products|umkms)$/]);
+  const managedPatch = await saveAndCapturePatch(page, fixture, browserEvents, true, [/http:\/\/localhost:3(?:001|101)\/api\/(?:products|umkms)$/]);
   expect((await productListRefresh).status()).toBe(200);
   expect(managedPatch.payload).toMatchObject({ imageUrl: null, imageAssetId: uploaded.id });
   await expect(page).toHaveURL(/dashboard\/products$/);

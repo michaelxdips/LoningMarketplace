@@ -3,6 +3,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '../../schema.js';
 import { UMKMS, productDeterministicId } from '../shared/ids.js';
 import { SEED_DATES } from '../shared/dates.js';
+import { slugify } from '../../../lib/slug.js';
 
 export async function seedProducts(db: PostgresJsDatabase<typeof schema>) {
   const catalog = [
@@ -68,7 +69,7 @@ export async function seedProducts(db: PostgresJsDatabase<typeof schema>) {
     Pertanian: 'http://localhost:3001/media/media/catalog-pertanian.webp',
   } as const;
   const products = catalog.map(([umkmId, name, price, description, category, unit], index) => ({
-    id: productDeterministicId(index + 1), umkmId, name, price, description, category,
+    id: productDeterministicId(index + 1), umkmId, name, slug: slugify(name, 'produk'), price, description, category,
     imageUrl: imageByCategory[category],
     isAvailable: true, unit, displayOrder: (index % 4) + 1,
     publicationStatus: 'published' as const, publishedAt: SEED_DATES.recent,

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { RefObject } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { Product } from '../../types';
 import { formatPrice } from '../../lib/price';
@@ -9,9 +10,10 @@ interface ProductDetailDialogProps {
   product: Product;
   onClose: () => void;
   onInquire: () => void;
+  returnFocusRef?: RefObject<HTMLElement | null>;
 }
 
-export default function ProductDetailDialog({ isOpen, product, onClose, onInquire }: ProductDetailDialogProps) {
+export default function ProductDetailDialog({ isOpen, product, onClose, onInquire, returnFocusRef }: ProductDetailDialogProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -21,19 +23,17 @@ export default function ProductDetailDialog({ isOpen, product, onClose, onInquir
     document.body.style.overflow = 'hidden';
     closeButtonRef.current?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); return; }
       if (event.key !== 'Tab' || !dialogRef.current) return;
-      const elements = Array.from(dialogRef.current.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')) as HTMLElement[];
-      const focusable = elements.filter((element) => !element.hasAttribute('disabled'));
+      const focusable = Array.from(dialogRef.current.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')) as HTMLElement[];
       if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+      const first = focusable[0]; const last = focusable[focusable.length - 1];
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', handleKeyDown); };
-  }, [isOpen, onClose]);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', handleKeyDown); requestAnimationFrame(() => returnFocusRef?.current?.focus()); };
+  }, [isOpen, onClose, returnFocusRef]);
 
   if (!isOpen) return null;
   const availability = product.isAvailable ? 'Tersedia' : 'Saat ini tidak tersedia';

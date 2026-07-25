@@ -34,10 +34,12 @@
     "test:frontend": "npm run test --workspace=frontend",
     "test:backend": "npm run test --workspace=backend",
     "test:harness-safety": "node scripts/test-disposable-db-safety.mjs",
+    "test:migration:existing:isolated": "node scripts/run-isolated.mjs migration",
     "test:integration": "npm run test:integration:isolated",
     "test:integration:isolated": "node scripts/run-isolated.mjs integration",
     "test:e2e": "playwright test",
     "test:e2e:isolated": "node scripts/run-isolated.mjs e2e",
+    "test:e2e:zoom-native:isolated": "node scripts/run-isolated.mjs zoom-native",
     "verify:full:isolated": "node scripts/run-isolated.mjs full",
     "test:all": "npm run test:unit && npm run test:integration:isolated && npm run test:e2e:isolated"
   },

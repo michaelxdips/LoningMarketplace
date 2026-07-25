@@ -1,4 +1,4 @@
-import type { Category, Product, UMKM } from '../types';
+import type { Category, Product, ProductDetail, UMKM } from '../types';
 
 export interface GetUMKMsParams { category?: Category; q?: string; limit?: number }
 export interface GetProductsParams { category?: Category; q?: string; umkmId?: string; limit?: number }
@@ -64,6 +64,8 @@ export async function get<T>(path: string, params: object = {}, signal?: AbortSi
 
 export const getUMKMs = (params?: GetUMKMsParams, signal?: AbortSignal) => get<UMKM[]>('/umkms', params, signal);
 export const getProducts = (params?: GetProductsParams, signal?: AbortSignal) => get<Product[]>('/products', params, signal);
+export const getUMKM = (id: string, signal?: AbortSignal) => get<UMKM>(`/umkms/${encodeURIComponent(id)}`, {}, signal);
+export const getProduct = (id: string, signal?: AbortSignal) => get<ProductDetail>(`/products/${encodeURIComponent(id)}`, {}, signal);
 
 export interface MediaAsset { id: string; imageUrl: string; thumbnailUrl: string; width: number; height: number; byteSize: number; altText: string | null }
 export function uploadMedia(file: File, altText: string, csrf: string | undefined, onProgress?: (percent: number) => void) {

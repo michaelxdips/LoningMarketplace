@@ -1,7 +1,7 @@
-import { lazy, StrictMode, Suspense } from 'react';
+import { lazy, StrictMode, Suspense, useLayoutEffect } from 'react';
 import {createRoot} from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router';
 import App from './App.tsx';
 import { PasswordGuard, ProtectedGuard, PublicOnlyGuard, RoleGuard, UnsupportedRolePage } from './components/dashboard/Guards.tsx';
 import { LoadingPanel } from './components/dashboard/Ui.tsx';
@@ -15,6 +15,10 @@ const ProductListPage = lazy(() => import('./pages/ManagementLists.tsx').then(mo
 const UserListPage = lazy(() => import('./pages/ManagementLists.tsx').then(module => ({ default: module.UserListPage })));
 const AuditListPage = lazy(() => import('./pages/ManagementLists.tsx').then(module => ({ default: module.AuditListPage })));
 const InquiryAnalyticsPage = lazy(() => import('./pages/InquiryAnalyticsPage.tsx'));
+const FaqPage = lazy(() => import('./pages/FaqPage.tsx'));
+const AboutVillagePage = lazy(() => import('./pages/AboutVillagePage.tsx'));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage.tsx'));
+const UMKMDetailPage = lazy(() => import('./pages/UMKMDetailPage.tsx'));
 const UMKMFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.UMKMFormPage })));
 const ProductFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.ProductFormPage })));
 const UserFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.UserFormPage })));
@@ -36,12 +40,47 @@ setUnauthorizedHandler(() => {
   queryClient.setQueryData(['auth', 'session'], null); queryClient.setQueryData(['auth', 'csrf'], null);
 });
 
+function PublicNavigationManager() {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+
+  useLayoutEffect(() => {
+    if (location.hash) {
+      document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView({ block: 'start' });
+      return;
+    }
+
+    // ponytail: focus `main` on every non-hash navigation, including the initial POP (direct load).
+    // The POP early-return left main unfocused on direct/refresh loads, so screen-reader and keyboard
+    // users landed on <body> instead of the main landmark. Scroll-to-top is skipped for POP so the
+    // browser's own scroll restoration (back/forward) is preserved.
+    if (navigationType !== 'POP') {
+      const root = document.documentElement;
+      const previousScrollBehavior = root.style.scrollBehavior;
+      root.style.scrollBehavior = 'auto';
+      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+      root.style.scrollBehavior = previousScrollBehavior;
+    }
+
+    const main = document.querySelector<HTMLElement>('main');
+    if (!main) return;
+    main.tabIndex = -1;
+    main.focus({ preventScroll: true });
+  }, [location.key, location.hash, navigationType]);
+
+  return null;
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter><LazyRouteBoundary><Suspense fallback={<main className="grid min-h-screen place-items-center"><LoadingPanel /></main>}>
         <Routes>
           <Route path="/" element={<App />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route path="/tentang-desa" element={<AboutVillagePage />} />
+          <Route path="/produk/:identifier" element={<ProductDetailPage />} />
+          <Route path="/umkm/:identifier" element={<UMKMDetailPage />} />
           <Route element={<PublicOnlyGuard />}><Route path="/login" element={<LoginPage />} /></Route>
           <Route element={<ProtectedGuard />}>
             <Route path="/unsupported-role" element={<UnsupportedRolePage />} />
@@ -68,6 +107,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
+        <PublicNavigationManager />
       </Suspense></LazyRouteBoundary></BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,

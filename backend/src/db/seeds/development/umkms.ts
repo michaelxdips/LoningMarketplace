@@ -3,6 +3,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '../../schema.js';
 import { UMKMS, USERS } from '../shared/ids.js';
 import { SEED_DATES } from '../shared/dates.js';
+import { slugify } from '../../../lib/slug.js';
 
 export async function seedUmkms(db: PostgresJsDatabase<typeof schema>) {
   const umkms = [
@@ -31,6 +32,7 @@ export async function seedUmkms(db: PostgresJsDatabase<typeof schema>) {
   for (const umkm of umkms) {
     await db.insert(schema.umkms).values({
       ...umkm,
+      slug: slugify(umkm.name, 'umkm'),
       // ponytail: media assets are created later in this transaction; this source only satisfies the insert-time constraint.
       imageUrl: umkm.imageUrl ?? 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=600&q=80',
       createdAt: SEED_DATES.old,

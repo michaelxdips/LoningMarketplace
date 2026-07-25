@@ -7,12 +7,14 @@ const root = process.cwd();
 const npmCli = process.env.npm_execpath;
 if (!npmCli) throw new Error('npm_execpath is required for shell-free npm execution');
 const mode = process.argv[2];
-if (!['integration', 'e2e', 'full'].includes(mode)) throw new Error('Usage: node scripts/run-isolated.mjs integration|e2e|full [Playwright args]');
-const project = mode === 'e2e' ? 'marketplace-loning-e2e-phase0' : 'marketplace-loning-test-phase0';
-const database = mode === 'e2e' ? 'loning_phase0_e2e' : 'loning_phase0_test';
-const port = mode === 'e2e' ? '55433' : '55432';
+if (!['integration', 'e2e', 'full', 'migration', 'zoom-native'].includes(mode)) throw new Error('Usage: node scripts/run-isolated.mjs integration|e2e|full|migration|zoom-native [Playwright args]');
+const project = mode === 'e2e' || mode === 'zoom-native' ? 'marketplace-loning-e2e-phase0' : mode === 'migration' ? 'marketplace-loning-test-migration-v12' : 'marketplace-loning-test-phase0';
+const database = mode === 'e2e' || mode === 'zoom-native' ? 'loning_phase0_e2e' : mode === 'migration' ? 'loning_v12_migration_test' : 'loning_phase0_test';
+const port = mode === 'e2e' || mode === 'zoom-native' ? '55433' : '55432';
 const artifactRoot = resolve(root, '.phase0-runtime', mode);
 const artifactMediaRoot = resolve(artifactRoot, 'media');
+const frontendOrigin = 'http://localhost:3100';
+const backendOrigin = 'http://localhost:3101';
 const env = {
   ...process.env,
   NODE_ENV: 'test',
@@ -22,12 +24,18 @@ const env = {
   DISPOSABLE_DB_NAME: database,
   DATABASE_URL: `postgresql://loning_test:loning_disposable_only@127.0.0.1:${port}/${database}`,
   COOKIE_SECURE: 'false',
-  CORS_ORIGIN: 'http://localhost:3000',
+  PORT: '3101',
+  CORS_ORIGIN: frontendOrigin,
   MEDIA_STORAGE_DRIVER: 'filesystem',
   MEDIA_FILESYSTEM_ROOT: artifactMediaRoot,
-  MEDIA_PUBLIC_BASE_URL: 'http://localhost:3001/media',
+  MEDIA_PUBLIC_BASE_URL: `${backendOrigin}/media`,
   RATE_LIMIT_MAX: '10000',
   LOGIN_RATE_LIMIT_MAX: '1000',
+  VITE_API_URL: `${backendOrigin}/api`,
+  VITE_PUBLIC_SITE_URL: frontendOrigin,
+  E2E_API_BASE_URL: `${backendOrigin}/api`,
+  E2E_BASE_URL: frontendOrigin,
+  E2E_FRONTEND_ORIGIN: frontendOrigin,
 };
 const target = assertDisposableDatabase(env);
 const compose = ['compose', '--project-name', project, '--file', 'compose.test.yaml'];
@@ -58,7 +66,7 @@ async function waitForPostgres(timeout = 120_000) {
 async function waitForBackend(timeout = 120_000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
-    try { const response = await fetch('http://127.0.0.1:3001/api/ready'); if (response.ok) return; } catch {}
+    try { const response = await fetch(`${backendOrigin}/api/ready`); if (response.ok) return; } catch {}
     await new Promise(resolve => setTimeout(resolve, 500));
   }
   throw new Error(`Backend did not become ready\n${backendOutput.slice(-100).join('')}`);
@@ -72,8 +80,49 @@ async function integration() {
   const backend = spawn(process.execPath, [npmCli, '--prefix', 'backend', 'run', 'dev'], { cwd: root, env, shell: false, windowsHide: true });
   backend.stdout.on('data', data => backendOutput.push(String(data)));
   backend.stderr.on('data', data => backendOutput.push(String(data)));
-  try { await waitForBackend(); run(process.execPath, ['scripts/integration-smoke.mjs'], { env: { ...env, API_BASE_URL: 'http://127.0.0.1:3001/api' } }); }
+  try { await waitForBackend(); run(process.execPath, ['scripts/integration-smoke.mjs'], { env: { ...env, API_BASE_URL: `${backendOrigin}/api`, FRONTEND_ORIGIN: frontendOrigin } }); }
   finally { stop(backend); }
+}
+function psql(statement) {
+  docker(['exec', '-T', 'postgres', 'psql', '-v', 'ON_ERROR_STOP=1', '-U', 'loning_test', '-d', database, '-c', statement]);
+}
+function existingDataMigration() {
+  npm(['--prefix', 'backend', 'run', 'db:migrate']);
+  psql(`
+    DROP INDEX products_slug_unique;
+    DROP INDEX umkms_slug_unique;
+    ALTER TABLE products DROP COLUMN slug;
+    ALTER TABLE umkms DROP COLUMN slug;
+    DELETE FROM drizzle.__drizzle_migrations WHERE id = (SELECT max(id) FROM drizzle.__drizzle_migrations);
+    INSERT INTO umkms (id, name, owner, description, phone, category, image_url, address, publication_status, published_at, created_at)
+    VALUES
+      ('f2000000-0000-4000-8000-000000000001', 'Dapur Bu Sri', 'Sri', 'Legacy migration fixture', '628123456789', 'Kuliner', 'https://example.test/umkm-1.png', 'Loning', 'published', now(), '2025-01-01T00:00:00Z'),
+      ('f2000000-0000-4000-8000-000000000002', 'Dapur-Bu Sri', 'Sri Dua', 'Collision migration fixture', '628123456788', 'Kuliner', 'https://example.test/umkm-2.png', 'Loning', 'published', now(), '2025-01-02T00:00:00Z');
+    INSERT INTO products (id, umkm_id, name, price, description, category, image_url, publication_status, published_at, created_at)
+    VALUES
+      ('f3000000-0000-4000-8000-000000000001', 'f2000000-0000-4000-8000-000000000001', 'Keripik Pisang Cokelat', 12000, 'Legacy migration fixture', 'Kuliner', 'https://example.test/product-1.png', 'published', now(), '2025-01-01T00:00:00Z'),
+      ('f3000000-0000-4000-8000-000000000002', 'f2000000-0000-4000-8000-000000000002', 'Keripik-Pisang Cokelat', 13000, 'Collision migration fixture', 'Kuliner', 'https://example.test/product-2.png', 'published', now(), '2025-01-02T00:00:00Z');
+  `);
+  npm(['--prefix', 'backend', 'run', 'db:migrate']);
+  const expected = `
+    DO $check$
+    DECLARE actual text[];
+    BEGIN
+      SELECT array_agg(slug ORDER BY id) INTO actual FROM umkms;
+      IF actual <> ARRAY['dapur-bu-sri','dapur-bu-sri-2'] THEN RAISE EXCEPTION 'Unexpected UMKM slugs: %', actual; END IF;
+      SELECT array_agg(slug ORDER BY id) INTO actual FROM products;
+      IF actual <> ARRAY['keripik-pisang-cokelat','keripik-pisang-cokelat-2'] THEN RAISE EXCEPTION 'Unexpected product slugs: %', actual; END IF;
+      IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name IN ('umkms','products') AND column_name='slug' AND (is_nullable <> 'NO' OR character_maximum_length <> 96)) THEN RAISE EXCEPTION 'Invalid slug column contract'; END IF;
+      IF (SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND indexname IN ('umkms_slug_unique','products_slug_unique')) <> 2 THEN RAISE EXCEPTION 'Missing slug unique indexes'; END IF;
+      IF (SELECT count(*) FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu ON tc.constraint_name=kcu.constraint_name AND tc.table_schema=kcu.table_schema WHERE tc.constraint_type='PRIMARY KEY' AND tc.table_schema='public' AND tc.table_name IN ('umkms','products') AND kcu.column_name='id') <> 2 THEN RAISE EXCEPTION 'UUID id primary keys not retained'; END IF;
+    END $check$;
+    SELECT id, slug FROM umkms UNION ALL SELECT id, slug FROM products ORDER BY id;
+  `;
+  psql(expected);
+  npm(['--prefix', 'backend', 'run', 'db:migrate']);
+  psql(expected);
+  npm(['--prefix', 'backend', 'run', 'db:audit']);
+  console.log('EXISTING_DATA_MIGRATION_PASS');
 }
 
 let failure;
@@ -81,12 +130,15 @@ console.log(`Disposable target: ${target.redactedUrl}; project=${target.project}
 try {
   docker(['up', '-d', '--wait', 'postgres']);
   await waitForPostgres();
-   npm(['--prefix', 'backend', 'run', 'db:migrate']);
-   npm(['--prefix', 'backend', 'run', 'db:seed']);
-   if (mode === 'e2e' || mode === 'full') npm(['--prefix', 'backend', 'run', 'e2e:setup']);
-   if (mode === 'integration' || mode === 'full') await integration();
-  if (mode === 'e2e' || mode === 'full') npm(['exec', '--', 'playwright', 'test', ...process.argv.slice(3)]);
-  npm(['--prefix', 'backend', 'run', 'db:audit']);
+  if (mode === 'migration') existingDataMigration();
+  else {
+    npm(['--prefix', 'backend', 'run', 'db:migrate']);
+    npm(['--prefix', 'backend', 'run', 'db:seed']);
+    if (mode === 'e2e' || mode === 'full') npm(['--prefix', 'backend', 'run', 'e2e:setup']);
+    if (mode === 'zoom-native') npm(['exec', '--', 'playwright', 'test', '--config', 'playwright.zoom-native.config.ts']);
+    else if (mode === 'e2e' || mode === 'full') npm(['exec', '--', 'playwright', 'test', ...process.argv.slice(3)]);
+    npm(['--prefix', 'backend', 'run', 'db:audit']);
+  }
 } catch (error) {
   failure = error instanceof Error ? error : new Error(String(error));
   try { docker(['logs', '--no-color', '--tail', '200', 'postgres']); } catch {}

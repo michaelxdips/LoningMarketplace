@@ -16,40 +16,32 @@ interface UMKMDetailDialogProps {
   products: Product[];
   onInquireProduct: (product: Product) => void;
   onInquireUMKM: (umkm: UMKM) => void;
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
-export default function UMKMDetailDialog({ isOpen, onClose, umkm, products, onInquireProduct, onInquireUMKM }: UMKMDetailDialogProps) {
+export default function UMKMDetailDialog({ isOpen, onClose, umkm, products, onInquireProduct, onInquireUMKM, returnFocusRef }: UMKMDetailDialogProps) {
   const [activeTab, setActiveTab] = useState<'info' | 'products'>('info');
-  
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-
-  // Load associated products
   const associatedProducts = products.filter((p) => p.umkmId === umkm.id);
 
-  // Focus trap & Scroll lock
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      closeButtonRef.current?.focus();
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
-  // Escape listener
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeButtonRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); return; }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = (Array.from(dialogRef.current.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')) as HTMLElement[]).filter((element) => !element.hasAttribute('disabled'));
+      if (!focusable.length) return;
+      const first = focusable[0]; const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', handleKeyDown); requestAnimationFrame(() => returnFocusRef?.current?.focus()); };
+  }, [isOpen, onClose, returnFocusRef]);
 
   if (!isOpen) return null;
 

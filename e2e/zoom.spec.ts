@@ -1,8 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { E2E_FIXTURES, loginFixture } from './support/fixtures';
 
-const API_BASE = 'http://localhost:3001/api';
-const FRONTEND_ORIGIN = 'http://localhost:3000';
+const API_BASE = process.env.E2E_API_BASE_URL ?? 'http://localhost:3001/api';
+const FRONTEND_ORIGIN = process.env.E2E_FRONTEND_ORIGIN ?? 'http://localhost:3000';
 const desktopProduct = E2E_FIXTURES.products.desktop;
 const mobileProduct = E2E_FIXTURES.products.mobile;
 const image = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
@@ -22,8 +22,7 @@ async function withinViewport(page: Page, selector: Locator) {
 }
 
 for (const viewport of [{ width: 1024, height: 768 }, { width: 320, height: 700 }]) {
-  test(`core flow remains interactive at ${viewport.width}x${viewport.height}`, async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'desktop', 'Explicit viewport acceptance runs once in Chromium');
+  test(`core flow remains interactive at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.route('https://images.unsplash.com/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: image }));
 
@@ -33,7 +32,7 @@ for (const viewport of [{ width: 1024, height: 768 }, { width: 320, height: 700 
     await expect(page.locator('footer')).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 0));
     if (viewport.width < 768) {
-      await page.getByRole('button', { name: 'Toggle navigasi' }).click();
+      await page.getByRole('button', { name: 'Buka atau tutup navigasi' }).click();
       await expect(page.locator('#mobile-nav-menu')).toBeVisible();
       await page.getByRole('link', { name: 'Masuk Pengelola' }).click();
     } else {
@@ -55,7 +54,159 @@ for (const viewport of [{ width: 1024, height: 768 }, { width: 320, height: 700 
   });
 }
 
-test('required routes remain task-completable at 200% desktop zoom and normal mobile scale', async ({ page, context }, testInfo) => {
+test('mobile 390x844 remains task-completable at 200% visual page scale', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(page.viewportSize()).toEqual({ width: 390, height: 844 });
+
+  const consoleErrors: Array<{ text: string; url: string }> = [];
+  const pageErrors: string[] = [];
+  const requestFailures: string[] = [];
+  const mainFrameNavigations: string[] = [];
+  page.on('console', message => { if (message.type() === 'error') consoleErrors.push({ text: message.text(), url: message.location().url }); });
+  page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('requestfailed', request => requestFailures.push(`${request.method()} ${request.url()} ${request.failure()?.errorText}`));
+  page.on('framenavigated', frame => { if (frame === page.mainFrame() && mainFrameNavigations[mainFrameNavigations.length - 1] !== frame.url()) mainFrameNavigations.push(frame.url()); });
+  await page.route('https://images.unsplash.com/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: image }));
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (value: string) => { (window as Window & { __sharedUrl?: string }).__sharedUrl = value; } } });
+  });
+
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 2 });
+
+    const metrics = await cdp.send('Page.getLayoutMetrics');
+    const runtimeMetrics = await page.evaluate(() => ({
+      configuredViewport: { width: 390, height: 844 },
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+      devicePixelRatio: window.devicePixelRatio,
+      visualViewportWidth: window.visualViewport?.width,
+      visualViewportHeight: window.visualViewport?.height,
+      visualViewportScale: window.visualViewport?.scale,
+    }));
+    console.log('390x844@200% visual page scale runtime metrics', { ...runtimeMetrics, cdpCssVisualViewportScale: metrics.cssVisualViewport.scale });
+    expect(page.viewportSize()).toEqual({ width: 390, height: 844 });
+    expect(runtimeMetrics.innerWidth).toBe(390);
+    expect(runtimeMetrics.innerHeight).toBe(844);
+    expect(metrics.cssVisualViewport.scale).toBeCloseTo(2, 2);
+    expect(runtimeMetrics.visualViewportScale).toBeCloseTo(2, 2);
+
+    const assertNoOverflow = async () => {
+      const overflow = await page.evaluate(() => ({
+        documentScrollWidth: document.documentElement.scrollWidth,
+        documentClientWidth: document.documentElement.clientWidth,
+        bodyScrollWidth: document.body.scrollWidth,
+        bodyClientWidth: document.body.clientWidth,
+      }));
+      expect(overflow.documentScrollWidth).toBeLessThanOrEqual(overflow.documentClientWidth);
+      expect(overflow.bodyScrollWidth).toBeLessThanOrEqual(overflow.bodyClientWidth);
+    };
+    const expectInsideLayoutViewport = async (locator: Locator) => {
+      await locator.scrollIntoViewIfNeeded();
+      // Measure in layout-viewport coordinates. Playwright's boundingBox() is relative to the
+      // visual viewport, which Emulation.setPageScaleFactor(2) offsets by visualViewport.offsetLeft
+      // (195px here), so a correctly-laid-out full-width element reports a negative x. The layout
+      // viewport (getBoundingClientRect + innerWidth/innerHeight) is the 390x844 space we assert on.
+      const box = await locator.evaluate(element => { const r = element.getBoundingClientRect(); return { x: r.left, y: r.top, width: r.width, height: r.height }; });
+      expect(box).not.toBeNull();
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(390);
+      expect(box.y + box.height).toBeGreaterThan(0);
+      expect(box.y).toBeLessThan(844);
+    };
+    const expectNoCollision = async (first: Locator, second: Locator) => {
+      const [a, b] = await Promise.all([first.boundingBox(), second.boundingBox()]);
+      expect(a).not.toBeNull(); expect(b).not.toBeNull();
+      expect(a!.x + a!.width <= b!.x || b!.x + b!.width <= a!.x || a!.y + a!.height <= b!.y || b!.y + b!.height <= a!.y).toBe(true);
+    };
+
+    const heading = page.getByRole('heading', { name: 'Katalog Produk Warga' });
+    await expect(heading).toBeVisible();
+    await expectInsideLayoutViewport(heading);
+    await assertNoOverflow();
+
+    const menuToggle = page.getByRole('button', { name: 'Buka atau tutup navigasi' });
+    await menuToggle.focus();
+    await expect(menuToggle).toBeFocused();
+    expect(await menuToggle.evaluate(element => element.matches(':focus-visible'))).toBe(true);
+    await menuToggle.press('Enter');
+    const mobileMenu = page.locator('#mobile-nav-menu');
+    await expect(mobileMenu).toBeVisible();
+    await expectInsideLayoutViewport(mobileMenu);
+    const faqLink = mobileMenu.getByRole('link', { name: 'FAQ', exact: true });
+    await faqLink.focus();
+    await expect(faqLink).toBeFocused();
+    await faqLink.press('Enter');
+    await expect(page).toHaveURL(/\/faq$/);
+    await expect(page.locator('main')).toBeFocused();
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 2 });
+    expect((await cdp.send('Page.getLayoutMetrics')).cssVisualViewport.scale).toBeCloseTo(2, 2);
+    expect(await page.evaluate(() => window.visualViewport?.scale)).toBeCloseTo(2, 2);
+    const productCard = page.locator('[id^="product-card-"]').first();
+    await expectInsideLayoutViewport(productCard);
+    await assertNoOverflow();
+    const productLink = productCard.getByRole('link', { name: /Buka halaman/ });
+    await productLink.focus();
+    await expect(productLink).toBeFocused();
+    await productLink.press('Enter');
+    await expect(page).toHaveURL(/\/produk\/[a-z0-9-]+$/);
+    await expect(page.locator('main')).toBeFocused();
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await assertNoOverflow();
+
+    const merchantLink = page.getByRole('link', { name: /^Oleh / });
+    const inquiryButton = page.getByRole('button', { name: 'Tanya Produk' });
+    const shareButton = page.getByRole('button', { name: 'Bagikan' });
+    await expectInsideLayoutViewport(inquiryButton);
+    await expectInsideLayoutViewport(shareButton);
+    await expectNoCollision(inquiryButton, shareButton);
+    await shareButton.focus();
+    await expect(shareButton).toBeFocused();
+    await shareButton.press('Enter');
+    await expect(page.getByRole('status')).toHaveText('Tautan disalin.');
+    expect(await page.evaluate(() => (window as Window & { __sharedUrl?: string }).__sharedUrl)).toBe(page.url());
+
+    await inquiryButton.focus();
+    await expect(inquiryButton).toBeFocused();
+    await inquiryButton.press('Enter');
+    const dialog = page.getByRole('dialog', { name: 'Kirim Pertanyaan' });
+    await expect(dialog).toBeVisible();
+    await expectInsideLayoutViewport(dialog);
+    await expect(page.getByRole('button', { name: 'Tutup dialog' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Kirim Pertanyaan' })).toBeEnabled();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+
+    await merchantLink.focus();
+    await expect(merchantLink).toBeFocused();
+    await merchantLink.press('Enter');
+    await expect(page).toHaveURL(/\/umkm\/[a-z0-9-]+$/);
+    await expect(page.locator('main')).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Hubungi via WhatsApp' })).toBeVisible();
+    await assertNoOverflow();
+
+    const footer = page.locator('footer');
+    await footer.scrollIntoViewIfNeeded();
+    await expect(footer).toBeVisible();
+    await expectInsideLayoutViewport(footer);
+    expect(mainFrameNavigations.length).toBeLessThanOrEqual(5);
+    expect(requestFailures).toEqual([]);
+    expect(pageErrors).toEqual([]);
+    expect(consoleErrors).toEqual([]);
+  } finally {
+    await cdp.send('Emulation.resetPageScaleFactor');
+    await cdp.detach();
+  }
+});
+
+test('required routes remain task-completable at density override and normal mobile scale', async ({ page, context }, testInfo) => {
   const consoleErrors: Array<{ text: string; url: string }> = [];
   const pageErrors: string[] = [];
   const apiFailures: string[] = [];
@@ -85,7 +236,7 @@ test('required routes remain task-completable at 200% desktop zoom and normal mo
   await expect(page.locator('footer')).toBeVisible();
   await noDocumentOverflow(page);
 
-  await page.locator('[id^="business-card-"]').first().getByRole('button', { name: /Kunjungi Profil/ }).click();
+  await page.locator('[id^="business-card-"]').first().getByRole('button', { name: /Lihat ringkasan/ }).click();
   const businessDialog = page.getByRole('dialog');
   await expect(businessDialog).toBeVisible();
   await withinViewport(page, businessDialog);

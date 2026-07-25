@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 
 export const categoryEnum = pgEnum('category', ['Kuliner', 'Kerajinan', 'Jasa', 'Sembako', 'Pertanian']);
 export const userRoleEnum = pgEnum('user_role', ['superadmin', 'admin', 'perangkat_desa', 'pelaku_umkm']);
@@ -34,25 +34,25 @@ export const mediaAssets = pgTable('media_assets', {
 }, (table) => ({ creatorIdx: index('media_assets_created_by_user_id_idx').on(table.createdByUserId), checksumIdx: index('media_assets_checksum_sha256_idx').on(table.checksumSha256), orphanIdx: index('media_assets_orphaned_at_idx').on(table.orphanedAt), deletedIdx: index('media_assets_deleted_at_idx').on(table.deletedAt), createdIdx: index('media_assets_created_at_idx').on(table.createdAt), cardKeyIdx: uniqueIndex('media_assets_card_storage_key_unique').on(table.cardStorageKey), thumbKeyIdx: uniqueIndex('media_assets_thumbnail_storage_key_unique').on(table.thumbnailStorageKey), dimensionsCheck: check('media_assets_dimensions_check', sql`${table.cardWidth} > 0 AND ${table.cardHeight} > 0 AND ${table.cardByteSize} > 0 AND ${table.thumbnailWidth} > 0 AND ${table.thumbnailHeight} > 0 AND ${table.thumbnailByteSize} > 0`), checksumCheck: check('media_assets_checksum_sha256_check', sql`${table.checksumSha256} ~ '^[0-9a-f]{64}$'`), altTextCheck: check('media_assets_alt_text_check', sql`${table.altText} IS NULL OR char_length(${table.altText}) <= 500`) }));
 
 export const umkms = pgTable('umkms', {
-  id: uuid('id').primaryKey(), name: text('name').notNull(), owner: text('owner').notNull(), description: text('description').notNull(),
+  id: uuid('id').primaryKey(), name: text('name').notNull(), slug: varchar('slug', { length: 96 }).notNull(), owner: text('owner').notNull(), description: text('description').notNull(),
   phone: text('phone').notNull(), category: categoryEnum('category').notNull(), imageUrl: text('image_url'), imageAssetId: uuid('image_asset_id').references(() => mediaAssets.id, { onDelete: 'set null' }), address: text('address').notNull(),
   workingHours: text('working_hours'), ownerUserId: uuid('owner_user_id').references(() => users.id, { onDelete: 'set null' }), displayOrder: integer('display_order').notNull().default(0),
   publicationStatus: publicationStatusEnum('publication_status').notNull().default('draft'), publishedAt: timestamp('published_at', { withTimezone: true }),
   contactVerifiedAt: timestamp('contact_verified_at', { withTimezone: true }), catalogUpdatedAt: timestamp('catalog_updated_at', { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
-  categoryIdx: index('umkms_category_idx').on(table.category), orderIdx: index('umkms_display_order_idx').on(table.displayOrder), ownerIdx: index('umkms_owner_user_id_idx').on(table.ownerUserId), statusIdx: index('umkms_publication_status_idx').on(table.publicationStatus),
+  slugIdx: uniqueIndex('umkms_slug_unique').on(table.slug), categoryIdx: index('umkms_category_idx').on(table.category), orderIdx: index('umkms_display_order_idx').on(table.displayOrder), ownerIdx: index('umkms_owner_user_id_idx').on(table.ownerUserId), statusIdx: index('umkms_publication_status_idx').on(table.publicationStatus),
   phoneCheck: check('umkms_phone_digits_check', sql`${table.phone} ~ '^[0-9]+$'`), orderCheck: check('umkms_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('umkms_image_asset_id_idx').on(table.imageAssetId),
   imageSourceCheck: check('umkms_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`),
 }));
 
 export const products = pgTable('products', {
-  id: uuid('id').primaryKey(), umkmId: uuid('umkm_id').notNull().references(() => umkms.id, { onDelete: 'cascade' }), name: text('name').notNull(), price: integer('price'),
+  id: uuid('id').primaryKey(), umkmId: uuid('umkm_id').notNull().references(() => umkms.id, { onDelete: 'cascade' }), name: text('name').notNull(), slug: varchar('slug', { length: 96 }).notNull(), price: integer('price'),
   description: text('description').notNull(), category: categoryEnum('category').notNull(), imageUrl: text('image_url'), imageAssetId: uuid('image_asset_id').references(() => mediaAssets.id, { onDelete: 'set null' }), isAvailable: boolean('is_available').notNull().default(true),
   unit: text('unit'), displayOrder: integer('display_order').notNull().default(0), publicationStatus: publicationStatusEnum('publication_status').notNull().default('draft'), publishedAt: timestamp('published_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
-  umkmIdx: index('products_umkm_id_idx').on(table.umkmId), categoryIdx: index('products_category_idx').on(table.category), orderIdx: index('products_display_order_idx').on(table.displayOrder), statusIdx: index('products_publication_status_idx').on(table.publicationStatus), parentStatusOrderIdx: index('products_umkm_status_order_idx').on(table.umkmId, table.publicationStatus, table.displayOrder),
+  slugIdx: uniqueIndex('products_slug_unique').on(table.slug), umkmIdx: index('products_umkm_id_idx').on(table.umkmId), categoryIdx: index('products_category_idx').on(table.category), orderIdx: index('products_display_order_idx').on(table.displayOrder), statusIdx: index('products_publication_status_idx').on(table.publicationStatus), parentStatusOrderIdx: index('products_umkm_status_order_idx').on(table.umkmId, table.publicationStatus, table.displayOrder),
   priceCheck: check('products_price_check', sql`${table.price} IS NULL OR ${table.price} >= 0`), orderCheck: check('products_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('products_image_asset_id_idx').on(table.imageAssetId),
   imageSourceCheck: check('products_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`),
 }));
@@ -67,7 +67,7 @@ export const publicEvents = pgTable('public_events', {
   umkmDedupeIdx: uniqueIndex('public_events_umkm_dedupe_unique').on(table.anonymousSessionId, table.eventType, table.umkmId, table.source, table.dedupeBucket).where(sql`${table.umkmId} IS NOT NULL AND ${table.productId} IS NULL`),
   productDedupeIdx: uniqueIndex('public_events_product_dedupe_unique').on(table.anonymousSessionId, table.eventType, table.productId, table.source, table.dedupeBucket).where(sql`${table.productId} IS NOT NULL`),
   targetCheck: check('public_events_target_check', sql`(${table.umkmId} IS NOT NULL AND ${table.productId} IS NULL) OR ${table.productId} IS NOT NULL`),
-  sourceCheck: check('public_events_source_check', sql`${table.source} IN ('homepage_featured','homepage_catalog','umkm_detail','product_detail','search_results')`),
+  sourceCheck: check('public_events_source_check', sql`${table.source} IN ('homepage_featured','homepage_catalog','umkm_detail','product_detail','product_page','umkm_page','search_results')`),
   versionCheck: check('public_events_version_check', sql`${table.eventVersion} = 1`),
 }));
 
