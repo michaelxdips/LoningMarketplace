@@ -1,13 +1,10 @@
 import { createDatabase } from './client.js';
-import * as schema from './schema.js';
 import { seedUsers } from './seeds/development/users.js';
 import { seedUmkms } from './seeds/development/umkms.js';
 import { seedProducts } from './seeds/development/products.js';
 import { seedMedia } from './seeds/development/media.js';
-import { loadEnv } from '../config/env.js';
 import process from 'node:process';
 import argon2 from 'argon2';
-import { sql } from 'drizzle-orm';
 
 async function seed() {
   const envNode = process.env.NODE_ENV || 'development';

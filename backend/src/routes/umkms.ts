@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { categories, type Repository } from '../db/repository.js';
 
-const querySchema = z.object({ category: z.enum(categories).optional(), q: z.string().trim().optional(), limit: z.coerce.number().int().positive().max(100).default(100) });
+const querySchema = z.object({ category: z.enum(categories).optional(), q: z.string().trim().max(80).optional(), limit: z.coerce.number().int().positive().max(100).default(100) });
 const identifierSchema = z.string().min(1).max(128);
 const error = (message: string, code: string) => ({ error: { message, code } });
 export async function umkmRoutes(app: FastifyInstance, repository: Repository) {

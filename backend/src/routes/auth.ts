@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AppEnv } from '../config/env.js';
-import { isUserRole, loginPasswordSchema, normalizeUsername, passwordSetterSchema, usernameSchema } from '../auth/policy.js';
+import { isSupportedUserRole, loginPasswordSchema, normalizeUsername, passwordSetterSchema, usernameSchema } from '../auth/policy.js';
 import type { Security } from '../auth/security.js';
 import type { Repository } from '../db/repository.js';
 import type { ReturnTypeGuards } from './types.js';
@@ -22,10 +22,10 @@ export async function authRoutes(app: FastifyInstance, repository: Repository, g
       await repository.transaction(async (tx) => { if (found && found.isActive && (!found.lockedUntil || found.lockedUntil <= at)) { const count = found.lockedUntil ? 1 : found.failedLoginCount + 1; await tx.recordLoginFailure(found.id, count, count >= env.LOGIN_MAX_ATTEMPTS ? new Date(at.getTime() + env.LOGIN_LOCKOUT_MINUTES * 60_000) : null, at); } await tx.addAudit({ actorUserId: found?.id ?? null, action: 'auth.login_failed', entityType: 'auth', metadata: {}, ...info(request) }); });
       return reply.code(401).send(error('Email/username atau kata sandi salah.', 'INVALID_CREDENTIALS'));
     }
-    if (!isUserRole(found.role)) {
+    if (!isSupportedUserRole(found.role)) {
       await repository.revokeUserSessions(found.id, at);
       await repository.addAudit({ actorUserId: found.id, action: 'auth.login_denied_invalid_role', entityType: 'auth', metadata: {}, ...info(request) });
-      return reply.code(403).send(error('Akun Anda tidak memiliki akses yang valid ke dashboard.', 'ROLE_INVALID'));
+      return reply.code(401).send(error('Email/username atau kata sandi salah.', 'INVALID_CREDENTIALS'));
     }
     const sessionToken = crypto.token(), csrfToken = crypto.token(), expiresAt = new Date(at.getTime() + env.SESSION_TTL_HOURS * 3_600_000);
     await repository.transaction(async (tx) => { await tx.recordLoginSuccess(found.id, at); const session = await tx.createSession({ userId: found.id, tokenHash: crypto.hashToken(sessionToken), csrfTokenHash: crypto.hashToken(csrfToken), expiresAt, ...info(request) }); await tx.addAudit({ actorUserId: found.id, action: 'auth.login_succeeded', entityType: 'session', entityId: session.id, ...info(request) }); });

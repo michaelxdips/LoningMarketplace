@@ -48,16 +48,20 @@ export function mediaConfig(env: AppEnv): MediaConfig {
   };
 }
 
-export function loadEnv(requireDatabase = true): AppEnv {
-  const parsed = envSchema.safeParse(process.env);
+export function parseEnv(input: NodeJS.ProcessEnv, requireDatabase = true): AppEnv {
+  const parsed = envSchema.safeParse(input);
   if (!parsed.success) throw new Error(`Invalid environment configuration: ${parsed.error.message}`);
   if (requireDatabase && !parsed.data.DATABASE_URL) throw new Error('DATABASE_URL is required. For local development: copy backend/.env.example to backend/.env, run npm run db:local:setup, then run npm run dev:all. Aiven is not required for local development.');
-  if (parsed.data.NODE_ENV === 'production' && !process.env.CORS_ORIGIN) throw new Error('CORS_ORIGIN is required in production');
+  if (parsed.data.NODE_ENV === 'production' && !input.CORS_ORIGIN) throw new Error('CORS_ORIGIN is required in production');
   if (parsed.data.NODE_ENV === 'production' && parsed.data.COOKIE_SECURE === false) throw new Error('COOKIE_SECURE must be true in production');
   if (parsed.data.NODE_ENV === 'production' && parsed.data.MEDIA_STORAGE_DRIVER !== 's3') throw new Error('MEDIA_STORAGE_DRIVER must be s3 in production');
   if (parsed.data.MEDIA_STORAGE_DRIVER === 's3' && (!parsed.data.S3_BUCKET || !parsed.data.S3_REGION)) throw new Error('S3_BUCKET and S3_REGION are required for S3 storage');
   if ((parsed.data.S3_ACCESS_KEY_ID && !parsed.data.S3_SECRET_ACCESS_KEY) || (!parsed.data.S3_ACCESS_KEY_ID && parsed.data.S3_SECRET_ACCESS_KEY)) throw new Error('Both S3 credential fields must be provided together');
-  if (parsed.data.NODE_ENV === 'production' && !process.env.MEDIA_PUBLIC_BASE_URL) throw new Error('MEDIA_PUBLIC_BASE_URL is required in production');
+  if (parsed.data.NODE_ENV === 'production' && !input.MEDIA_PUBLIC_BASE_URL) throw new Error('MEDIA_PUBLIC_BASE_URL is required in production');
   if (parsed.data.CORS_ORIGIN === '*' || parsed.data.CORS_ORIGIN.includes(',')) throw new Error('CORS_ORIGIN must be one explicit origin');
   return { ...parsed.data, COOKIE_SECURE: parsed.data.COOKIE_SECURE ?? parsed.data.NODE_ENV === 'production', DATABASE_URL: parsed.data.DATABASE_URL ?? '' };
+}
+
+export function loadEnv(requireDatabase = true): AppEnv {
+  return parseEnv(process.env, requireDatabase);
 }

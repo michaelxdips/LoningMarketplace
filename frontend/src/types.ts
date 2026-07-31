@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type Category = 'Kuliner' | 'Kerajinan' | 'Jasa' | 'Sembako' | 'Pertanian';
+export const CATEGORIES = ['Kuliner', 'Kerajinan', 'Jasa', 'Sembako', 'Pertanian'] as const;
+export type Category = typeof CATEGORIES[number];
 
 export interface UMKM {
   id: string;

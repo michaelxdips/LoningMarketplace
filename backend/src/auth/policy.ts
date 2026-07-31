@@ -12,7 +12,7 @@ const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
   superadmin: [],
   perangkat_desa: [],
 };
-export const hasCapability = (role: UserRole, capability: Capability) => ROLE_CAPABILITIES[role].includes(capability);
+export const hasCapability = (role: UserRole, capability: Capability) => ROLE_CAPABILITIES[role]?.includes(capability) ?? false;
 export const isSupportedUserRole = (role: UserRole): role is SupportedUserRole => (SUPPORTED_USER_ROLES as readonly UserRole[]).includes(role);
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;

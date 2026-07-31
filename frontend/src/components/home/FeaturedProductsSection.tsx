@@ -3,18 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { Search, X, Grid } from 'lucide-react';
+import { Grid } from 'lucide-react';
 import { Product, Category } from '../../types';
 import ProductCard from '../product/ProductCard';
 import EmptyState from '../shared/EmptyState';
 import LoadingSkeleton from '../shared/LoadingSkeleton';
+import DiscoverySearchForm from '../discovery/DiscoverySearchForm';
 
 interface FeaturedProductsSectionProps {
   products: Product[];
   selectedCategory: Category | 'Semua';
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  onSearchSubmit?: () => void;
+  onClearFilters?: () => void;
   onInquireProduct: (product: Product) => void;
   onViewProduct: (product: Product, trigger: HTMLElement, source: 'homepage_featured') => void;
   onViewMerchant: (merchantId: string) => void;
@@ -28,13 +30,17 @@ export default function FeaturedProductsSection({
   selectedCategory,
   searchQuery,
   onSearchChange,
+  onSearchSubmit,
+  onClearFilters,
   onInquireProduct,
   onViewProduct,
   onViewMerchant, isLoading, isError, onRetry
 }: FeaturedProductsSectionProps) {
   return (
-    <section 
+    <section
       id="featured-products" 
+      aria-labelledby="featured-products-heading"
+      aria-busy={isLoading}
       className="py-16 bg-cream-bg border-b border-sage-border px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-7xl mx-auto">
@@ -45,7 +51,7 @@ export default function FeaturedProductsSection({
             <span className="text-[10px] font-bold text-terracotta uppercase tracking-widest block mb-1">
               Etalase Niaga Desa
             </span>
-            <h2 className="text-2xl font-extrabold text-charcoal tracking-tight">
+            <h2 id="featured-products-heading" className="text-2xl font-extrabold text-charcoal tracking-tight">
               Katalog Produk Warga
             </h2>
             <p className="text-xs text-warm-gray mt-1 leading-relaxed max-w-xl">
@@ -55,31 +61,15 @@ export default function FeaturedProductsSection({
 
           {/* Search Box with Accessible Labels */}
           <div className="relative w-full md:max-w-xs shrink-0">
-            <label htmlFor="search-products-input" className="sr-only">
-              Cari produk lokal
-            </label>
-            <div className="relative">
-              <input
-                id="search-products-input"
-                type="text"
-                placeholder="Cari produk atau nama UMKM..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-cream-card border border-sage-border rounded-xl pl-9 pr-8 py-2.5 text-xs text-charcoal placeholder:text-warm-gray/40 focus:outline-none focus:ring-1 focus:ring-forest focus:border-forest focus-ring"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-warm-gray">
-                <Search size={14} />
-              </div>
-              {searchQuery && (
-                <button
-                   onClick={() => onSearchChange('')}
-                  aria-label="Bersihkan pencarian"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-warm-gray hover:text-charcoal focus-ring rounded"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
+            <DiscoverySearchForm
+              id="search-products-input"
+              label="Cari produk lokal"
+              placeholder="Cari produk atau nama UMKM..."
+              query={searchQuery}
+              onQueryChange={onSearchChange}
+              onSubmit={onSearchSubmit ?? (() => onSearchChange(searchQuery))}
+              onClear={() => onSearchChange('')}
+            />
           </div>
         </div>
 
@@ -93,13 +83,18 @@ export default function FeaturedProductsSection({
           </div>
         )}
 
+        <p role="status" aria-live="polite" className="mb-5 text-xs text-warm-gray">
+          {isLoading ? 'Memuat produk…' : isError ? 'Produk gagal dimuat.' : `${products.length} produk ditemukan`}
+        </p>
         {/* Displaying Products or Empty State */}
-        {isLoading ? <LoadingSkeleton count={3} /> : isError ? (
+        {isLoading ? <div data-testid="products-loading"><LoadingSkeleton count={3} /></div> : isError ? (
           <EmptyState title="Katalog Tidak Dapat Dimuat" description="Terjadi kendala saat mengambil katalog produk. Silakan coba lagi." actionLabel="Coba Lagi" onAction={onRetry} />
         ) : products.length === 0 ? (
           <EmptyState
             title="Produk Tidak Ditemukan"
-            description={`Tidak ada produk yang cocok dengan kategori "${selectedCategory}" atau kata pencarian "${searchQuery}". Silakan coba kata kunci lain.`}
+            description="Tidak ada produk yang cocok. Hapus filter atau gunakan kata kunci lain."
+            actionLabel={onClearFilters && (Boolean(searchQuery.trim()) || selectedCategory !== 'Semua') ? 'Hapus Filter' : undefined}
+            onAction={onClearFilters && (Boolean(searchQuery.trim()) || selectedCategory !== 'Semua') ? onClearFilters : undefined}
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

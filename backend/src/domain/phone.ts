@@ -3,7 +3,7 @@ const NORMALIZED_INDONESIAN_PHONE = /^628\d{7,12}$/;
 
 /**
  * Normalizes Indonesian mobile numbers to E.164 digits without `+`.
- * The 10–15 digit limit follows E.164's maximum while requiring Indonesia's 628 mobile prefix.
+ * The 10â€“15 digit limit follows E.164's maximum while requiring Indonesia's 628 mobile prefix.
  */
 export function normalizeIndonesianWhatsAppNumber(value: string): string | undefined {
   const input = value.trim();

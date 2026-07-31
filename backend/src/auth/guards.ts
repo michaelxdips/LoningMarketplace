@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { AppEnv } from '../config/env.js';
 import type { Repository, SessionUser } from '../db/repository.js';
-import { hasCapability, isUserRole } from './policy.js';
+import { hasCapability, isSupportedUserRole } from './policy.js';
 import { safeEqual, type Security } from './security.js';
 
 export type AuthContext = { user: SessionUser; sessionId: string; csrfTokenHash: string };
@@ -15,7 +15,7 @@ export function createGuards(repository: Repository, crypto: Security, env: AppE
     const at = now();
     const session = await repository.findSession(crypto.hashToken(token), at);
     if (!session) return fail(reply, 401, 'Session is invalid or expired', 'UNAUTHENTICATED');
-    if (!session.user.isActive || !isUserRole(session.user.role)) {
+    if (!session.user.isActive || !isSupportedUserRole(session.user.role)) {
       await repository.revokeSession(session.sessionId, at);
       reply.clearCookie(env.SESSION_COOKIE_NAME, { path: '/', sameSite: 'lax', secure: env.COOKIE_SECURE });
       return fail(reply, 403, 'Akun Anda tidak memiliki akses yang valid ke dashboard.', 'ROLE_INVALID');

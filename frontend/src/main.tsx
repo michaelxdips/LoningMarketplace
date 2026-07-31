@@ -1,4 +1,4 @@
-import { lazy, StrictMode, Suspense, useLayoutEffect } from 'react';
+import { lazy, StrictMode, Suspense, useLayoutEffect, useRef } from 'react';
 import {createRoot} from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router';
@@ -31,6 +31,7 @@ class LazyRouteBoundary extends Component<{ children: ReactNode }, { failed: boo
 }
 import NotFoundPage from './pages/NotFoundPage.tsx';
 import { setUnauthorizedHandler, shouldRetryApiRequest } from './lib/api.ts';
+import { shouldFocusMain } from './lib/navigation-focus.ts';
 import './index.css';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: shouldRetryApiRequest } } });
@@ -43,17 +44,21 @@ setUnauthorizedHandler(() => {
 function PublicNavigationManager() {
   const location = useLocation();
   const navigationType = useNavigationType();
+  const previousPathnameRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
+    const previousPathname = previousPathnameRef.current;
+    previousPathnameRef.current = location.pathname;
+
     if (location.hash) {
       document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView({ block: 'start' });
       return;
     }
 
-    // ponytail: focus `main` on every non-hash navigation, including the initial POP (direct load).
-    // The POP early-return left main unfocused on direct/refresh loads, so screen-reader and keyboard
-    // users landed on <body> instead of the main landmark. Scroll-to-top is skipped for POP so the
-    // browser's own scroll restoration (back/forward) is preserved.
+    if (!shouldFocusMain(previousPathname, location.pathname, location.hash)) return;
+
+    // Initial/direct loads and pathname transitions focus the main landmark. POP keeps native scroll
+    // restoration; PUSH/REPLACE pathname transitions reset scroll before transferring focus.
     if (navigationType !== 'POP') {
       const root = document.documentElement;
       const previousScrollBehavior = root.style.scrollBehavior;
@@ -66,7 +71,7 @@ function PublicNavigationManager() {
     if (!main) return;
     main.tabIndex = -1;
     main.focus({ preventScroll: true });
-  }, [location.key, location.hash, navigationType]);
+  }, [location.key, location.pathname, location.hash, navigationType]);
 
   return null;
 }

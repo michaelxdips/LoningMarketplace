@@ -9,10 +9,12 @@ import { ChefHat, Hammer, Sprout, ShoppingBag, Truck } from 'lucide-react';
 
 interface CategorySectionProps {
   selectedCategory: Category | 'Semua';
+  hasFilters?: boolean;
+  onClearFilters?: () => void;
   onSelectCategory: (category: Category | 'Semua') => void;
 }
 
-export default function CategorySection({ selectedCategory, onSelectCategory }: CategorySectionProps) {
+export default function CategorySection({ selectedCategory, hasFilters = false, onClearFilters, onSelectCategory }: CategorySectionProps) {
   const categoriesList: { name: Category | 'Semua'; label: string; icon: React.ReactNode }[] = [
     { name: 'Semua', label: 'Semua Produk', icon: <ShoppingBag size={14} /> },
     { name: 'Kuliner', label: 'Kuliner', icon: <ChefHat size={14} /> },
@@ -41,6 +43,7 @@ export default function CategorySection({ selectedCategory, onSelectCategory }: 
             Saring direktori produk berdasarkan bidang usaha lokal untuk memudahkan pencarian Anda.
           </p>
         </div>
+        {hasFilters && onClearFilters && <button type="button" onClick={onClearFilters} className="focus-ring mt-4 rounded-lg border border-sage-border px-3 py-2 text-xs font-bold text-forest hover:bg-sage-light/40">Hapus semua filter</button>}
 
         {/* Scrollable Container with Affordance */}
         <div className="relative">

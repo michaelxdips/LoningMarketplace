@@ -37,4 +37,19 @@ describe('page sharing', () => {
     await expect(sharePage({ title: 'Produk', url: 'https://example.test/produk/1' })).resolves.toBe('copied');
     expect(writeText).toHaveBeenCalledWith('https://example.test/produk/1');
   });
+
+  it('treats native share cancellation as a non-error without copying', async () => {
+    const nativeShare = vi.fn().mockRejectedValue(new DOMException('cancelled', 'AbortError'));
+    const writeText = vi.fn();
+    Object.defineProperty(navigator, 'share', { configurable: true, value: nativeShare });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    await expect(sharePage({ title: 'Produk', url: 'https://example.test/produk/canonical-slug' })).resolves.toBe('cancelled');
+    expect(writeText).not.toHaveBeenCalled();
+  });
+
+  it('reports clipboard rejection after an unsupported native share', async () => {
+    Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: vi.fn().mockRejectedValue(new Error('denied')) } });
+    await expect(sharePage({ title: 'Produk', url: 'https://example.test/produk/canonical-slug' })).rejects.toThrow('denied');
+  });
 });

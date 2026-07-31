@@ -12,7 +12,7 @@ import {
   type ListParams,
   type PublicationStatus,
 } from "../../lib/management";
-import type { Category } from "../../types";
+import { CATEGORIES, type Category } from '../../types';
 import {
   buttonClass,
   dangerButtonClass,
@@ -192,15 +192,7 @@ export default function ResourceList<
           aria-label="Filter kategori"
         >
           <option value="">Semua kategori</option>
-          {(
-            [
-              "Kuliner",
-              "Kerajinan",
-              "Jasa",
-              "Sembako",
-              "Pertanian",
-            ] as Category[]
-          ).map((x) => (
+          {CATEGORIES.map((x) => (
             <option key={x}>{x}</option>
           ))}
         </Select>

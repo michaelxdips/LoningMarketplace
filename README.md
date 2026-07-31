@@ -4,7 +4,8 @@ Loning Maju is a public directory and product showcase for UMKM in Desa Loning, 
 
 ## Architecture
 
-- The Vite, React 19, TypeScript, and Tailwind CSS frontend remains at the repository root.
+- npm workspaces are `frontend/` and `backend/`; root scripts coordinate both.
+- The Vite, React 19, TypeScript, and Tailwind CSS frontend lives in `frontend/`.
 - The Fastify TypeScript API and management layer live in `backend/`.
 - PostgreSQL is accessed through Drizzle ORM and the `postgres` driver.
 - TanStack Query loads public, authenticated-session, and management server state.
@@ -18,7 +19,8 @@ The public brand is **Loning Maju**. The internal or persistent identifiers `mar
 ## Roles and Security
 
 - `admin`: manages users, owner assignments, every UMKM/product, publication state, and audit activity.
-- `owner`: manages only assigned UMKMs and their products. Owners cannot access admin endpoints or publish records.
+- `pelaku_umkm`: manages only assigned UMKMs and their products. This role cannot access admin endpoints or publish records.
+- `superadmin` and `perangkat_desa` are reserved V1.3 roles. They have zero capabilities; login and existing-session bootstrap are rejected. Admin user create/update accepts only `admin` and `pelaku_umkm`.
 - Authentication uses Argon2id password hashes and opaque random server-side sessions.
 - The browser receives an HTTP-only `loning_session` cookie. Raw sessions are never stored in PostgreSQL or browser storage.
 - Authenticated mutations require an in-memory CSRF token in the `X-CSRF-Token` header and a matching allowed `Origin`.
@@ -64,6 +66,7 @@ Root `.env.local`:
 
 ```dotenv
 VITE_API_URL=http://localhost:3001/api
+VITE_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 Backend `backend/.env` must include a database and local development origin:
@@ -150,6 +153,8 @@ Public:
 - `/api/products`
 - `/api/products/:id`
 
+Canonical public detail routes are `/produk/:slug` and `/umkm/:slug`. Legacy UUID detail links remain compatible: after loading, the SPA replaces them with the canonical slug while retaining query parameters and hash fragments.
+
 Authentication and management frontend:
 
 - `/login`
@@ -180,19 +185,46 @@ npm run test:all
 npm --prefix backend run db:generate
 ```
 
+Active isolated acceptance commands are:
+
+```bash
+npm run test:harness-safety
+npm run test:migration:existing:isolated
+npm run test:integration:isolated
+npm run test:e2e:isolated
+npm run test:e2e:zoom-native:isolated
+npm run verify:full:isolated
+```
+
+Docker Desktop is required for every `:isolated` command. The migration test owns a disposable PostgreSQL lifecycle and proves the recovery contract documented in `docs/v1.3-migration-guide.md`.
+
 Both integration commands own the local lifecycle: they start and wait for PostgreSQL, apply idempotent migrations and seed/E2E setup, start the backend with `backend/.env`, run the authenticated smoke test, and stop only that backend process. The PostgreSQL volume is preserved.
 
 ## Deployment
 
-Deploy the root Vite output as a static SPA and configure the hosting provider to fall back unknown frontend paths to `index.html`, including `/login` and `/dashboard/*`. Set production `VITE_API_URL` to the deployed API URL ending in `/api`.
+Deploy `frontend/` as a static SPA and configure the hosting provider to fall back unknown frontend paths to `index.html`, including canonical detail, login, and dashboard routes. Set production `VITE_API_URL` to the deployed API URL ending in `/api`. `VITE_PUBLIC_SITE_URL` is required at build time and must be the validated public origin.
 
 Deploy `backend/` with `npm run build` and `npm start`. Set `CORS_ORIGIN` to one exact frontend origin, `COOKIE_SECURE=true`, and configure the same-site/cross-site topology so the HTTP-only cookie is sent. If frontend and backend are on different sites, document and configure the required secure cookie/CORS policy deliberately rather than weakening defaults.
 
-`public/_redirects` supplies the Netlify SPA fallback for login and dashboard deep links. Production requires an explicit PostgreSQL URL and S3-compatible media storage; local filesystem media is rejected in production. Schedule both cleanup scripts with the hosting platform.
+`frontend/public/_redirects` supplies the Netlify SPA fallback. Render and Railway deploy the Fastify backend and check `/api/health`; Vercel deploys the frontend using its SPA rewrite configuration. Production requires an explicit PostgreSQL URL and S3-compatible media storage; local filesystem media is rejected in production. Schedule `sessions:cleanup`, `media:cleanup`, and `analytics:retention:apply` with the hosting platform.
+
+Public inquiry analytics records deduplicated view, inquiry-start, message-copy, and confirmed WhatsApp-open events. `whatsapp_opened` means `window.open()` returned a valid handle, not merely that an attempt occurred. Analytics delivery is non-blocking and must never block the CTA.
+
+Browser-native zoom is preserved; do not disable viewport scaling. Desktop, mobile, and native 200% zoom have separate isolated Playwright acceptance commands.
+
+### SEO status
+
+- Runtime route metadata, canonical links, social metadata, and JSON-LD are implemented in the SPA.
+- Initial per-route HTML metadata is not server-rendered.
+- Social crawler support is limited without prerendering or SSR.
+- `frontend/public/robots.txt` permits crawling and intentionally contains no placeholder sitemap URL.
+- Sitemap generation is deferred. It is a production-launch prerequisite and must use the real validated site origin plus only published canonical slug routes.
+
+V1.3 does not implement SSR or prerendering and therefore does not claim full SEO readiness.
 
 ## Limitations
 
-Managed media supports one primary UMKM/product image. Development uses ignored `backend/storage/`; production requires S3-compatible storage. Uploads are decoded, normalized to WebP card/thumbnail variants, metadata-stripped, bounded, and authorization-checked. Existing external URLs remain a fallback. Phase 3 still excludes public registration, OAuth, MFA, password recovery, galleries, cropping, video/document uploads, automatic external downloads, commerce transactions, payments, orders, invoices, shipping, ratings, reviews, verification badges, commissions, analytics, notifications, and real-time features.
+Managed media supports one primary UMKM/product image. Development uses ignored `backend/storage/`; production requires S3-compatible storage. Uploads are decoded, normalized to WebP card/thumbnail variants, metadata-stripped, bounded, and authorization-checked. Existing external URLs remain a fallback. The product remains a non-transactional catalog: cart, checkout, payment, shipping, orders, stock management, public seller registration, internal chat, CRM, and commissions remain excluded.
 
 ## Troubleshooting
 

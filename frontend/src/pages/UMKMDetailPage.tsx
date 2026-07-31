@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Clock3, MapPin, MessageSquare, ShieldCheck } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import PublicPageShell from '../components/layout/PublicPageShell';
 import PublicDetailState from '../components/shared/PublicDetailState';
 import ShareButton from '../components/shared/ShareButton';
@@ -16,13 +16,14 @@ import { trackPublicEvent } from '../lib/analytics';
 export default function UMKMDetailPage() {
   const { identifier = '' } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [inquiryOpen, setInquiryOpen] = useState(false);
   // ponytail: no AbortSignal — a StrictMode/Suspense remount would otherwise cancel the
   // in-flight fetch (net::ERR_ABORTED). Upgrade path: pass signal when real cancellation is needed.
   const umkmQuery = useQuery({ queryKey: ['umkm', identifier], queryFn: () => getUMKM(identifier), enabled: Boolean(identifier) });
   const umkm = umkmQuery.data;
   const productsQuery = useQuery({ queryKey: ['products', { umkmId: umkm?.id }], queryFn: () => getProducts({ umkmId: umkm!.id }), enabled: Boolean(umkm?.id) });
-  useEffect(() => { if (umkm && identifier !== umkm.slug) navigate(`/umkm/${encodeURIComponent(umkm.slug)}`, { replace: true }); }, [identifier, navigate, umkm]);
+  useEffect(() => { if (umkm && identifier !== umkm.slug) navigate(`/umkm/${encodeURIComponent(umkm.slug)}${location.search}${location.hash}`, { replace: true }); }, [identifier, location.hash, location.search, navigate, umkm]);
   useEffect(() => { if (umkm) trackPublicEvent({ eventType: 'umkm_view', umkmId: umkm.id, source: 'umkm_page' }); }, [umkm?.id]);
   const description = umkm?.description ?? 'Profil pelaku UMKM Desa Loning.';
   usePageMetadata(umkm ? { title: `${umkm.name} — Profil UMKM | Loning Maju`, description, image: umkm.imageUrl, jsonLd: { '@context': 'https://schema.org', '@type': 'LocalBusiness', name: umkm.name, description, image: umkm.imageUrl, telephone: umkm.phone, url: buildSiteUrl(`/umkm/${umkm.slug}`), address: { '@type': 'PostalAddress', streetAddress: umkm.address, addressLocality: 'Loning', addressRegion: 'Jawa Tengah', addressCountry: 'ID' }, openingHours: umkm.workingHours } } : { title: 'Profil UMKM — Loning Maju', description });

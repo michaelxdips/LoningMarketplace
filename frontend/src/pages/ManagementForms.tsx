@@ -18,7 +18,7 @@ import {
   type UserCreateInput,
   type UserUpdateInput,
 } from "../lib/management";
-import type { Category } from "../types";
+import { CATEGORIES, type Category } from "../types";
 import { useSession } from "../hooks/useAuth";
 import { useCsrfToken } from "../hooks/useAuth";
 import { deleteMedia, updateMediaAltText, uploadMedia } from "../lib/api";
@@ -37,13 +37,7 @@ import {
   Textarea,
 } from "../components/dashboard/Ui";
 
-const categoryNames: Category[] = [
-  "Kuliner",
-  "Kerajinan",
-  "Jasa",
-  "Sembako",
-  "Pertanian",
-];
+
 const CONTACT_VERIFICATION_DAYS = 90;
 const contactStatus = (item?: ManagedUMKM) => {
   if (!item?.contactVerifiedAt) return 'Belum diverifikasi';
@@ -300,7 +294,7 @@ export function UMKMFormPage() {
           <Field label="Kategori" error={errors.category}>
             <Select name="category" required defaultValue={value?.category}>
               <option value="">Pilih kategori</option>
-              {categoryNames.map((x) => (
+              {CATEGORIES.map((x) => (
                 <option key={x}>{x}</option>
               ))}
             </Select>
@@ -527,7 +521,7 @@ export function ProductFormPage() {
           <Field label="Kategori" error={errors.category}>
             <Select name="category" required defaultValue={value?.category}>
               <option value="">Pilih kategori</option>
-              {categoryNames.map((x) => (
+              {CATEGORIES.map((x) => (
                 <option key={x}>{x}</option>
               ))}
             </Select>

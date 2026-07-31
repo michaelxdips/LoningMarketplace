@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { X, MessageSquare, Send, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, UMKM } from '../../types';
@@ -26,31 +26,63 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
   const [visitorName, setVisitorName] = useState('');
   const [visitorQuestion, setVisitorQuestion] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  const [status, setStatus] = useState('');
+  const [popupFallbackUrl, setPopupFallbackUrl] = useState('');
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      closeButtonRef.current?.focus();
-    } else document.body.style.overflow = '';
-    return () => { document.body.style.overflow = ''; };
+  const track = (event: Parameters<typeof trackPublicEvent>[0]) => {
+    try { trackPublicEvent(event); } catch { /* analytics must not block the CTA */ }
+  };
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const backdrop = backdropRef.current;
+    const background = backdrop
+      ? [...document.body.children, ...Array.from(backdrop.parentElement?.children ?? [])]
+        .filter((element): element is HTMLElement => element instanceof HTMLElement && element !== backdrop && !element.contains(backdrop))
+      : [];
+    const uniqueBackground = [...new Set(background)];
+    const previous = uniqueBackground.map((element) => ({ element, inert: element.inert, ariaHidden: element.getAttribute('aria-hidden') }));
+    for (const element of uniqueBackground) { element.inert = true; element.setAttribute('aria-hidden', 'true'); }
+    closeButtonRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      for (const { element, inert, ariaHidden } of previous) {
+        element.inert = inert;
+        if (ariaHidden === null) element.removeAttribute('aria-hidden'); else element.setAttribute('aria-hidden', ariaHidden);
+      }
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      const trigger = returnFocusRef.current;
+      if (trigger?.isConnected) trigger.focus();
+    };
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen && hasContact) trackPublicEvent({ eventType: 'inquiry_started', source, umkmId: umkm?.id, productId: product?.id });
+    if (isOpen && hasContact) track({ eventType: 'inquiry_started', source, umkmId: umkm?.id, productId: product?.id });
   }, [isOpen, hasContact, product?.id, source, umkm?.id]);
 
-  // Escape to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
+      if (!isOpen) return;
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key === 'Tab') {
+        const focusable: HTMLElement[] = [...(containerRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])') ?? [])];
+        if (!focusable.length) { e.preventDefault(); containerRef.current?.focus(); return; }
+        const first = focusable[0], last = focusable.at(-1)!;
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -71,23 +103,37 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
 
   const handleSend = () => {
     if (!phoneNumber) return;
-    trackPublicEvent({ eventType: 'whatsapp_opened', source, umkmId: umkm?.id, productId: product?.id });
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    const opened = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    if (!opened) {
+      setPopupFallbackUrl(whatsappUrl);
+      setStatus('Browser memblokir popup WhatsApp. Gunakan tautan langsung di bawah.');
+      return;
+    }
+    track({ eventType: 'whatsapp_opened', source, umkmId: umkm?.id, productId: product?.id });
     onClose();
   };
 
-  const handleCopy = () => {
-    void navigator.clipboard.writeText(finalMessage).then(() => {
-      trackPublicEvent({ eventType: 'message_copied', source, umkmId: umkm?.id, productId: product?.id });
+  const handleCopy = async () => {
+    setStatus('');
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+      await navigator.clipboard.writeText(finalMessage);
+      track({ eventType: 'message_copied', source, umkmId: umkm?.id, productId: product?.id });
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    }).catch(() => undefined);
+      setStatus('Pesan berhasil disalin.');
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      setIsCopied(false);
+      setStatus('Salin secara manual: pilih pesan atau nomor WhatsApp di bawah.');
+    }
   };
 
   return (
     <AnimatePresence>
       <div 
         id="wa-dialog-backdrop"
+        ref={backdropRef}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-xs"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
@@ -99,6 +145,7 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
           role="dialog"
           aria-modal="true"
           aria-labelledby="wa-dialog-title"
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -196,7 +243,10 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
               <div className="p-3 bg-cream-bg rounded-lg border border-sage-border text-[11px] font-mono leading-relaxed text-warm-gray whitespace-pre-wrap max-h-32 overflow-y-auto">
                 {finalMessage}
               </div>
+              {status.startsWith('Salin secara manual') && <p className="mt-2 text-xs text-warm-gray">Nomor WhatsApp: <span className="select-all font-mono text-charcoal">{phoneNumber}</span></p>}
             </div>
+            <p role="status" aria-live="polite" className="text-xs leading-5 text-warm-gray">{status}</p>
+            {popupFallbackUrl && <a href={popupFallbackUrl} target="_blank" rel="noopener noreferrer" className="focus-ring inline-flex rounded text-xs font-bold text-forest underline">Buka WhatsApp secara langsung</a>}
           </div>
 
           {/* Footer Actions */}

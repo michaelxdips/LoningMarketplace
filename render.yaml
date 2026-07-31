@@ -6,7 +6,7 @@ services:
     plan: free
     buildCommand: npm ci && npm run build
     startCommand: npm start
-    healthCheckPath: /health
+    healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
@@ -26,9 +26,7 @@ services:
       - key: SESSION_TTL_HOURS
         value: "168"
       - key: MEDIA_STORAGE_DRIVER
-        value: filesystem
-      - key: MEDIA_FILESYSTEM_ROOT
-        value: ./storage
+        value: s3
       - key: MEDIA_PUBLIC_BASE_URL
         sync: false
       - key: S3_BUCKET

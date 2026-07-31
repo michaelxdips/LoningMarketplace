@@ -25,10 +25,32 @@ const ready = await request('/ready');
 const umkms = await request('/umkms');
 const products = await request('/products');
 const category = await request('/umkms?category=Kuliner');
+const trimmedProducts = await request('/products?q=%20nAsI%20&category=Kuliner&limit=2');
+const joinedParentProducts = await request('/products?q=Warung%20Nasi%20Khas%20Loning&limit=100');
+const ownerUmkms = await request('/umkms?q=siti%20aminah&limit=100');
+const emptyQueryProducts = await request('/products?q=%20%20&limit=1');
+const invalidProductCategory = await request('/products?category=Invalid', {}, [400]);
+const invalidUmkmCategory = await request('/umkms?category=Invalid', {}, [400]);
+const oversizedProductQuery = await request(`/products?q=${'a'.repeat(81)}`, {}, [400]);
+const boundedProductLimit = await request('/products?limit=101', {}, [400]);
 
 if (health.body.status !== 'ok' || ready.body.status !== 'ok' || !umkms.body.data.length || !products.body.data.length || !category.body.data.length) {
   throw new Error('Local API smoke assertions failed');
 }
+if (!trimmedProducts.body.data.length || trimmedProducts.body.data.some(item => item.category !== 'Kuliner') || trimmedProducts.body.data.length > 2) throw new Error('Combined trimmed product search failed');
+if (!joinedParentProducts.body.data.length || joinedParentProducts.body.data.some(item => item.umkmName !== 'Warung Nasi Khas Loning')) throw new Error('Product search by public parent name failed');
+if (ownerUmkms.body.data.length !== 1 || ownerUmkms.body.data[0].owner !== 'Siti Aminah') throw new Error('Case-insensitive UMKM owner search failed');
+if (emptyQueryProducts.body.data.length !== 1) throw new Error('Whitespace-only search did not preserve the bounded catalog');
+for (const result of [invalidProductCategory, invalidUmkmCategory, oversizedProductQuery, boundedProductLimit]) if (result.body.error?.code !== 'VALIDATION_ERROR') throw new Error('Public filter validation did not use VALIDATION_ERROR');
+const productIds = products.body.data.map(item => item.id);
+if (new Set(productIds).size !== productIds.length) throw new Error('Public products contain duplicate rows');
+for (const id of ['e3000000-0000-4000-8000-000000000045', 'e3000000-0000-4000-8000-000000000048', 'e3000000-0000-4000-8000-000000000009']) if (productIds.includes(id)) throw new Error(`Non-public product leaked into list: ${id}`);
+const firstProduct = products.body.data[0];
+const related = await request(`/products/${firstProduct.slug}/related?limit=4`);
+if (related.body.data.length > 4 || related.body.data.some(item => item.id === firstProduct.id) || new Set(related.body.data.map(item => item.id)).size !== related.body.data.length) throw new Error('Related-product bounds or uniqueness failed');
+if (related.body.data.length && related.body.data[0].umkmId !== firstProduct.umkmId) throw new Error('Related-product same-UMKM secondary priority failed');
+const relatedAgain = await request(`/products/${firstProduct.slug}/related?limit=4`);
+if (JSON.stringify(relatedAgain.body.data.map(item => item.id)) !== JSON.stringify(related.body.data.map(item => item.id))) throw new Error('Related-product ordering is not deterministic');
 
 const preflight = await fetch(`${baseUrl}/manage/products/${fixtureId}`, {
   method: 'OPTIONS',

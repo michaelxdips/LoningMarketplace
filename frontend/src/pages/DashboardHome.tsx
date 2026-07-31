@@ -1,4 +1,4 @@
-import { ClipboardList, Package, Store, Users } from 'lucide-react';
+import { Package, Store, Users } from 'lucide-react';
 import { Link } from 'react-router';
 import { useSession } from '../hooks/useAuth';
 import { useManagedList } from '../hooks/useManagement';

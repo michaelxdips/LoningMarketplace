@@ -57,6 +57,13 @@
       "when": 1784954600000,
       "tag": "0007_public_slugs",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785380400000,
+      "tag": "0008_finalize_public_integrity",
+      "breakpoints": true
     }
   ]
 }

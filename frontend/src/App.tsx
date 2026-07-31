@@ -4,10 +4,11 @@
  */
 
 import React, { useRef, useState } from 'react';
-import { UMKM, Product, Category } from './types';
+import { UMKM, Product } from './types';
 import { useUMKMs } from './hooks/useUMKMs';
 import { useProducts } from './hooks/useProducts';
 import { useDebouncedValue } from './hooks/useDebouncedValue';
+import { useDiscoveryUrlState } from './hooks/discovery/useDiscoveryUrlState';
 
 // Layout & Section Components
 import Navbar from './components/layout/Navbar';
@@ -32,10 +33,11 @@ export default function App() {
   // Page section highlights
   const [activeSection, setActiveSection] = useState('home');
 
-  // Directory Data States
-  const [selectedCategory, setSelectedCategory] = useState<Category | 'Semua'>('Semua');
-  const [productSearchQuery, setProductSearchQuery] = useState('');
-  const [umkmSearchQuery, setUmkmSearchQuery] = useState('');
+  // Directory state is URL-owned so refresh, back/forward, and shared links agree.
+  const discovery = useDiscoveryUrlState();
+  const selectedCategory = discovery.category;
+  const productSearchQuery = discovery.draftQuery;
+  const umkmSearchQuery = discovery.draftQuery;
   const debouncedProductSearchQuery = useDebouncedValue(productSearchQuery);
   const debouncedUmkmSearchQuery = useDebouncedValue(umkmSearchQuery);
   const apiCategory = selectedCategory === 'Semua' ? undefined : selectedCategory;
@@ -173,8 +175,10 @@ export default function App() {
         {/* 3. Category Discovery Section */}
         <CategorySection 
           selectedCategory={selectedCategory}
+          hasFilters={selectedCategory !== 'Semua' || Boolean(discovery.draftQuery)}
+          onClearFilters={discovery.clearFilters}
           onSelectCategory={(cat) => {
-            setSelectedCategory(cat);
+            discovery.setCategory(cat);
             handleScrollToSection('categories');
           }}
         />
@@ -184,7 +188,9 @@ export default function App() {
           products={products}
           selectedCategory={selectedCategory}
           searchQuery={productSearchQuery}
-          onSearchChange={setProductSearchQuery}
+          onSearchChange={discovery.setDraftQuery}
+          onSearchSubmit={discovery.submitQuery}
+          onClearFilters={discovery.clearFilters}
           onInquireProduct={(product) => handleInquireProduct(product, 'homepage_featured')}
           onViewProduct={handleViewProduct}
           onViewMerchant={handleViewUMKMById}
@@ -197,7 +203,9 @@ export default function App() {
         <FeaturedBusinessesSection 
           umkms={umkms}
           searchQuery={umkmSearchQuery}
-          onSearchChange={setUmkmSearchQuery}
+          onSearchChange={discovery.setDraftQuery}
+          onSearchSubmit={discovery.submitQuery}
+          onClearFilters={discovery.clearFilters}
           onViewDetails={handleViewUMKMDetails}
           isLoading={umkmsQuery.isPending}
           isError={umkmsQuery.isError}

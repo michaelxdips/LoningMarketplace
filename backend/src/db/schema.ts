@@ -42,7 +42,7 @@ export const umkms = pgTable('umkms', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   slugIdx: uniqueIndex('umkms_slug_unique').on(table.slug), categoryIdx: index('umkms_category_idx').on(table.category), orderIdx: index('umkms_display_order_idx').on(table.displayOrder), ownerIdx: index('umkms_owner_user_id_idx').on(table.ownerUserId), statusIdx: index('umkms_publication_status_idx').on(table.publicationStatus),
-  phoneCheck: check('umkms_phone_digits_check', sql`${table.phone} ~ '^[0-9]+$'`), orderCheck: check('umkms_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('umkms_image_asset_id_idx').on(table.imageAssetId),
+  slugCheck: check('umkms_slug_nonempty_check', sql`btrim(${table.slug}) <> ''`), phoneCheck: check('umkms_phone_normalized_check', sql`${table.phone} ~ '^628[0-9]{7,12}$'`), publishedPhoneCheck: check('umkms_published_phone_ready_check', sql`${table.publicationStatus} <> 'published' OR ${table.phone} ~ '^628[0-9]{7,12}$'`), orderCheck: check('umkms_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('umkms_image_asset_id_idx').on(table.imageAssetId),
   imageSourceCheck: check('umkms_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`),
 }));
 
@@ -53,7 +53,7 @@ export const products = pgTable('products', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   slugIdx: uniqueIndex('products_slug_unique').on(table.slug), umkmIdx: index('products_umkm_id_idx').on(table.umkmId), categoryIdx: index('products_category_idx').on(table.category), orderIdx: index('products_display_order_idx').on(table.displayOrder), statusIdx: index('products_publication_status_idx').on(table.publicationStatus), parentStatusOrderIdx: index('products_umkm_status_order_idx').on(table.umkmId, table.publicationStatus, table.displayOrder),
-  priceCheck: check('products_price_check', sql`${table.price} IS NULL OR ${table.price} >= 0`), orderCheck: check('products_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('products_image_asset_id_idx').on(table.imageAssetId),
+  slugCheck: check('products_slug_nonempty_check', sql`btrim(${table.slug}) <> ''`), priceCheck: check('products_price_check', sql`${table.price} IS NULL OR ${table.price} >= 0`), orderCheck: check('products_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('products_image_asset_id_idx').on(table.imageAssetId),
   imageSourceCheck: check('products_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`),
 }));
 
