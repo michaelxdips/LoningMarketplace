@@ -7,13 +7,12 @@ const drizzleDirectory = resolve(import.meta.dirname, '../drizzle');
 const journalPath = resolve(drizzleDirectory, 'meta/_journal.json');
 const backendDirectory = resolve(import.meta.dirname, '..');
 
-const migrationFiles = async () => (await readdir(drizzleDirectory)).filter((file) => /^0008_.*\.sql$/.test(file));
+const migrationFiles = async () => (await readdir(drizzleDirectory)).filter((file) => /^000[89]_.*\.sql$/.test(file));
 
-describe('migration 0008 contract', () => {
-  it('has exactly one semantic migration registered after 0007', async () => {
+describe('public integrity migrations', () => {
+  it('keeps 0008 historical and registers one forward repair after it', async () => {
     const files = await migrationFiles();
-    expect(files).toHaveLength(1);
-    expect(files[0]).toBe('0008_finalize_public_integrity.sql');
+    expect(files).toEqual(['0008_finalize_public_integrity.sql', '0009_repair_public_integrity.sql']);
 
     const journal = JSON.parse(await readFile(journalPath, 'utf8')) as { entries: Array<{ idx: number; tag: string }> };
     const indexes = journal.entries.map(({ idx }) => idx);
@@ -22,6 +21,7 @@ describe('migration 0008 contract', () => {
     expect(new Set(tags).size).toBe(tags.length);
     expect(tags.indexOf('0008_finalize_public_integrity')).toBe(tags.indexOf('0007_public_slugs') + 1);
     expect(journal.entries.find(({ tag }) => tag === '0008_finalize_public_integrity')?.idx).toBe(8);
+    expect(journal.entries.find(({ tag }) => tag === '0009_repair_public_integrity')?.idx).toBe(9);
   });
 
   it('contains the required non-destructive preflight checks', async () => {

@@ -64,6 +64,13 @@
       "when": 1785380400000,
       "tag": "0008_finalize_public_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1785465960000,
+      "tag": "0009_repair_public_integrity",
+      "breakpoints": true
     }
   ]
 }
