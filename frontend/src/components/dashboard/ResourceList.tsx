@@ -65,6 +65,7 @@ export default function ResourceList<
   itemName,
   canCreate = true,
   canPublish = true,
+  extraAction,
 }: {
   resource: "umkms" | "products";
   title: string;
@@ -81,6 +82,7 @@ export default function ResourceList<
   itemName: (item: T) => string;
   canCreate?: boolean;
   canPublish?: boolean;
+  extraAction?: (item: T) => ReactNode;
 }) {
   const [search, setSearch] = useState("");
   const deferred = useDeferredValue(search);
@@ -128,6 +130,7 @@ export default function ResourceList<
       >
         Kelola
       </Link>
+      {extraAction?.(item)}
       {canPublish && item.publicationStatus === "draft" && (
         <button
           className={buttonClass}

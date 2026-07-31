@@ -36,7 +36,12 @@ const managedResource = <T, C, U>(path: string) => ({
 });
 
 export const managementApi = {
-  umkms: { ...managedResource<ManagedUMKM, UMKMInput, Partial<UMKMInput>>('/manage/umkms'), verifyContact: (id: string, csrf?: string) => mutation<ManagedUMKM>(`/manage/umkms/${id}/verify-contact`, csrf) },
+  umkms: {
+    ...managedResource<ManagedUMKM, UMKMInput, Partial<UMKMInput>>('/manage/umkms'),
+    verifyContact: (id: string, csrf?: string) => mutation<ManagedUMKM>(`/manage/umkms/${id}/verify-contact`, csrf),
+    setLocation: (id: string, input: { latitude: number; longitude: number }, csrf?: string) => mutation<ManagedUMKM>(`/manage/umkms/${id}/location`, csrf, 'PATCH', input),
+    clearLocation: (id: string, csrf?: string) => mutation<ManagedUMKM>(`/manage/umkms/${id}/location`, csrf, 'DELETE'),
+  },
   products: managedResource<ManagedProduct, ProductCreateInput, Partial<ProductUpdateInput>>('/manage/products'),
   users: {
     list: (params: ListParams, signal?: AbortSignal) => apiRequest<Page<ManagedUser> | ManagedUser[]>(pathWithQuery('/admin/users', params), { signal }),

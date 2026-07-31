@@ -5,8 +5,8 @@ import { categories, type PublicProduct, type PublicUMKM, type Repository } from
 
 const env: AppEnv = { DATABASE_URL: 'postgresql://test:test@localhost/test', PORT: 3001, HOST: '127.0.0.1', CORS_ORIGIN: 'http://localhost:3000', NODE_ENV: 'test', SESSION_TTL_HOURS: 168, SESSION_RETENTION_DAYS: 30, SESSION_COOKIE_NAME: 'loning_session', LOGIN_MAX_ATTEMPTS: 5, LOGIN_LOCKOUT_MINUTES: 15, LOGIN_RATE_LIMIT_MAX: 10, LOGIN_RATE_LIMIT_WINDOW: '1 minute', RATE_LIMIT_MAX: 100, TRUST_PROXY: false, COOKIE_SECURE: false };
 const umkms: PublicUMKM[] = [
-  { id: '00000000-0000-4000-8000-000000000001', slug: 'umkm-kuliner-desa', name: 'UMKM Kuliner Desa', owner: 'Owner A', description: 'Traditional food', phone: '62812', category: 'Kuliner', imageUrl: 'image-a', address: 'Loning' },
-  { id: '00000000-0000-4000-8000-000000000002', slug: 'mebel-kayu', name: 'Mebel Kayu', owner: 'Owner B', description: 'Furniture', phone: '62813', category: 'Jasa', imageUrl: 'image-b', address: 'Loning', workingHours: '08:00' },
+  { id: '00000000-0000-4000-8000-000000000001', slug: 'umkm-kuliner-desa', name: 'UMKM Kuliner Desa', owner: 'Owner A', description: 'Traditional food', phone: '62812', category: 'Kuliner', imageUrl: 'image-a', address: 'Loning', latitude: null, longitude: null },
+  { id: '00000000-0000-4000-8000-000000000002', slug: 'mebel-kayu', name: 'Mebel Kayu', owner: 'Owner B', description: 'Furniture', phone: '62813', category: 'Jasa', imageUrl: 'image-b', address: 'Loning', workingHours: '08:00', latitude: null, longitude: null },
 ];
 const products: PublicProduct[] = [
   { id: '10000000-0000-4000-8000-000000000001', slug: 'nasi-box', umkmId: umkms[0].id, umkmName: umkms[0].name, name: 'Nasi Box', price: null, description: 'Food', category: 'Kuliner', imageUrl: 'image-a', isAvailable: true },
@@ -22,6 +22,7 @@ const repository = {
 } as unknown as Repository;
 
 describe('public API routes', () => {
+  it('allows only self and OpenStreetMap frames in CSP', async () => { const app = await buildApp(env, repository); const response = await app.inject('/api/health'); const csp = response.headers['content-security-policy']; expect(csp).toContain("frame-src 'self' https://www.openstreetmap.org"); expect(csp).not.toMatch(/frame-src https:|frame-src \*/); expect(csp).not.toContain('google.com'); await app.close(); });
   it('returns health, list envelopes, joined names, and stable order', async () => { const app = await buildApp(env, repository); expect((await app.inject('/api/health')).json()).toEqual({ status: 'ok' }); expect((await app.inject('/api/umkms')).json().data.map((item: PublicUMKM) => item.id)).toEqual(umkms.map((item) => item.id)); expect((await app.inject('/api/products')).json().data[0].umkmName).toBe('UMKM Kuliner Desa'); await app.close(); });
   it.each(categories)('accepts the %s category', async (category) => { const app = await buildApp(env, repository); expect((await app.inject(`/api/umkms?category=${category}`)).statusCode).toBe(200); expect((await app.inject(`/api/products?category=${category}`)).statusCode).toBe(200); await app.close(); });
   it('rejects invalid category and limit values', async () => { const app = await buildApp(env, repository); for (const path of ['/api/umkms?category=Nope', '/api/products?category=Nope', '/api/umkms?limit=0', '/api/products?limit=0', '/api/umkms?limit=101', '/api/products?limit=101', '/api/umkms?limit=1.5', '/api/products?limit=-1']) { const response = await app.inject(path); expect(response.statusCode).toBe(400); expect(response.json().error.code).toBe('VALIDATION_ERROR'); } await app.close(); });

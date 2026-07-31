@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { brand } from '../config/brand';
 import { buildSiteUrl } from './siteUrl';
+import { normalizeCoordinates } from './location';
+import type { UMKM } from '../types';
 
 export type PageMetadata = { title: string; description: string; image?: string; type?: 'website' | 'product'; jsonLd?: Record<string, unknown> | Array<Record<string, unknown>> };
 const OWNED_SELECTOR = '[data-route-owned="true"]';
@@ -37,4 +39,15 @@ export function usePageMetadata(metadata: PageMetadata) {
   useEffect(() => applyPageMetadata(metadata), [metadata.title, metadata.description, metadata.image, metadata.type, JSON.stringify(metadata.jsonLd)]);
 }
 export const defaultMetadata: PageMetadata = { title: brand.title, description: brand.description };
+
+export function buildLocalBusinessJsonLd(umkm: UMKM, description = umkm.description): Record<string, unknown> {
+  const coordinates = typeof umkm.latitude === 'number' && typeof umkm.longitude === 'number' ? normalizeCoordinates(umkm.latitude, umkm.longitude) : undefined;
+  return {
+    '@context': 'https://schema.org', '@type': 'LocalBusiness', name: umkm.name, description, image: umkm.imageUrl,
+    telephone: umkm.phone, url: buildSiteUrl(`/umkm/${umkm.slug}`),
+    address: { '@type': 'PostalAddress', streetAddress: umkm.address, addressLocality: 'Loning', addressRegion: 'Jawa Tengah', addressCountry: 'ID' },
+    openingHours: umkm.workingHours,
+    ...(coordinates ? { geo: { '@type': 'GeoCoordinates', latitude: coordinates.latitude, longitude: coordinates.longitude } } : {}),
+  };
+}
 

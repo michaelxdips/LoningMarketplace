@@ -19,6 +19,7 @@ const FaqPage = lazy(() => import('./pages/FaqPage.tsx'));
 const AboutVillagePage = lazy(() => import('./pages/AboutVillagePage.tsx'));
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage.tsx'));
 const UMKMDetailPage = lazy(() => import('./pages/UMKMDetailPage.tsx'));
+const BusinessLocationPage = lazy(() => import('./pages/BusinessLocationPage.tsx'));
 const UMKMFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.UMKMFormPage })));
 const ProductFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.ProductFormPage })));
 const UserFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.UserFormPage })));
@@ -95,6 +96,8 @@ createRoot(document.getElementById('root')!).render(
                 <Route index element={<DashboardHome />} />
                 <Route path="umkms" element={<UMKMListPage />} />
                 <Route path="umkms/:id" element={<UMKMFormPage />} />
+                <Route path="umkms/:id/location" element={<BusinessLocationPage />} />
+                <Route path="location" element={<Navigate to="/dashboard/umkms" replace />} />
                 <Route path="products" element={<ProductListPage />} />
                 <Route path="products/new" element={<ProductFormPage />} />
                 <Route path="products/:id" element={<ProductFormPage />} />

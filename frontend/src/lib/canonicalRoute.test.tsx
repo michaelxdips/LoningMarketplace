@@ -11,7 +11,7 @@ import type { ProductDetail, UMKM } from '../types';
 
 const { product, umkm } = vi.hoisted(() => {
   const product: ProductDetail = { id: '10000000-0000-4000-8000-000000000001', slug: 'keripik-canonical', umkmId: '00000000-0000-4000-8000-000000000001', name: 'Keripik', price: 10_000, description: 'Keripik', category: 'Kuliner', imageUrl: '/product.webp', isAvailable: true, umkm: { id: '00000000-0000-4000-8000-000000000001', slug: 'dapur-canonical', name: 'Dapur', phone: '628123456789' } };
-  const umkm: UMKM = { id: product.umkm.id, slug: product.umkm.slug, name: product.umkm.name, owner: 'Sri', description: 'Dapur', phone: product.umkm.phone, category: 'Kuliner', imageUrl: '/umkm.webp', address: 'Loning' };
+  const umkm: UMKM = { id: product.umkm.id, slug: product.umkm.slug, name: product.umkm.name, owner: 'Sri', description: 'Dapur', phone: product.umkm.phone, category: 'Kuliner', imageUrl: '/umkm.webp', address: 'Loning', latitude: null, longitude: null };
   return { product, umkm };
 });
 

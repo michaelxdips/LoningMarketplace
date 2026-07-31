@@ -31,7 +31,7 @@ export async function buildApp(env: AppEnv, repository: Repository, dependencies
   const app = Fastify({ logger: env.NODE_ENV !== 'test', trustProxy: env.TRUST_PROXY });
   const crypto = dependencies.security ?? security; const now = dependencies.now ?? (() => new Date()); const id = dependencies.id ?? randomUUID;
   const guards = createGuards(repository, crypto, env, now); const media = dependencies.storage ?? createMediaStorage(mediaConfig(env));
-  await app.register(helmet, { crossOriginResourcePolicy: { policy: 'cross-origin' } });
+  await app.register(helmet, { crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: { directives: { frameSrc: ["'self'", 'https://www.openstreetmap.org'] } } });
   await app.register(cookie);
   await app.register(rateLimit, { max: env.RATE_LIMIT_MAX, timeWindow: '1 minute' });
   await app.register(cors, { origin: env.CORS_ORIGIN, credentials: true, methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'X-CSRF-Token'] });

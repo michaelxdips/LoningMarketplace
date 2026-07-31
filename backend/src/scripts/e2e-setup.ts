@@ -5,7 +5,7 @@ import sharp from 'sharp';
 import { createDatabase } from '../db/client.js';
 import { createRepository } from '../db/repository.js';
 import { security } from '../auth/security.js';
-import { products } from '../db/schema.js';
+import { products, umkms } from '../db/schema.js';
 import { UMKMS } from '../db/seeds/shared/ids.js';
 
 if (process.env.NODE_ENV === 'production') throw new Error('E2E setup is disabled in production');
@@ -41,6 +41,7 @@ try {
   await ensureUser('admin.products.e2e@local.test', 'Admin Produk E2E', 'admin', false);
   const ownerId = await ensureUser('owner.e2e@local.test', 'Pemilik E2E', 'pelaku_umkm', false);
   await repository.assignUMKMOwner(umkmId, ownerId);
+  await database.db.update(umkms).set({ latitude: null, longitude: null }).where(eq(umkms.id, umkmId));
   for (const fixture of fixtures) {
     const previous = (await database.db.select({ imageAssetId: products.imageAssetId }).from(products).where(eq(products.id, fixture.id)).limit(1))[0];
     await database.db.insert(products).values({ id: fixture.id, umkmId, name: fixture.name, slug: fixture.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), price: 35000, description: 'Produk deterministik untuk pengujian browser lokal.', category: 'Kuliner', imageUrl, isAvailable: true, unit: 'Pcs', displayOrder: fixture.displayOrder, publicationStatus: 'published', publishedAt: new Date() }).onConflictDoUpdate({ target: products.id, set: { umkmId, name: fixture.name, slug: fixture.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), price: 35000, description: 'Produk deterministik untuk pengujian browser lokal.', category: 'Kuliner', imageUrl, imageAssetId: null, isAvailable: true, unit: 'Pcs', displayOrder: fixture.displayOrder, publicationStatus: 'published', publishedAt: new Date(), updatedAt: sql`now()` } });

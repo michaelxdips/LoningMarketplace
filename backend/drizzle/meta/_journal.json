@@ -71,6 +71,13 @@
       "when": 1785465960000,
       "tag": "0009_repair_public_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785531600000,
+      "tag": "0010_umkm_business_location",
+      "breakpoints": true
     }
   ]
 }

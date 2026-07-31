@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, check, index, integer, jsonb, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 
 export const categoryEnum = pgEnum('category', ['Kuliner', 'Kerajinan', 'Jasa', 'Sembako', 'Pertanian']);
 export const userRoleEnum = pgEnum('user_role', ['superadmin', 'admin', 'perangkat_desa', 'pelaku_umkm']);
@@ -36,6 +36,7 @@ export const mediaAssets = pgTable('media_assets', {
 export const umkms = pgTable('umkms', {
   id: uuid('id').primaryKey(), name: text('name').notNull(), slug: varchar('slug', { length: 96 }).notNull(), owner: text('owner').notNull(), description: text('description').notNull(),
   phone: text('phone').notNull(), category: categoryEnum('category').notNull(), imageUrl: text('image_url'), imageAssetId: uuid('image_asset_id').references(() => mediaAssets.id, { onDelete: 'set null' }), address: text('address').notNull(),
+  latitude: numeric('latitude', { precision: 9, scale: 6 }), longitude: numeric('longitude', { precision: 9, scale: 6 }),
   workingHours: text('working_hours'), ownerUserId: uuid('owner_user_id').references(() => users.id, { onDelete: 'set null' }), displayOrder: integer('display_order').notNull().default(0),
   publicationStatus: publicationStatusEnum('publication_status').notNull().default('draft'), publishedAt: timestamp('published_at', { withTimezone: true }),
   contactVerifiedAt: timestamp('contact_verified_at', { withTimezone: true }), catalogUpdatedAt: timestamp('catalog_updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -44,6 +45,9 @@ export const umkms = pgTable('umkms', {
   slugIdx: uniqueIndex('umkms_slug_unique').on(table.slug), categoryIdx: index('umkms_category_idx').on(table.category), orderIdx: index('umkms_display_order_idx').on(table.displayOrder), ownerIdx: index('umkms_owner_user_id_idx').on(table.ownerUserId), statusIdx: index('umkms_publication_status_idx').on(table.publicationStatus),
   slugCheck: check('umkms_slug_nonempty_check', sql`btrim(${table.slug}) <> ''`), phoneCheck: check('umkms_phone_normalized_check', sql`${table.phone} ~ '^628[0-9]{7,12}$'`), publishedPhoneCheck: check('umkms_published_phone_ready_check', sql`${table.publicationStatus} <> 'published' OR ${table.phone} ~ '^628[0-9]{7,12}$'`), orderCheck: check('umkms_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('umkms_image_asset_id_idx').on(table.imageAssetId),
   imageSourceCheck: check('umkms_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`),
+  locationPairCheck: check('umkms_location_pair_check', sql`(${table.latitude} IS NULL AND ${table.longitude} IS NULL) OR (${table.latitude} IS NOT NULL AND ${table.longitude} IS NOT NULL)`),
+  latitudeRangeCheck: check('umkms_latitude_range_check', sql`${table.latitude} IS NULL OR ${table.latitude} BETWEEN -90 AND 90`),
+  longitudeRangeCheck: check('umkms_longitude_range_check', sql`${table.longitude} IS NULL OR ${table.longitude} BETWEEN -180 AND 180`),
 }));
 
 export const products = pgTable('products', {

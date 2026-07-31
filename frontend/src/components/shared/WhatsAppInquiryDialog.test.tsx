@@ -7,7 +7,7 @@ import WhatsAppInquiryDialog from './WhatsAppInquiryDialog';
 const trackPublicEvent = vi.fn();
 vi.mock('../../lib/analytics', () => ({ trackPublicEvent: (...args: unknown[]) => trackPublicEvent(...args) }));
 
-const umkm: UMKM = { id: '00000000-0000-4000-8000-000000000001', slug: 'dapur-loning', name: 'Dapur Loning', owner: 'Sri', description: 'Kuliner', phone: '628123456789', category: 'Kuliner', imageUrl: '/umkm.webp', address: 'Loning', isContactValid: true };
+const umkm: UMKM = { id: '00000000-0000-4000-8000-000000000001', slug: 'dapur-loning', name: 'Dapur Loning', owner: 'Sri', description: 'Kuliner', phone: '628123456789', category: 'Kuliner', imageUrl: '/umkm.webp', address: 'Loning', latitude: null, longitude: null, isContactValid: true };
 const renderDialog = (onClose = vi.fn()) => render(<WhatsAppInquiryDialog isOpen onClose={onClose} umkm={umkm} source="umkm_detail" />);
 
 function setClipboard(value: { writeText: ReturnType<typeof vi.fn> } | undefined) {

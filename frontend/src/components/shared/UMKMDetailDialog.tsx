@@ -8,6 +8,7 @@ import { X, MapPin, Clock, User, Phone, MessageSquare, Info, Grid } from 'lucide
 import { motion, AnimatePresence } from 'motion/react';
 import { UMKM, Product } from '../../types';
 import { formatPrice } from '../../lib/price';
+import BusinessLocation from './BusinessLocation';
 
 interface UMKMDetailDialogProps {
   isOpen: boolean;
@@ -167,22 +168,7 @@ export default function UMKMDetailDialog({ isOpen, onClose, umkm, products, onIn
                   </div>
                 </div>
 
-                {/* Minimalist Location Map Placement */}
-                <div className="pt-4 border-t border-sage-border">
-                  <h4 className="text-[10px] font-semibold uppercase tracking-widest text-warm-gray mb-2">Simulasi Lokasi Usaha</h4>
-                  <div className="w-full h-28 bg-cream-tint rounded-lg border border-sage-border relative overflow-hidden flex items-center justify-center">
-                    <svg className="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M 0 30 Q 80 50 160 30 T 320 60 T 480 30 T 640 50 L 640 120 L 0 120 Z" fill="#123E25" />
-                      <line x1="100" y1="0" x2="100" y2="120" stroke="#000" strokeWidth="1" strokeDasharray="3" />
-                      <line x1="0" y1="50" x2="640" y2="50" stroke="#000" strokeWidth="1" />
-                    </svg>
-                    <div className="z-10 text-center flex flex-col items-center">
-                      <MapPin size={20} className="text-terracotta animate-bounce" />
-                      <span className="text-xs font-semibold mt-1 text-charcoal">{umkm.name}</span>
-                      <span className="text-[10px] text-warm-gray">Dusun Desa Loning, Pemalang</span>
-                    </div>
-                  </div>
-                </div>
+                <BusinessLocation umkmName={umkm.name} address={umkm.address} latitude={umkm.latitude} longitude={umkm.longitude} compact />
               </div>
             )}
 

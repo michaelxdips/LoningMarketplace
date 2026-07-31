@@ -19,6 +19,8 @@ export interface UMKM {
   altText?: string | null;
   address: string;
   workingHours?: string;
+  latitude: number | null;
+  longitude: number | null;
   contactVerifiedAt?: string | null;
   catalogUpdatedAt?: string;
   isContactValid?: boolean;

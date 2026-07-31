@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { createDatabase } from '../db/client.js';
 import { mediaAssets, products, umkms, users } from '../db/schema.js';
+import { collectLocationIntegrityFailures } from '../db/location-integrity.js';
 import { collectPublicIntegrityFailures } from '../db/public-integrity.js';
 
 async function audit() {
@@ -29,6 +30,7 @@ async function audit() {
     const unreferencedWithoutLifecycle = Number((await db.execute(sql`SELECT count(*) FROM media_assets m WHERE m.orphaned_at IS NULL AND m.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM products p WHERE p.image_asset_id = m.id) AND NOT EXISTS (SELECT 1 FROM umkms u WHERE u.image_asset_id = m.id)`))[0].count);
     const expiredOrphans = Number((await db.execute(sql`SELECT count(*) FROM media_assets m WHERE (m.orphaned_at IS NOT NULL OR m.deleted_at IS NOT NULL) AND COALESCE(m.orphaned_at, m.deleted_at) <= now() - interval '24 hours' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.image_asset_id = m.id) AND NOT EXISTS (SELECT 1 FROM umkms u WHERE u.image_asset_id = m.id)`))[0].count);
     const publicIntegrityFailures = await collectPublicIntegrityFailures(db);
+    const locationIntegrityFailures = await collectLocationIntegrityFailures(db);
 
     console.log('--- DATABASE AUDIT ---');
     console.log(`UMKMs: ${umkmCount}`); console.log(`Products: ${productCount}`);
@@ -39,8 +41,9 @@ async function audit() {
     console.log(`Invalid Product Statuses: ${invalidStatus}`); console.log(`Negative Prices: ${negativePrices}`); console.log(`Stale E2E Products: ${staleE2EProducts}`); console.log(`Stale E2E UMKMs: ${staleE2EUmkms}`); console.log(`Whitespace/Missing Product Names: ${missingRequiredProduct}`);
     console.log(`Referenced Media With Lifecycle Marker: ${referencedMediaLifecycle}`); console.log(`Unreferenced Media Without Lifecycle Marker: ${unreferencedWithoutLifecycle}`); console.log(`Expired Unreferenced Media: ${expiredOrphans}`);
     for (const failure of publicIntegrityFailures) console.log(`${failure.check}: ${failure.failures}`);
+    for (const failure of locationIntegrityFailures) console.log(`${failure.check}: ${failure.failures}`);
 
-    const failures = orphanProducts + duplicateProductNames + duplicateUmkmNames + invalidStatus + negativePrices + staleE2EProducts + staleE2EUmkms + missingRequiredProduct + referencedMediaLifecycle + unreferencedWithoutLifecycle + expiredOrphans + publicIntegrityFailures.reduce((sum, failure) => sum + failure.failures, 0);
+    const failures = orphanProducts + duplicateProductNames + duplicateUmkmNames + invalidStatus + negativePrices + staleE2EProducts + staleE2EUmkms + missingRequiredProduct + referencedMediaLifecycle + unreferencedWithoutLifecycle + expiredOrphans + publicIntegrityFailures.reduce((sum, failure) => sum + failure.failures, 0) + locationIntegrityFailures.reduce((sum, failure) => sum + failure.failures, 0);
     console.log(`Audit Status: ${failures === 0 ? 'PASS' : 'FAIL'}`);
     console.log('--- AUDIT COMPLETE ---');
     if (failures > 0) process.exitCode = 1;
