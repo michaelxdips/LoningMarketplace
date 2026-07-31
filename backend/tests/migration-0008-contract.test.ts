@@ -50,12 +50,14 @@ describe('public integrity migrations', () => {
     expect(sql).toMatch(/VALIDATE CONSTRAINT "umkms_published_phone_ready_check"/i);
   });
 
-  it('keeps historical migrations byte-for-byte unchanged', async () => {
-    const hashes = await Promise.all(['0005_trusted_inquiry.sql', '0007_public_slugs.sql'].map(async (file) =>
-      createHash('sha256').update(await readFile(resolve(drizzleDirectory, file))).digest('hex')));
+  it('keeps historical migrations content unchanged across checkout line endings', async () => {
+    const hashes = await Promise.all(['0005_trusted_inquiry.sql', '0007_public_slugs.sql'].map(async (file) => {
+      const canonicalContent = (await readFile(resolve(drizzleDirectory, file), 'utf8')).replace(/\r\n?/g, '\n');
+      return createHash('sha256').update(canonicalContent, 'utf8').digest('hex');
+    }));
     expect(hashes).toEqual([
-      '205962d2ba9dab2a6c79d807d5532b1fcc585540b85c43140b7a435ad0bfc26a',
-      'a3a96b53057a1f336781e7c6a064315b738fdbd7453cc3285d0fff8d04f51847',
+      'e7069badcc4e6a1105edc5c9ea70cee7730b974e0e9a9d1a748339848582d1c4',
+      '1f5e22d2eb0f428ca263296ef2d20b00435d5f927fa5f1cc7f31e753ae985511',
     ]);
   });
 

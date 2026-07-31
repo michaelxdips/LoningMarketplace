@@ -23,6 +23,12 @@ export default defineConfig(({ command, mode }) => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    test: {
+      env: {
+        VITE_API_URL: 'https://api.example.invalid/api',
+        VITE_PUBLIC_SITE_URL: 'https://site.example.invalid',
+      },
+    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
