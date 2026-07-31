@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { UMKM, Product } from '../../types';
 import { formatPrice } from '../../lib/price';
 import BusinessLocation from './BusinessLocation';
+import { ProductImage } from '../product/ProductImage';
 
 interface UMKMDetailDialogProps {
   isOpen: boolean;
@@ -191,7 +192,7 @@ export default function UMKMDetailDialog({ isOpen, onClose, umkm, products, onIn
                         className="bg-cream-card border border-sage-border rounded-lg overflow-hidden flex flex-col transition-card hover:border-forest/30"
                       >
                         <div className="h-28 w-full relative bg-cream-tint">
-                          <img
+                          <ProductImage
                             src={p.imageUrl}
                             alt={p.altText || p.name}
                             className="w-full h-full object-cover"

@@ -19,6 +19,7 @@ const FaqPage = lazy(() => import('./pages/FaqPage.tsx'));
 const AboutVillagePage = lazy(() => import('./pages/AboutVillagePage.tsx'));
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage.tsx'));
 const UMKMDetailPage = lazy(() => import('./pages/UMKMDetailPage.tsx'));
+const PetaUMKMPage = lazy(() => import('./pages/PetaUMKMPage.tsx'));
 const BusinessLocationPage = lazy(() => import('./pages/BusinessLocationPage.tsx'));
 const UMKMFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.UMKMFormPage })));
 const ProductFormPage = lazy(() => import('./pages/ManagementForms.tsx').then(module => ({ default: module.ProductFormPage })));
@@ -85,6 +86,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<App />} />
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/tentang-desa" element={<AboutVillagePage />} />
+          <Route path="/peta-umkm" element={<PetaUMKMPage />} />
           <Route path="/produk/:identifier" element={<ProductDetailPage />} />
           <Route path="/umkm/:identifier" element={<UMKMDetailPage />} />
           <Route element={<PublicOnlyGuard />}><Route path="/login" element={<LoginPage />} /></Route>

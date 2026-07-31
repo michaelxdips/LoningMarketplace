@@ -16,6 +16,7 @@ interface NavbarProps {
 const navItems = [
   { label: 'Produk', href: '/#featured-products' },
   { label: 'Profil UMKM', href: '/#umkm' },
+  { label: 'Peta UMKM', href: '/peta-umkm' },
   { label: 'Tentang Desa', href: '/tentang-desa' },
   { label: 'FAQ', href: '/faq' }
 ] as const;

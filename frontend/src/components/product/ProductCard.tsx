@@ -20,34 +20,44 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
   const { product } = props;
   const content = <>
     <div className="h-44 w-full overflow-hidden bg-cream-tint relative">
-      <ProductImage src={product.imageUrl} alt={product.altText || product.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-103" />
-      {product.unit && <span className="absolute top-3 right-3 bg-charcoal/85 text-white text-[9px] font-semibold tracking-wider px-2 py-0.5 rounded uppercase">/ {product.unit}</span>}
+      <ProductImage src={product.imageUrl} alt={product.altText || product.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      {product.unit && <span className="absolute top-3 right-3 bg-charcoal/80 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-full uppercase shadow-xs">/ {product.unit}</span>}
     </div>
-    <div className="p-4 space-y-1">
-      <span className="text-[9px] font-bold text-terracotta uppercase tracking-widest block">{product.category}</span>
-      {props.variant === 'related' ? <h3 className="text-sm font-semibold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">{product.name}</h3> : <h4 className="text-sm font-semibold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">{product.name}</h4>}
-      <p className="text-[11px] text-warm-gray/80 line-clamp-2 leading-relaxed pt-1.5">{product.description}</p>
-      <div className="pt-3 flex items-center gap-2.5">
-        <span className="text-[9px] font-semibold text-warm-gray uppercase tracking-widest">Harga</span>
+    <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+      <div>
+        <span className="text-[10px] font-bold text-terracotta uppercase tracking-widest block mb-1">{product.category}</span>
+        {props.variant === 'related' ? <h3 className="text-sm font-bold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">{product.name}</h3> : <h4 className="text-sm font-bold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">{product.name}</h4>}
+        <p className="text-xs text-warm-gray line-clamp-2 leading-relaxed mt-1">{product.description}</p>
+      </div>
+      <div className="pt-3 border-t border-sage-border/50 flex items-center justify-between mt-auto">
+        <span className="text-[10px] font-bold text-warm-gray uppercase tracking-wider">Harga</span>
         <span className="text-xs font-bold text-forest">{formatPrice(product.price, 'Hubungi Penjual')}</span>
       </div>
     </div>
   </>;
   return (
-    <article id={`product-card-${product.id}`} className="self-start bg-cream-card border border-sage-border rounded-xl overflow-hidden flex flex-col transition-card hover:border-forest/30 hover:shadow-md group">
-      {props.variant === 'related' ? <Link to={`/produk/${encodeURIComponent(product.slug)}`} aria-label={`Buka produk terkait ${product.name}`} className="focus-ring block w-full text-left">{content}</Link> : <>
-        <button type="button" aria-label={`Lihat detail ${product.name}`} onClick={(event) => props.onViewProduct(product, event.currentTarget, 'homepage_featured')} className="focus-ring block w-full cursor-pointer text-left">{content}</button>
-        <div className="mt-auto px-4 pb-4 flex items-center gap-2.5">
-          <Link to={`/produk/${encodeURIComponent(product.slug)}`} className="focus-ring touch-target inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-sage-border text-forest transition-colors hover:border-forest/30 hover:bg-cream-tint" aria-label={`Buka halaman ${product.name}`}>
-            <Eye size={14} aria-hidden="true" />
-          </Link>
-          <button id={`product-cta-${product.id}`} type="button" onClick={() => props.onInquire(product)} className="focus-ring touch-target flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-forest px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-forest-hover">
-            <MessageSquare size={12} aria-hidden="true" />
-            <span>Tanya Produk</span>
-            <ArrowRight size={12} aria-hidden="true" />
+    <article id={`product-card-${product.id}`} className="h-full bg-cream-card border border-sage-border rounded-xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:border-forest/30 hover:shadow-md hover:-translate-y-0.5 group">
+      {props.variant === 'related' ? (
+        <Link to={`/produk/${encodeURIComponent(product.slug)}`} aria-label={`Buka produk terkait ${product.name}`} className="focus-ring block w-full text-left h-full flex flex-col justify-between">
+          {content}
+        </Link>
+      ) : (
+        <>
+          <button type="button" aria-label={`Lihat detail ${product.name}`} onClick={(event) => props.onViewProduct(product, event.currentTarget, 'homepage_featured')} className="focus-ring block w-full cursor-pointer text-left flex-1 flex flex-col justify-between">
+            {content}
           </button>
-        </div>
-      </>}
+          <div className="mt-auto px-4 pb-4 flex items-center gap-2.5">
+            <Link to={`/produk/${encodeURIComponent(product.slug)}`} className="focus-ring touch-target inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-sage-border text-forest transition-colors hover:border-forest/30 hover:bg-sage-light" aria-label={`Buka halaman ${product.name}`}>
+              <Eye size={14} aria-hidden="true" />
+            </Link>
+            <button id={`product-cta-${product.id}`} type="button" onClick={() => props.onInquire(product)} className="focus-ring touch-target flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-forest px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-forest-hover">
+              <MessageSquare size={13} aria-hidden="true" />
+              <span className="truncate">Tanya Produk</span>
+              <ArrowRight size={13} aria-hidden="true" className="shrink-0" />
+            </button>
+          </div>
+        </>
+      )}
     </article>
   );
 };
