@@ -34,20 +34,23 @@ export default function FeaturedBusinessesSection({ umkms, searchQuery, onSearch
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
-          <div>
+          <div className="flex-1 min-w-0">
             <span className="text-[10px] font-bold text-terracotta uppercase tracking-widest block mb-1">
               Direktori Usaha Rakyat
             </span>
-            <h2 id="featured-businesses-heading" className="text-2xl font-extrabold text-charcoal tracking-tight">
+            <h2 id="featured-businesses-heading" className="text-2xl font-extrabold text-charcoal tracking-tight sm:text-3xl">
               Profil Pelaku UMKM Desa
             </h2>
-            <p className="text-xs text-warm-gray mt-1 leading-relaxed max-w-xl">
+            <p className="text-xs text-warm-gray mt-1.5 leading-relaxed max-w-xl">
               Kenali lebih dekat warga pegiat niaga mandiri yang menggerakkan roda ekonomi Desa Loning. Kunjungi profil untuk membaca informasi jam operasional dan melihat produk mereka.
+            </p>
+            <p role="status" aria-live="polite" className="mt-3 text-xs font-medium text-forest">
+              {isLoading ? 'Memuat UMKM…' : isError ? 'UMKM gagal dimuat.' : `${umkms.length} UMKM ditemukan`}
             </p>
           </div>
 
           {/* Search Box */}
-          <div className="relative w-full md:max-w-xs shrink-0">
+          <div className="relative w-full md:w-80 lg:w-[24rem] shrink-0">
             <DiscoverySearchForm
               id="search-umkm-input"
               label="Cari pelaku UMKM"
@@ -59,10 +62,6 @@ export default function FeaturedBusinessesSection({ umkms, searchQuery, onSearch
             />
           </div>
         </div>
-
-        <p role="status" aria-live="polite" className="mb-5 text-xs text-warm-gray">
-          {isLoading ? 'Memuat UMKM…' : isError ? 'UMKM gagal dimuat.' : `${umkms.length} UMKM ditemukan`}
-        </p>
         {/* Directory Grid */}
         {isLoading ? <div data-testid="umkms-loading"><LoadingSkeleton count={3} /></div> : isError ? (
           <EmptyState title="Direktori Tidak Dapat Dimuat" description="Terjadi kendala saat mengambil data UMKM. Silakan coba lagi." actionLabel="Coba Lagi" onAction={onRetry} />

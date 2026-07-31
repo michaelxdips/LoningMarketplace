@@ -30,18 +30,18 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
       className="py-10 bg-cream-card border-b border-sage-border px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-7xl mx-auto">
-        <div className="text-center md:text-left md:flex md:items-end md:justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
           <div>
             <span className="text-[10px] font-bold text-terracotta uppercase tracking-widest block mb-1">
               Pilih Kategori Usaha
             </span>
-            <h2 className="text-xl md:text-2xl font-extrabold text-charcoal tracking-tight">
+            <h2 className="text-2xl font-extrabold text-charcoal tracking-tight sm:text-3xl">
               Kategori Niaga Desa Loning
             </h2>
+            <p className="text-xs text-warm-gray mt-1.5 leading-relaxed max-w-xl">
+              Saring direktori produk berdasarkan bidang usaha lokal untuk memudahkan pencarian Anda.
+            </p>
           </div>
-          <p className="text-xs text-warm-gray mt-1.5 md:mt-0 max-w-sm">
-            Saring direktori produk berdasarkan bidang usaha lokal untuk memudahkan pencarian Anda.
-          </p>
         </div>
         {hasFilters && onClearFilters && <button type="button" onClick={onClearFilters} className="focus-ring mt-4 rounded-lg border border-sage-border px-3 py-2 text-xs font-bold text-forest hover:bg-sage-light/40">Hapus semua filter</button>}
 

@@ -47,20 +47,23 @@ export default function FeaturedProductsSection({
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
-          <div>
+          <div className="flex-1 min-w-0">
             <span className="text-[10px] font-bold text-terracotta uppercase tracking-widest block mb-1">
               Etalase Niaga Desa
             </span>
-            <h2 id="featured-products-heading" className="text-2xl font-extrabold text-charcoal tracking-tight">
+            <h2 id="featured-products-heading" className="text-2xl font-extrabold text-charcoal tracking-tight sm:text-3xl">
               Katalog Produk Warga
             </h2>
-            <p className="text-xs text-warm-gray mt-1 leading-relaxed max-w-xl">
+            <p className="text-xs text-warm-gray mt-1.5 leading-relaxed max-w-xl">
               Telusuri aneka produk pilihan hasil karya mandiri masyarakat Desa Loning. Klik tombol tanya produk untuk tersambung ke WhatsApp penjual.
+            </p>
+            <p role="status" aria-live="polite" className="mt-3 text-xs font-medium text-forest">
+              {isLoading ? 'Memuat produk…' : isError ? 'Produk gagal dimuat.' : `${products.length} produk ditemukan`}
             </p>
           </div>
 
           {/* Search Box with Accessible Labels */}
-          <div className="relative w-full md:max-w-xs shrink-0">
+          <div className="relative w-full md:w-80 lg:w-[24rem] shrink-0">
             <DiscoverySearchForm
               id="search-products-input"
               label="Cari produk lokal"
@@ -82,10 +85,6 @@ export default function FeaturedProductsSection({
             </span>
           </div>
         )}
-
-        <p role="status" aria-live="polite" className="mb-5 text-xs text-warm-gray">
-          {isLoading ? 'Memuat produk…' : isError ? 'Produk gagal dimuat.' : `${products.length} produk ditemukan`}
-        </p>
         {/* Displaying Products or Empty State */}
         {isLoading ? <div data-testid="products-loading"><LoadingSkeleton count={3} /></div> : isError ? (
           <EmptyState title="Katalog Tidak Dapat Dimuat" description="Terjadi kendala saat mengambil katalog produk. Silakan coba lagi." actionLabel="Coba Lagi" onAction={onRetry} />
