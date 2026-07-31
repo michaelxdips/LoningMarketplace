@@ -369,9 +369,23 @@ npm --prefix backend run admin:create
 
 ### Build Commands
 
+> [!IMPORTANT]
+> **Production Build Requirement**: `VITE_PUBLIC_SITE_URL` wajib diisi saat menjalankan `npm run build` untuk menghasilkan canonical URLs dan metadata SEO yang valid.
+
+#### Windows (PowerShell)
+```powershell
+$env:VITE_PUBLIC_SITE_URL="https://loningmaju.desa.id"
+npm run build
+```
+
+#### Linux / macOS / Cloud Shell
+```bash
+VITE_PUBLIC_SITE_URL="https://loningmaju.desa.id" npm run build
+```
+
 | Command | Keterangan |
 |---|---|
-| `npm run build` | Build semua workspaces |
+| `npm run build` | Build semua workspaces (butuh `VITE_PUBLIC_SITE_URL`) |
 | `npm run build:frontend` | Build frontend saja |
 | `npm run build:backend` | Build backend saja |
 | `npm run lint` | TypeScript lint (semua workspaces) |
@@ -698,9 +712,9 @@ npm run lint
 npm run typecheck
 ```
 
-### Isolated Test Commands (Membutuhkan Docker)
+### Docker Isolated Dependency Simulation (Membutuhkan Docker)
 
-Isolated commands mengelola lifecycle PostgreSQL sendiri — tidak perlu database yang sudah berjalan.
+Set up isolated dependency containers (PostgreSQL 16 & MinIO) — tidak perlu database atau S3 server yang sudah berjalan.
 
 ```bash
 # Safety check harness

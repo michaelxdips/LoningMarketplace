@@ -18,6 +18,7 @@ const productionS3Environment = (overrides: NodeJS.ProcessEnv = {}): NodeJS.Proc
   NODE_ENV: 'production',
   DATABASE_URL: 'postgresql://test:password@db.example.test/loning',
   CORS_ORIGIN: 'https://app.example.test',
+  PUBLIC_SITE_URL: 'https://app.example.test',
   COOKIE_SECURE: 'true',
   MEDIA_STORAGE_DRIVER: 's3',
   MEDIA_PUBLIC_BASE_URL: 'https://media.example.test',

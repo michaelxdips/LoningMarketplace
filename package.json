@@ -42,7 +42,10 @@
     "test:e2e:isolated": "node scripts/run-isolated.mjs e2e",
     "test:e2e:zoom-native:isolated": "node scripts/run-isolated.mjs zoom-native",
     "verify:full:isolated": "node scripts/run-isolated.mjs full",
-    "test:all": "npm run test:unit && npm run test:integration:isolated && npm run test:e2e:isolated"
+    "test:all": "npm run test:unit && npm run test:integration:isolated && npm run test:e2e:isolated",
+    "storage:check": "npm run storage:check --workspace=backend",
+    "media:audit": "npm run media:audit --workspace=backend",
+    "precloud:check": "node scripts/precloud-check.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",

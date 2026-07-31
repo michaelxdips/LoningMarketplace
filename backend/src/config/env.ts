@@ -6,6 +6,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   HOST: z.string().default('0.0.0.0'),
   CORS_ORIGIN: z.string().url().default('http://localhost:3000'),
+  PUBLIC_SITE_URL: z.string().url().default('http://localhost:3000'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   SESSION_TTL_HOURS: z.coerce.number().int().positive().max(24 * 30).default(24 * 7),
   SESSION_RETENTION_DAYS: z.coerce.number().int().nonnegative().max(3650).default(30),
@@ -34,7 +35,7 @@ const envSchema = z.object({
 });
 
 type ParsedEnv = z.infer<typeof envSchema>;
-export type AppEnv = Omit<ParsedEnv, 'DATABASE_URL' | keyof MediaConfig> & { DATABASE_URL: string } & Partial<MediaConfig>;
+export type AppEnv = Omit<ParsedEnv, 'DATABASE_URL' | 'PUBLIC_SITE_URL' | keyof MediaConfig> & { DATABASE_URL: string; PUBLIC_SITE_URL?: string } & Partial<MediaConfig>;
 export type MediaConfig = Pick<ParsedEnv, 'MEDIA_STORAGE_DRIVER' | 'MEDIA_FILESYSTEM_ROOT' | 'MEDIA_PUBLIC_BASE_URL' | 'MEDIA_MAX_BYTES' | 'MEDIA_MAX_WIDTH' | 'MEDIA_MAX_HEIGHT' | 'MEDIA_MAX_PIXELS' | 'MEDIA_ORPHAN_GRACE_HOURS' | 'S3_BUCKET' | 'S3_REGION' | 'S3_ENDPOINT' | 'S3_ACCESS_KEY_ID' | 'S3_SECRET_ACCESS_KEY' | 'S3_FORCE_PATH_STYLE'>;
 
 export function mediaConfig(env: AppEnv): MediaConfig {
@@ -58,6 +59,13 @@ export function parseEnv(input: NodeJS.ProcessEnv, requireDatabase = true): AppE
   if (parsed.data.MEDIA_STORAGE_DRIVER === 's3' && (!parsed.data.S3_BUCKET || !parsed.data.S3_REGION)) throw new Error('S3_BUCKET and S3_REGION are required for S3 storage');
   if ((parsed.data.S3_ACCESS_KEY_ID && !parsed.data.S3_SECRET_ACCESS_KEY) || (!parsed.data.S3_ACCESS_KEY_ID && parsed.data.S3_SECRET_ACCESS_KEY)) throw new Error('Both S3 credential fields must be provided together');
   if (parsed.data.NODE_ENV === 'production' && !input.MEDIA_PUBLIC_BASE_URL) throw new Error('MEDIA_PUBLIC_BASE_URL is required in production');
+  if (parsed.data.NODE_ENV === 'production') {
+    if (!input.PUBLIC_SITE_URL) throw new Error('PUBLIC_SITE_URL is required in production');
+    const u = new URL(parsed.data.PUBLIC_SITE_URL);
+    if (u.protocol !== 'https:') throw new Error('PUBLIC_SITE_URL must use HTTPS in production');
+    if (u.hostname === 'localhost' || u.hostname.endsWith('.example.com') || u.hostname === 'example.com') throw new Error('PUBLIC_SITE_URL cannot use localhost or example placeholders in production');
+    if (u.pathname !== '/' || u.search || u.hash || u.username || u.password) throw new Error('PUBLIC_SITE_URL must be a plain origin without path, query, or credentials');
+  }
   if (parsed.data.CORS_ORIGIN === '*' || parsed.data.CORS_ORIGIN.includes(',')) throw new Error('CORS_ORIGIN must be one explicit origin');
   return { ...parsed.data, COOKIE_SECURE: parsed.data.COOKIE_SECURE ?? parsed.data.NODE_ENV === 'production', DATABASE_URL: parsed.data.DATABASE_URL ?? '' };
 }

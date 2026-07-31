@@ -11,6 +11,8 @@ if (!['integration', 'e2e', 'full', 'migration', 'zoom-native'].includes(mode)) 
 const project = mode === 'e2e' || mode === 'zoom-native' ? 'marketplace-loning-e2e-phase0' : mode === 'migration' ? 'marketplace-loning-test-migration-v12' : 'marketplace-loning-test-phase0';
 const database = mode === 'e2e' || mode === 'zoom-native' ? 'loning_phase0_e2e' : mode === 'migration' ? 'loning_v12_migration_test' : 'loning_phase0_test';
 const port = mode === 'e2e' || mode === 'zoom-native' ? '55433' : '55432';
+const minioPort = mode === 'e2e' || mode === 'zoom-native' ? '59002' : '59000';
+const minioConsolePort = mode === 'e2e' || mode === 'zoom-native' ? '59003' : '59001';
 const artifactRoot = resolve(root, '.phase0-runtime', mode);
 const artifactMediaRoot = resolve(artifactRoot, 'media');
 const frontendOrigin = 'http://localhost:3100';
@@ -22,6 +24,8 @@ const env = {
   DISPOSABLE_COMPOSE_PROJECT: project,
   DISPOSABLE_DB_PORT: port,
   DISPOSABLE_DB_NAME: database,
+  DISPOSABLE_MINIO_PORT: minioPort,
+  DISPOSABLE_MINIO_CONSOLE_PORT: minioConsolePort,
   DATABASE_URL: `postgresql://loning_test:loning_disposable_only@127.0.0.1:${port}/${database}`,
   COOKIE_SECURE: 'false',
   PORT: '3101',
@@ -29,6 +33,12 @@ const env = {
   MEDIA_STORAGE_DRIVER: 'filesystem',
   MEDIA_FILESYSTEM_ROOT: artifactMediaRoot,
   MEDIA_PUBLIC_BASE_URL: `${backendOrigin}/media`,
+  S3_ENDPOINT: `http://127.0.0.1:${minioPort}`,
+  S3_BUCKET: 'loning-test-media',
+  S3_REGION: 'us-east-1',
+  S3_ACCESS_KEY_ID: 'minioadmin',
+  S3_SECRET_ACCESS_KEY: 'minioadmin',
+  S3_FORCE_PATH_STYLE: 'true',
   RATE_LIMIT_MAX: '10000',
   LOGIN_RATE_LIMIT_MAX: '1000',
   VITE_API_URL: `${backendOrigin}/api`,
@@ -62,6 +72,79 @@ async function waitForPostgres(timeout = 120_000) {
     await new Promise(resolve => setTimeout(resolve, 500));
   }
   throw new Error('Disposable PostgreSQL did not become healthy');
+}
+async function waitForMinIO(timeout = 120_000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(`http://127.0.0.1:${minioPort}/minio/health/live`);
+      if (response.ok) {
+        spawnSync(process.execPath, [
+          '--eval',
+          `import('@aws-sdk/client-s3').then(async ({S3Client, CreateBucketCommand, HeadBucketCommand}) => { const s3 = new S3Client({ endpoint: 'http://127.0.0.1:${minioPort}', region: 'us-east-1', credentials: { accessKeyId: 'minioadmin', secretAccessKey: 'minioadmin' }, forcePathStyle: true }); try { await s3.send(new HeadBucketCommand({ Bucket: 'loning-test-media' })); } catch { await s3.send(new CreateBucketCommand({ Bucket: 'loning-test-media' })); } })`
+        ], { cwd: resolve(root, 'backend'), stdio: 'ignore', shell: false, windowsHide: true });
+        return;
+      }
+    } catch {}
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  console.warn('Isolated MinIO did not become healthy within timeout');
+}
+async function verifyMinioRestartPersistence() {
+  console.log('Running real MinIO container restart persistence test...');
+  const key = `media/minio-restart-persistence-${Date.now()}.bin`;
+  const bytes = Buffer.from('LONING_MINIO_RESTART_PERSISTENCE_TEST_PAYLOAD_DETERMINISTIC_V1_VERIFIED');
+  const expectedLength = bytes.length;
+  const crypto = await import('node:crypto');
+  const expectedChecksum = crypto.createHash('sha256').update(bytes).digest('hex');
+
+  const { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand } = await import('@aws-sdk/client-s3');
+  const s3Config = {
+    endpoint: `http://127.0.0.1:${minioPort}`,
+    region: 'us-east-1',
+    credentials: { accessKeyId: 'minioadmin', secretAccessKey: 'minioadmin' },
+    forcePathStyle: true,
+  };
+
+  // 1. Upload deterministic object using initial client
+  const client1 = new S3Client(s3Config);
+  await client1.send(new PutObjectCommand({ Bucket: 'loning-test-media', Key: key, Body: bytes, ContentType: 'application/octet-stream' }));
+  client1.destroy();
+
+  // 2. Restart the MinIO container without deleting its volume
+  console.log('Restarting MinIO container (volume preserved)...');
+  docker(['restart', 'minio']);
+
+  // 3. Wait for MinIO health
+  await waitForMinIO();
+
+  // 4. Create a brand new S3 client instance
+  const client2 = new S3Client(s3Config);
+
+  // 5. Verify HeadObject & GetObject with exact checksum
+  const head = await client2.send(new HeadObjectCommand({ Bucket: 'loning-test-media', Key: key }));
+  if (head.ContentLength !== expectedLength) {
+    throw new Error(`MinIO restart persistence failed: expected length ${expectedLength}, got ${head.ContentLength}`);
+  }
+
+  const getRes = await client2.send(new GetObjectCommand({ Bucket: 'loning-test-media', Key: key }));
+  const chunks = [];
+  for await (const chunk of getRes.Body) chunks.push(chunk);
+  const downloadedBytes = Buffer.concat(chunks);
+  const downloadedChecksum = crypto.createHash('sha256').update(downloadedBytes).digest('hex');
+
+  if (downloadedChecksum !== expectedChecksum) {
+    throw new Error(`MinIO restart persistence checksum mismatch: expected ${expectedChecksum}, got ${downloadedChecksum}`);
+  }
+  if (!downloadedBytes.equals(bytes)) {
+    throw new Error('MinIO restart persistence byte mismatch');
+  }
+
+  // 6. Clean ONLY the test object afterward
+  await client2.send(new DeleteObjectCommand({ Bucket: 'loning-test-media', Key: key }));
+  client2.destroy();
+
+  console.log('MINIO_RESTART_PERSISTENCE_PASS: exact checksum, bytes, HeadObject, GetObject, and test object cleanup verified across container restart.');
 }
 async function waitForBackend(timeout = 120_000) {
   const deadline = Date.now() + timeout;
@@ -198,8 +281,10 @@ function existingDataMigration() {
 let failure;
 console.log(`Disposable target: ${target.redactedUrl}; project=${target.project}; port=${target.port}`);
 try {
-  docker(['up', '-d', '--wait', 'postgres']);
+  docker(['up', '-d', 'postgres', 'minio']);
   await waitForPostgres();
+  await waitForMinIO();
+  await verifyMinioRestartPersistence();
   if (mode === 'migration') existingDataMigration();
   else {
     npm(['--prefix', 'backend', 'run', 'db:migrate']);

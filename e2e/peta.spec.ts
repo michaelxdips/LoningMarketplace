@@ -8,10 +8,23 @@ test('public interactive map route loads directory map, selector, and detail nav
   await page.goto('/peta-umkm');
   await expect(page.getByRole('heading', { name: 'Peta Lokasi UMKM Desa Loning' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Pilih Lokasi Usaha' })).toBeVisible();
+  await expect(page.getByText('Memuat data peta UMKM...')).not.toBeVisible();
+  await expect(page.locator('span', { hasText: 'Lokasi Terverifikasi' })).toBeVisible();
 
-  // Navigation check
-  await page.getByRole('link', { name: 'Kembali ke Beranda', exact: true }).click();
-  await expect(page).toHaveURL(/\/#umkm/);
+  // Navigation check with bounded transition for old-document in-flight aborts
+  const transition = events.beginExpectedTransition({
+    reason: 'navigate-home-from-peta',
+    expectedRequests: [
+      { method: 'GET', url: /\/api\/(?:products|umkms)(?:\?.*)?$/ },
+      { method: 'GET', url: /https:\/\/images\.unsplash\.com\/.*/ }
+    ]
+  });
+  try {
+    await page.getByRole('link', { name: 'Kembali ke Beranda', exact: true }).click();
+    await expect(page).toHaveURL(/\/#umkm/);
+  } finally {
+    transition.complete();
+  }
 
   // Re-navigate to peta
   await page.goto('/peta-umkm');

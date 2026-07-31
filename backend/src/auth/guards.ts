@@ -20,6 +20,9 @@ export function createGuards(repository: Repository, crypto: Security, env: AppE
       reply.clearCookie(env.SESSION_COOKIE_NAME, { path: '/', sameSite: 'lax', secure: env.COOKIE_SECURE });
       return fail(reply, 403, 'Akun Anda tidak memiliki akses yang valid ke dashboard.', 'ROLE_INVALID');
     }
+    if (session.user.mustChangePassword && !request.url.startsWith('/api/auth/')) {
+      return fail(reply, 403, 'Must change password before accessing dashboard resources.', 'PASSWORD_CHANGE_REQUIRED');
+    }
     request.auth = session;
   };
   const origin = async (request: FastifyRequest, reply: FastifyReply) => {

@@ -19,6 +19,9 @@
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": { "service": "backend" } },
+    { "source": "/sitemap.xml", "destination": { "service": "backend" } },
+    { "source": "/robots.txt", "destination": { "service": "backend" } },
     { "source": "/(.*)", "destination": { "service": "frontend" } }
   ]
+}
 }

@@ -26,6 +26,7 @@ import { manageRoutes } from './routes/manage.js';
 import { mediaRoutes } from './routes/media.js';
 import { eventRoutes } from './routes/events.js';
 import { analyticsRoutes } from './routes/analytics.js';
+import { sitemapRoutes } from './routes/sitemap.js';
 import { SlugConflictError } from './errors/domain.js';
 
 const errorEnvelope = (message: string, code: string) => ({ error: { message, code } });
@@ -58,6 +59,7 @@ export async function buildApp(env: AppEnv, repository: Repository, dependencies
   if (env.NODE_ENV !== 'production' && media instanceof FilesystemMediaStorage) { await mkdir(media.root, { recursive: true }); await app.register(fastifyStatic, { root: media.root, prefix: '/media/', decorateReply: false, dotfiles: 'ignore', list: false, setHeaders: (reply) => { reply.header('Access-Control-Allow-Origin', env.CORS_ORIGIN); reply.header('Cross-Origin-Resource-Policy', 'cross-origin'); reply.header('Cache-Control', 'public, max-age=3600'); } }); }
   app.setErrorHandler((error, _request, reply) => { app.log.error(error); if (error instanceof SlugConflictError) return reply.code(error.statusCode).send(errorEnvelope(error.message, error.code)); const statusCode = typeof error === 'object' && error !== null && 'statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : 500; const message = error instanceof Error ? error.message : 'Request failed'; return reply.code(statusCode < 500 ? statusCode : 500).send(errorEnvelope(statusCode < 500 ? message : 'Internal server error', statusCode < 500 ? 'REQUEST_ERROR' : 'INTERNAL_ERROR')); });
   await app.register(async (api) => { await healthRoutes(api, repository); await umkmRoutes(api, repository); await productRoutes(api, repository); await eventRoutes(api, repository, now); await authRoutes(api, repository, guards, crypto, env, now); await adminRoutes(api, repository, guards, crypto, now); await analyticsRoutes(api, repository, guards); await manageRoutes(api, repository, guards, now, id); await mediaRoutes(api, repository, guards, media, env, id); }, { prefix: '/api' });
+  await sitemapRoutes(app, repository, env);
   // Same-origin static frontend serving (production only). Serves hashed assets and SPA fallback.
   // NEVER intercepts /api/* (registered above with prefix). API 404 stays JSON.
   if (env.NODE_ENV === 'production') {

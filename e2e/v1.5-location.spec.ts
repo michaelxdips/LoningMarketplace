@@ -32,6 +32,7 @@ test('owner parses, saves, publishes, and clears business location', async ({ pa
   await expect(page.getByTitle(`Peta lokasi ${E2E_FIXTURES.umkm.primaryName}`)).toHaveAttribute('src', /openstreetmap\.org\/export\/embed\.html/);
   await expect(page.getByRole('link', { name: 'Buka di Google Maps' })).toHaveAttribute('href', /google\.com\/maps\/search/);
   await expect(page.getByRole('link', { name: 'Petunjuk Arah' })).toHaveAttribute('href', /google\.com\/maps\/dir/);
+  await page.waitForLoadState('networkidle');
 
   await page.goto(`/dashboard/umkms/${E2E_FIXTURES.umkm.primaryId}/location`);
   await page.getByRole('button', { name: 'Hapus Lokasi' }).click();
@@ -39,6 +40,7 @@ test('owner parses, saves, publishes, and clears business location', async ({ pa
   await expect(page.getByRole('status')).toContainText('berhasil dihapus');
   await page.goto(`/umkm/${slug}`);
   await expect(page.getByRole('heading', { name: 'Lokasi Usaha' })).toHaveCount(0);
+  await page.waitForLoadState('networkidle');
   assertBrowserEvents(events);
   events.dispose();
 });
