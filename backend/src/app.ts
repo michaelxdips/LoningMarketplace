@@ -1,3 +1,7 @@
+import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
@@ -25,6 +29,21 @@ import { analyticsRoutes } from './routes/analytics.js';
 import { SlugConflictError } from './errors/domain.js';
 
 const errorEnvelope = (message: string, code: string) => ({ error: { message, code } });
+
+const FRONTEND_DIST_CANDIDATES = [
+  // Render same-origin: backend dist is backend/dist, frontend dist is frontend/dist
+  resolve(process.cwd(), '..', 'frontend', 'dist'),
+  // Local monorepo run from backend/
+  resolve(process.cwd(), 'frontend', 'dist'),
+  // Compiled backend dist/src -> ../../frontend/dist
+  (() => { try { return resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'frontend', 'dist'); } catch { return ''; } })(),
+].filter(Boolean);
+
+function resolveFrontendDist(): string | null {
+  for (const candidate of FRONTEND_DIST_CANDIDATES) if (candidate && existsSync(join(candidate, 'index.html'))) return candidate;
+  return null;
+}
+
 export type AppDependencies = { security?: Security; now?: () => Date; id?: () => string; storage?: MediaStorage };
 export async function buildApp(env: AppEnv, repository: Repository, dependencies: AppDependencies = {}) {
   if (env.NODE_ENV === 'production' && (!env.COOKIE_SECURE || env.CORS_ORIGIN === '*' || env.CORS_ORIGIN.includes(','))) throw new Error('Unsafe production security configuration');
@@ -39,6 +58,27 @@ export async function buildApp(env: AppEnv, repository: Repository, dependencies
   if (env.NODE_ENV !== 'production' && media instanceof FilesystemMediaStorage) { await mkdir(media.root, { recursive: true }); await app.register(fastifyStatic, { root: media.root, prefix: '/media/', decorateReply: false, dotfiles: 'ignore', list: false, setHeaders: (reply) => { reply.header('Access-Control-Allow-Origin', env.CORS_ORIGIN); reply.header('Cross-Origin-Resource-Policy', 'cross-origin'); reply.header('Cache-Control', 'public, max-age=3600'); } }); }
   app.setErrorHandler((error, _request, reply) => { app.log.error(error); if (error instanceof SlugConflictError) return reply.code(error.statusCode).send(errorEnvelope(error.message, error.code)); const statusCode = typeof error === 'object' && error !== null && 'statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : 500; const message = error instanceof Error ? error.message : 'Request failed'; return reply.code(statusCode < 500 ? statusCode : 500).send(errorEnvelope(statusCode < 500 ? message : 'Internal server error', statusCode < 500 ? 'REQUEST_ERROR' : 'INTERNAL_ERROR')); });
   await app.register(async (api) => { await healthRoutes(api, repository); await umkmRoutes(api, repository); await productRoutes(api, repository); await eventRoutes(api, repository, now); await authRoutes(api, repository, guards, crypto, env, now); await adminRoutes(api, repository, guards, crypto, now); await analyticsRoutes(api, repository, guards); await manageRoutes(api, repository, guards, now, id); await mediaRoutes(api, repository, guards, media, env, id); }, { prefix: '/api' });
-  app.setNotFoundHandler((_request, reply) => reply.code(404).send(errorEnvelope('Route not found', 'NOT_FOUND')));
+  // Same-origin static frontend serving (production only). Serves hashed assets and SPA fallback.
+  // NEVER intercepts /api/* (registered above with prefix). API 404 stays JSON.
+  if (env.NODE_ENV === 'production') {
+    const frontendDist = resolveFrontendDist();
+    if (frontendDist) {
+      await app.register(fastifyStatic, { root: frontendDist, prefix: '/', decorateReply: false, dotfiles: 'ignore', list: false, cacheControl: true, maxAge: '1y', immutable: true, extensions: [] });
+      // SPA fallback: serve index.html for non-asset, non-api GET paths (deep links).
+      let indexHtml: Buffer | null = null;
+      try { indexHtml = await readFile(join(frontendDist, 'index.html')); } catch { indexHtml = null; }
+      const spaHtml = indexHtml;
+      app.setNotFoundHandler((request, reply) => {
+        if (spaHtml && request.method === 'GET' && !request.url.startsWith('/api/') && !request.url.startsWith('/media/') && !/\.[a-zA-Z0-9]{1,8}$/.test(request.url.split('?')[0])) {
+          return reply.header('Content-Type', 'text/html; charset=utf-8').send(spaHtml);
+        }
+        return reply.code(404).send(errorEnvelope('Route not found', 'NOT_FOUND'));
+      });
+    } else {
+      app.setNotFoundHandler((_request, reply) => reply.code(404).send(errorEnvelope('Route not found', 'NOT_FOUND')));
+    }
+  } else {
+    app.setNotFoundHandler((_request, reply) => reply.code(404).send(errorEnvelope('Route not found', 'NOT_FOUND')));
+  }
   return app;
 }

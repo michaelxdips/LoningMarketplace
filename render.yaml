@@ -1,13 +1,12 @@
 services:
   - type: web
-    name: loning-backend
+    name: loning-preview
     runtime: node
-    rootDir: backend
     plan: free
     buildCommand: npm ci && npm run build
-    startCommand: npm start
+    startCommand: npm start --workspace=backend
     healthCheckPath: /api/health
-    autoDeploy: true
+    autoDeploy: false
     envVars:
       - key: NODE_ENV
         value: production
