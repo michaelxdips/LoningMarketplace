@@ -38,6 +38,13 @@ describe('deployment configuration', () => {
     expect(railway).toMatch(/^healthcheckPath = "\/api\/health"\s*$/m);
   });
 
+  it('migrates without seeding on Render restart and keeps automatic deploy disabled', async () => {
+    const render = await readRepositoryFile('render.yaml');
+    expect(render).toMatch(/^\s*startCommand: npm run db:migrate --workspace=backend && npm start --workspace=backend\s*$/m);
+    expect(render).not.toMatch(/^\s*startCommand:.*db:seed/m);
+    expect(render).toMatch(/^\s*autoDeploy: false\s*$/m);
+  });
+
   it('declares the complete Render S3 contract without literal credentials', async () => {
     const render = await readRepositoryFile('render.yaml');
     const requiredExternalValues = ['DATABASE_URL', 'CORS_ORIGIN', 'MEDIA_PUBLIC_BASE_URL', 'S3_BUCKET', 'S3_REGION'];

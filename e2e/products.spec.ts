@@ -107,6 +107,21 @@ async function publicProduct(id: string) {
   } finally { await api.dispose(); }
 }
 
+async function managementUmkm(page: Page, id: string) {
+  return page.evaluate(async url => {
+    const response = await fetch(url, { credentials: 'include' });
+    return { status: response.status, body: await response.json().catch(() => ({})) };
+  }, `${API_BASE}/manage/umkms/${id}`);
+}
+
+async function publicUmkm(id: string) {
+  const api = await apiRequest.newContext();
+  try {
+    const response = await api.get(`${API_BASE}/umkms/${id}`);
+    return { status: response.status(), body: await response.json().catch(() => ({})) };
+  } finally { await api.dispose(); }
+}
+
 async function publicProductFromPage(page: Page, id: string) {
   return page.evaluate(async url => {
     const response = await fetch(url, { credentials: 'include' });
@@ -422,14 +437,39 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   expect((await managementProduct(page, fixture.id)).body.data.imageUrl).toBe(ORIGINAL_IMAGE);
   expect((await managementProduct(page, fixture.id)).body.data.imageAssetId).toBeNull();
 
+  const uploadRequestPromise = page.waitForRequest(request => request.method() === 'POST' && request.url().endsWith('/manage/media/images'));
   const uploadResponsePromise = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/manage/media/images'));
   await fileInput.setInputFiles({ name: 'produk-e2e.png', mimeType: 'image/png', buffer: validPng });
-  const uploadResponse = await uploadResponsePromise;
+  const [uploadRequest, uploadResponse] = await Promise.all([uploadRequestPromise, uploadResponsePromise]);
   expect(uploadResponse.status()).toBe(201);
+  const uploadHeaders = await uploadRequest.allHeaders();
+  expect(uploadHeaders.origin).toBe(FRONTEND_ORIGIN);
+  expect(Boolean(uploadHeaders.cookie)).toBe(true);
+  expect(Boolean(uploadHeaders['x-csrf-token'])).toBe(true);
+  expect(uploadHeaders['content-type']).toContain('multipart/form-data; boundary=');
   const uploaded = (await uploadResponse.json()).data;
   expect(uploaded.id).toMatch(/^[0-9a-f-]{36}$/i);
+  expect(uploaded.imageUrl).toBe(`${BACKEND_ORIGIN}/media/${uploaded.id}/card.webp`);
+  expect(uploaded.thumbnailUrl).toBe(`${BACKEND_ORIGIN}/media/${uploaded.id}/thumbnail.webp`);
   uploadedAssetIds.push(uploaded.id);
   await expect(page.getByText('Unggahan selesai.')).toBeVisible();
+
+  for (const mediaUrl of [uploaded.imageUrl, uploaded.thumbnailUrl]) {
+    const mediaResponse = await page.request.get(mediaUrl);
+    expect(mediaResponse.status()).toBe(200);
+    expect(mediaResponse.headers()['content-type']).toMatch(/^image\/webp/);
+    const bytes = await mediaResponse.body();
+    expect(bytes.subarray(0, 4).toString('ascii')).toBe('RIFF');
+    expect(bytes.subarray(8, 12).toString('ascii')).toBe('WEBP');
+    const decoded = await page.evaluate(url => new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+      image.onerror = () => reject(new Error(`Failed to decode ${url}`));
+      image.src = `${url}?fresh-upload-proof=${Date.now()}`;
+    }), mediaUrl);
+    expect(decoded.width).toBeGreaterThan(0);
+    expect(decoded.height).toBeGreaterThan(0);
+  }
 
   const productListRefresh = page.waitForResponse(response => response.request().method() === 'GET' && response.url() === `${API_BASE}/manage/products?limit=100`);
   const managedPatch = await saveAndCapturePatch(page, fixture, browserEvents, true, [/http:\/\/localhost:3(?:001|101)\/api\/(?:products|umkms)$/]);
@@ -437,21 +477,112 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   expect(managedPatch.payload).toMatchObject({ imageUrl: null, imageAssetId: uploaded.id });
   await expect(page).toHaveURL(/dashboard\/products$/);
   const listImage = productItem(page, fixture).getByRole('img', { name: `Gambar ${fixture.name}` });
-  await expect(listImage).toHaveAttribute('src', /\/media\/media\//);
+  await expect(listImage).toHaveAttribute('src', new RegExp(`/media/${uploaded.id}/card\\.webp$`));
+  await listImage.scrollIntoViewIfNeeded();
+  await expect.poll(() => listImage.evaluate((image: HTMLImageElement) => ({ complete: image.complete, width: image.naturalWidth }))).toMatchObject({ complete: true, width: 1 });
 
   const managedDetail = await managementProduct(page, fixture.id);
   expect(managedDetail.body.data.imageAssetId).toBe(uploaded.id);
-  expect(managedDetail.body.data.imageUrl).toContain('/media/media/');
+  expect(managedDetail.body.data.imageUrl).toBe(uploaded.imageUrl);
+  expect(managedDetail.body.data.imageUrl).not.toContain('/media/media/');
   expect(managedDetail.body.data.imageUrl).not.toContain('blob:');
+  const publicDetail = await publicProduct(fixture.id);
+  expect(publicDetail.status).toBe(200);
+  expect(publicDetail.body.data.imageUrl).toBe(uploaded.imageUrl);
 
   const publicCard = page.locator(`#product-card-${fixture.id}`);
   try { await page.goto('/'); await page.waitForLoadState('networkidle'); } finally { await managedPatch.completeTransition?.(); }
   await expect(publicCard).toContainText('Rp35.000');
-  await expect(publicCard.getByRole('img', { name: fixture.name })).toHaveAttribute('src', /\/media\/media\//);
+  const publicImage = publicCard.getByRole('img', { name: fixture.name });
+  await expect(publicImage).toHaveAttribute('src', new RegExp(`/media/${uploaded.id}/card\\.webp$`));
+  await page.reload({ waitUntil: 'networkidle' });
+  await expect(publicImage).toHaveAttribute('src', new RegExp(`/media/${uploaded.id}/card\\.webp$`));
+  await publicImage.scrollIntoViewIfNeeded();
+  await expect.poll(() => publicImage.evaluate((image: HTMLImageElement) => ({ complete: image.complete, width: image.naturalWidth }))).toMatchObject({ complete: true, width: 1 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   assertBrowserEvents(browserEvents, {
     httpErrors: [expectedMediaValidationHttpError],
     browserDiagnostics: [expectedMediaValidationDiagnostic],
   });
   browserEvents.dispose();
+
+  await page.goto('/dashboard');
+  if (testInfo.project.name === 'mobile') await page.getByRole('button', { name: 'Buka navigasi' }).click();
+  await page.getByRole('button', { name: 'Keluar' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const loggedOutImage = page.locator(`#product-card-${fixture.id}`).getByRole('img', { name: fixture.name });
+  await expect(loggedOutImage).toHaveAttribute('src', new RegExp(`/media/${uploaded.id}/card\\.webp$`));
+  await loggedOutImage.scrollIntoViewIfNeeded();
+  await expect.poll(() => loggedOutImage.evaluate((image: HTMLImageElement) => ({ complete: image.complete, width: image.naturalWidth }))).toMatchObject({ complete: true, width: 1 });
+});
+
+test('UMKM form uploads fresh managed media on save and persists it publicly', async ({ page }) => {
+  test.setTimeout(60_000);
+  const umkmId = E2E_FIXTURES.umkm.primaryId;
+  let original: Record<string, any> | undefined;
+  let uploadedId: string | undefined;
+  await stabilizeLegacyImages(page);
+  await login(page);
+  try {
+    const before = await managementUmkm(page, umkmId);
+    expect(before.status).toBe(200);
+    original = before.body.data;
+    await page.goto(`/dashboard/umkms/${umkmId}`, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: 'Kelola UMKM' })).toBeVisible();
+    await page.getByLabel('Pilih gambar').setInputFiles({ name: 'umkm-e2e.webp', mimeType: 'image/webp', buffer: await page.request.get(ORIGINAL_IMAGE).then(response => response.body()) });
+
+    const uploadRequestPromise = page.waitForRequest(request => request.method() === 'POST' && request.url().endsWith('/manage/media/images'));
+    const uploadResponsePromise = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/manage/media/images'));
+    const patchRequestPromise = page.waitForRequest(request => request.method() === 'PATCH' && request.url().endsWith(`/manage/umkms/${umkmId}`));
+    const patchResponsePromise = page.waitForResponse(response => response.request().method() === 'PATCH' && response.url().endsWith(`/manage/umkms/${umkmId}`));
+    await page.getByRole('button', { name: 'Simpan perubahan' }).click();
+    const [uploadRequest, uploadResponse] = await Promise.all([uploadRequestPromise, uploadResponsePromise]);
+    expect(uploadResponse.status()).toBe(201);
+    expect((await uploadRequest.allHeaders())['content-type']).toContain('multipart/form-data; boundary=');
+    const uploaded = (await uploadResponse.json()).data;
+    uploadedId = uploaded.id;
+    const [patchRequest, patchResponse] = await Promise.all([patchRequestPromise, patchResponsePromise]);
+    expect(patchResponse.status()).toBe(200);
+    expect(uploaded.imageUrl).toBe(`${BACKEND_ORIGIN}/media/${uploaded.id}/card.webp`);
+    expect(patchRequest.postDataJSON()).toMatchObject({ imageUrl: null, imageAssetId: uploaded.id });
+    await expect(page).toHaveURL(/dashboard\/umkms$/);
+
+    const managed = await managementUmkm(page, umkmId);
+    expect(managed.body.data).toMatchObject({ imageAssetId: uploaded.id, imageUrl: uploaded.imageUrl });
+    const publicDetail = await publicUmkm(umkmId);
+    expect(publicDetail.status).toBe(200);
+    expect(publicDetail.body.data.imageUrl).toBe(uploaded.imageUrl);
+    const mediaResponse = await page.request.get(uploaded.imageUrl);
+    expect(mediaResponse.status()).toBe(200);
+    expect(mediaResponse.headers()['content-type']).toMatch(/^image\/webp/);
+    const mediaBytes = await mediaResponse.body();
+    expect(mediaBytes.subarray(0, 4).toString('ascii')).toBe('RIFF');
+    expect(mediaBytes.subarray(8, 12).toString('ascii')).toBe('WEBP');
+
+    await page.goto(`/umkm/${encodeURIComponent(publicDetail.body.data.slug)}`, { waitUntil: 'networkidle' });
+    const publicImage = page.getByRole('img', { name: publicDetail.body.data.name }).first();
+    await expect(publicImage).toHaveAttribute('src', new RegExp(`/media/${uploaded.id}/card\\.webp$`));
+    await page.reload({ waitUntil: 'networkidle' });
+    await publicImage.scrollIntoViewIfNeeded();
+    await expect.poll(() => publicImage.evaluate((image: HTMLImageElement) => ({ complete: image.complete }))).toMatchObject({ complete: true });
+    await expect.poll(() => publicImage.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+    await expect.poll(() => publicImage.evaluate((image: HTMLImageElement) => image.naturalHeight)).toBeGreaterThan(0);
+  } finally {
+    if (original) {
+      const api = await apiRequest.newContext({ baseURL: `${API_BASE}/` });
+      try {
+        const loginResponse = await api.post('auth/login', { headers: { Origin: FRONTEND_ORIGIN }, data: { identifier: loginFixture.identifier, password: loginFixture.password } });
+        if (!loginResponse.ok()) throw new Error(`UMKM cleanup login returned ${loginResponse.status()}`);
+        const csrf = (await loginResponse.json()).data.csrfToken as string;
+        const headers = { Origin: FRONTEND_ORIGIN, 'X-CSRF-Token': csrf };
+        const restore = await api.patch(`manage/umkms/${umkmId}`, { headers, data: { name: original.name, owner: original.owner, description: original.description, phone: original.phone, category: original.category, imageUrl: original.imageAssetId ? null : original.imageUrl, imageAssetId: original.imageAssetId ?? null, address: original.address, workingHours: original.workingHours ?? null, ownerUserId: original.ownerUserId ?? null } });
+        if (!restore.ok()) throw new Error(`UMKM cleanup PATCH returned ${restore.status()}: ${await restore.text()}`);
+        if (uploadedId) {
+          const deleted = await api.delete(`manage/media/images/${uploadedId}`, { headers });
+          if (!deleted.ok()) throw new Error(`UMKM media cleanup DELETE ${uploadedId} returned ${deleted.status()}: ${await deleted.text()}`);
+        }
+      } finally { await api.dispose(); }
+    }
+  }
 });

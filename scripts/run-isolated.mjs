@@ -32,7 +32,7 @@ const env = {
   CORS_ORIGIN: frontendOrigin,
   MEDIA_STORAGE_DRIVER: 'filesystem',
   MEDIA_FILESYSTEM_ROOT: artifactMediaRoot,
-  MEDIA_PUBLIC_BASE_URL: `${backendOrigin}/media`,
+  MEDIA_PUBLIC_BASE_URL: backendOrigin,
   S3_ENDPOINT: `http://127.0.0.1:${minioPort}`,
   S3_BUCKET: 'loning-test-media',
   S3_REGION: 'us-east-1',

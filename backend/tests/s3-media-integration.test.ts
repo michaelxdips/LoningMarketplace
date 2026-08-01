@@ -2,11 +2,11 @@ import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import { S3Client, CreateBucketCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { S3MediaStorage } from '../src/media/storage.js';
 
-describe('S3-compatible Media Storage Integration & Compensation Suite (MinIO / S3)', () => {
-  const minioEndpoint = process.env.S3_ENDPOINT || 'http://127.0.0.1:59000';
+describe.skipIf(!process.env.S3_ENDPOINT)('S3-compatible Media Storage Integration & Compensation Suite (MinIO / S3)', () => {
+  const minioEndpoint = process.env.S3_ENDPOINT!;
   const bucket = process.env.S3_BUCKET || 'loning-test-media';
   const region = process.env.S3_REGION || 'us-east-1';
-  const publicBaseUrl = process.env.MEDIA_PUBLIC_BASE_URL || 'http://localhost:3001/media';
+  const publicBaseUrl = process.env.MEDIA_PUBLIC_BASE_URL || 'http://localhost:3001';
   const credentials = {
     accessKeyId: process.env.S3_ACCESS_KEY_ID || 'minioadmin',
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || 'minioadmin',
@@ -14,7 +14,6 @@ describe('S3-compatible Media Storage Integration & Compensation Suite (MinIO / 
 
   let storage: S3MediaStorage;
   let rawClient: S3Client;
-  let minioAvailable = false;
 
   beforeAll(async () => {
     rawClient = new S3Client({
@@ -26,14 +25,8 @@ describe('S3-compatible Media Storage Integration & Compensation Suite (MinIO / 
 
     try {
       await rawClient.send(new HeadBucketCommand({ Bucket: bucket }));
-      minioAvailable = true;
     } catch {
-      try {
-        await rawClient.send(new CreateBucketCommand({ Bucket: bucket }));
-        minioAvailable = true;
-      } catch {
-        minioAvailable = false;
-      }
+      await rawClient.send(new CreateBucketCommand({ Bucket: bucket }));
     }
 
     storage = new S3MediaStorage(bucket, publicBaseUrl, {
@@ -45,10 +38,6 @@ describe('S3-compatible Media Storage Integration & Compensation Suite (MinIO / 
   });
 
   it('Gap 3: Upload -> object exists -> public read -> replace -> old object cleanup', async () => {
-    if (!minioAvailable) {
-      console.warn('Skipping S3 integration test: MinIO endpoint not reachable in this test runner context');
-      return;
-    }
 
     const initialKey = `media/integration-initial-${Date.now()}.webp`;
     const initialBody = Buffer.from('RIFF....WEBPVP8 INITIAL_IMAGE_BYTES');
@@ -66,7 +55,7 @@ describe('S3-compatible Media Storage Integration & Compensation Suite (MinIO / 
 
     // 3. Verify public URL format
     const publicUrl = storage.getPublicUrl(initialKey);
-    expect(publicUrl).toBe(`${publicBaseUrl}/${initialKey}`);
+    expect(publicUrl).toBe(`${publicBaseUrl.replace(/\/+$/, '').replace(/\/media$/, '')}/media/${initialKey.replace(/^media\//, '')}`);
 
     // 4. Replace image (upload replacement object & delete old object)
     const replacementKey = `media/integration-replacement-${Date.now()}.webp`;
@@ -89,7 +78,6 @@ describe('S3-compatible Media Storage Integration & Compensation Suite (MinIO / 
   });
 
   it('Gap 4: Compensation - DB failure deletes newly uploaded S3 object', async () => {
-    if (!minioAvailable) return;
 
     const probeKey = `media/compensation-db-fail-${Date.now()}.webp`;
     const probeBody = Buffer.from('RIFF....WEBPVP8 PROBE_BYTES');
@@ -147,7 +135,6 @@ describe('S3-compatible Media Storage Integration & Compensation Suite (MinIO / 
   });
 
   it('Gap 5: Restart persistence simulation - stored S3 media remains accessible across storage client re-instantiation', async () => {
-    if (!minioAvailable) return;
 
     const key = `media/persistence-test-${Date.now()}.webp`;
     const body = Buffer.from('RIFF....WEBPVP8 PERSISTENCE_BYTES');

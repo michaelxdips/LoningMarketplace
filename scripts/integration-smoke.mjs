@@ -2,7 +2,7 @@ const baseUrl = (process.env.API_BASE_URL ?? 'http://localhost:3001/api').replac
 const frontendOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:3000';
 const fixtureId = 'e3000000-0000-4000-8000-000000000001';
 const testIdentifier = process.env.E2E_ADMIN_EMAIL ?? 'admin1@local.test';
-const testPassword = process.env.E2E_ADMIN_PASSWORD ?? 'loning_local_dev';
+const testPassword = process.env.E2E_ADMIN_PASSWORD ?? 'admin1234';
 
 async function request(path, options = {}, expected = [200]) {
   const response = await fetch(`${baseUrl}${path}`, options);
