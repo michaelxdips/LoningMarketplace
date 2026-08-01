@@ -2,24 +2,22 @@
 
 ## 1. Primary Verdict
 
-**Verdict**: `PRODUCTION READY WITH FOLLOW-UP ITEMS`
+**Verdict**: `LOCAL VERIFIED; GUARDED PRODUCTION UPLOAD PENDING`
 
-The application codebase, frontend/backend builds, database migrations, authentication guards, and media storage architecture are overall sound and verified. However, final production closure requires addressing key deployment drift items (specifically tag synchronization and seed command removal from Render configuration).
+The source changes, local media lifecycle, isolated API smoke, storage persistence, database integrity, lint, unit tests, E2E tests, and builds are verified. A fresh upload against the live production stack has not yet been executed, so production media write/read closure remains open.
 
 ---
 
 ## 2. Release Identity & Version Mapping
 
-```text
 Local Branch        : master
-Local Commit (HEAD) : 64de9755a07dc4b35699df8f34b40824b2b4c0dc
-Origin Commit       : 64de9755a07dc4b35699df8f34b40824b2b4c0dc (Synced)
+Local Commit (HEAD) : ea45631f410cdbbe615505296d68085fbeab30f0 (runtime/test checkpoint)
+Origin Commit       : 6e69a6db4060c0c789e4c230fd6e3e5167856be0 (upstream baseline; local ahead by 2)
 Release Tag         : v1.5.0 (Points to commit 6f64445430aed7d4c36df067ab482fb0ea0d6dbf)
-Tag Drift           : master is 1 commit ahead of tag v1.5.0
-Render Commit       : 64de975 (Auto-deploy on master)
-Vercel Commit       : 64de975 (Auto-deploy on master)
-Aiven Migration     : Up to date (Migration 0010_umkm_business_location applied)
-```
+Tag Drift           : master is 11 commits ahead of tag v1.5.0
+Render Config       : Migration-only startup; live deployment commit requires independent cloud evidence
+Vercel Config       : SPA rewrite rules intact; live deployment commit requires independent cloud evidence
+Aiven Migration     : Local isolated migration chain and integrity checks pass
 
 ---
 
@@ -27,22 +25,21 @@ Aiven Migration     : Up to date (Migration 0010_umkm_business_location applied)
 
 | Finding ID | Severity | Status | Area | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **FINDING-01** | **S1** | `PROVEN` | Git / Release | Release tag `v1.5.0` points to commit `6f64445`, whereas `master` is at `64de975` (which fixes login lockout count resets). Tag needs re-syncing to `64de975`. |
-| **FINDING-02** | **S1** | `PROVEN` | Render / Seed | `render.yaml` `startCommand` includes `npm run db:seed`. Although guarded by `NODE_ENV === 'production'` in `seed.ts`, invoking seed on startup creates unnecessary risk and startup overhead. |
-| **FINDING-03** | **S2** | `PROVEN` | Seed / Assets | Development product seed hardcodes `http://localhost:3001/media/...` image URLs. |
+| **FINDING-01** | **S1** | `OPEN` | Git / Release | Release tag `v1.5.0` points to `6f64445`; the audited runtime/test checkpoint is `ea45631`, 11 commits ahead. Tag release action remains a human release decision. |
+| **FINDING-02** | **CLOSED IN SOURCE** | `RESOLVED` | Render / Seed | Active `render.yaml` now runs migration only before application start; it does not invoke `db:seed`. |
+| **FINDING-03** | **CLOSED IN SOURCE** | `RESOLVED` | Seed / Assets | Development seed media URLs and isolated defaults use the canonical public media origin. |
+| **FINDING-04** | **S1** | `OPEN` | Production Media | Fresh production upload, object persistence, and public browser decode still require guarded live verification. |
 
 ---
 
 ## 4. Key Subsystem Status Summary
 
-```text
-Repository State             : CLEAN (126 frontend tests pass, 181 backend tests pass, full build clean)
-Git Synchronization          : SYNCED (Local master = origin/master)
-Release Tag                  : DRIFTED (1 commit behind master)
-Render Web Service           : OPERATIONAL (Build: npm ci && npm run build:backend)
-Vercel Frontend              : OPERATIONAL (Vite build + SPA rewrite rules verified)
-Aiven Database               : OPERATIONAL (11 Drizzle migrations synced)
-Seed Safety                  : GUARDED IN CODE (Must be removed from render.yaml startCommand)
-Media Storage                : STABLE (S3 driver enforced in production)
-Authentication & Security    : SECURE (Argon2 password hashing, HTTP-only secure cookies, proxy trust verified)
-```
+Repository State             : INTENTIONAL UNCOMMITTED DOCUMENTATION CHANGES (runtime/test checkpoints committed)
+Git Synchronization          : AHEAD BY 2 LOCAL COMMITS (push not performed)
+Release Tag                  : DRIFTED (v1.5.0 is 11 commits behind audited source/test checkpoint)
+Render Web Service            : CONFIGURED (migration-only startup; live deployment requires cloud evidence)
+Vercel Frontend              : CONFIGURED (Vite build + SPA rewrite rules verified)
+Aiven Database               : LOCAL ISOLATED MIGRATION/AUDIT PASS
+Seed Safety                  : NO PRODUCTION STARTUP SEED
+Media Storage                : LOCAL FRESH UPLOAD PASS; PRODUCTION FRESH UPLOAD PENDING
+Authentication & Security    : UNIT/INTEGRATION CONTRACTS PASS

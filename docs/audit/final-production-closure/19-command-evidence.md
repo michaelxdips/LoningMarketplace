@@ -2,24 +2,23 @@
 
 ## 1. System & Git Verification
 
+The following snapshot was captured after the runtime and test commits, before the final documentation commit.
+
 ```bash
-$ pwd
-C:/Users/Michael/Documents/Marketplace-Loning
-
-$ node --version
-v26.4.0
-
-$ npm --version
-11.18.0
-
-$ git --version
-git version 2.55.0.windows.3
-
 $ git rev-parse HEAD
-64de9755a07dc4b35699df8f34b40824b2b4c0dc
+ea45631f410cdbbe615505296d68085fbeab30f0
 
 $ git rev-parse origin/master
-64de9755a07dc4b35699df8f34b40824b2b4c0dc
+6e69a6db4060c0c789e4c230fd6e3e5167856be0
+
+$ git rev-list --left-right --count origin/master...HEAD
+0 2
+
+$ git diff --check
+Exit Code: 0 (Success)
+
+$ git status --short
+Documentation report files pending final closure commit; runtime and test changes already committed as d4ad2c7 and ea45631.
 ```
 
 ---
@@ -35,24 +34,32 @@ $ npm run typecheck
 Exit Code: 0 (Success)
 
 $ npm run test
-> loning-maju-frontend@1.0.0 test
 > vitest run
- Test Files  21 passed (21)
-      Tests  126 passed (126)
+Frontend: 21 test files, 127 tests passed
+Backend: 16 test files passed, 181 tests passed, 4 S3 tests skipped
+Exit Code: 0 (Success)
 
-> loning-maju-backend@1.0.0 test
-> vitest run
- Test Files  17 passed (17)
-      Tests  181 passed (181)
+$ npm run lint
 Exit Code: 0 (Success)
 
 $ npm run build:all
-> loning-maju-frontend@1.0.0 build
-> vite build
-dist/index.html 1.35 kB
-✓ built in 2.65s
-
-> loning-maju-backend@1.0.0 build
-> tsc -p tsconfig.json
+Frontend Vite build: success
+Backend TypeScript build: success
 Exit Code: 0 (Success)
+
+$ npm run test:integration:isolated
+API smoke persisted and restored authenticated PATCH
+MinIO restart persistence: exact checksum/bytes/HeadObject/GetObject PASS
+Database audit: PASS
+Exit Code: 0 (Success)
+
+$ npm run test:e2e:isolated -- e2e/products.spec.ts
+6 passed: product and UMKM fresh media flows on desktop/mobile
+Exit Code: 0 (Success)
+
+$ diff secret scan on changed files
+SECRET_SCAN_RESULT potential_matches=0 review_required=false
+
+Production guarded fresh upload
+NOT RUN — pending explicit human approval; no production write/restart/cleanup performed.
 ```

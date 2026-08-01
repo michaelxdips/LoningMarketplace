@@ -15,7 +15,7 @@
 
 * **Rate Limiting**: `@fastify/rate-limit` enforces max 10 login attempts per minute per IP on `/api/auth/login`.
 * **Account Lockout**: 5 failed consecutive attempts (`LOGIN_MAX_ATTEMPTS`) lock the account for 15 minutes (`LOGIN_LOCKOUT_MINUTES`).
-* **Lockout Reset**: Commit `64de975` fixes lockout reset logic by clearing `failedLoginCount` to 0 and setting `lockedUntil` to `null` upon successful authentication or admin password reset.
+* **Lockout Reset**: Current audited source clears `failedLoginCount` to 0 and sets `lockedUntil` to `null` upon successful authentication or admin password reset.
 
 ---
 

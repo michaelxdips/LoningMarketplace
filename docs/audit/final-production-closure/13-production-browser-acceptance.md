@@ -20,3 +20,9 @@
 * **Keyboard Navigation**: Focus outlines are visible on all interactive elements. Modal dialogs (WhatsApp inquiry, dev chat) capture focus and close on `Escape`.
 * **Mobile Layout & Viewports**: Verified responsive behavior down to 320px width (`320x568`). Navigation collapses into an accessible slide-out mobile drawer.
 * **200% Zoom Compliance**: Page containers reflow vertically without horizontal scrollbar clipping at 200% browser zoom level.
+
+## 3. Fresh Media Acceptance Boundary
+
+* Local product and UMKM fresh-upload flows passed on desktop and mobile, including public reload and decoded WebP verification.
+* Production public read was previously verified for existing media.
+* Fresh production upload and subsequent public rendering remain pending guarded live execution.

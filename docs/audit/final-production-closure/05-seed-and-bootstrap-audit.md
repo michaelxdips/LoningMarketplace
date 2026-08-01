@@ -2,18 +2,15 @@
 
 ## 1. Deep Dive: Seed Execution Chain
 
-```text
 Render Deployment Start Command:
-  npm run db:seed --workspace=backend && npm start --workspace=backend
-                  |
-                  v
+  npm run db:migrate --workspace=backend && npm start --workspace=backend
+                         |
+                         v
+  backend/src/db/migrate.ts:
+    Applies recorded migrations and integrity assertions.
+
   backend/src/db/seed.ts:
-    const envNode = process.env.NODE_ENV || 'development';
-    if (envNode === 'production') {
-      console.log('Skipping seed in production environment.');
-      return;
-    }
-```
+    Explicit local/test command only; production execution is guarded and not part of startup.
 
 ---
 
@@ -21,14 +18,14 @@ Render Deployment Start Command:
 
 ### Risk 1: Accidental Seed Execution in Production
 * **Severity**: `S1 — High`
-* **Trigger**: If `NODE_ENV` is missing or accidentally set to `development` on Render.
-* **Impact**: `seedUsers` executes `onConflictDoUpdate` (resetting user passwords and lockout states), `seedProducts` deletes all products with ID `e3000000-%`, and `seedMedia` attempts to delete and recreate deterministic S3 media objects.
-* **Remediation**: Remove `npm run db:seed --workspace=backend &&` from `render.yaml` `startCommand`.
+* **Previous Trigger**: Render startup invoked `db:seed`.
+* **Current Status**: `CLOSED IN CONFIG`; active `render.yaml` runs migration only. The code guard remains defense in depth.
 
 ### Risk 2: Local Filesystem Dependency in `seedMedia`
 * **Severity**: `S1 — High`
-* **Trigger**: Invoking `seedMedia` in a production container.
-* **Impact**: `seedMedia` reads `../assets/seed-source/*.jpg`. If run in production where source asset files are missing, it throws `ENOENT: no such file or directory` and crashes the process.
+* **Current Status**: `CONTAINED`; seed is explicit local/test setup and is not part of Render startup.
+* **Impact if invoked in production**: `seedMedia` reads `../assets/seed-source/*.jpg`; missing source assets can throw `ENOENT: no such file or directory`.
+* **Remaining Evidence**: Fresh production upload/read verification is still pending.
 
 ---
 

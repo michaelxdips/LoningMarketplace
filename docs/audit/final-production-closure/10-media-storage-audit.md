@@ -42,5 +42,10 @@
 
 ## 3. Upload Persistence & Verification
 
-* **Ephemeral Disk Protection**: Production relies on S3 (`MEDIA_STORAGE_DRIVER=s3`). Images stored in S3 object storage persist independently of Render container restarts or redeployments.
 * **Database Metadata**: `media_assets` table records checksum (`checksum_sha256`), card storage key, thumbnail storage key, pixel dimensions, and creator user ID.
+
+## 4. Current Evidence Boundary
+
+* **Local fresh upload**: PASS for product and UMKM browser flows on desktop and mobile; upload response, canonical URL, WebP decode, database association, public reload, logout, and cleanup were verified.
+* **Isolated storage**: PASS for MinIO restart persistence with exact checksum, bytes, `HeadObject`, `GetObject`, and cleanup.
+* **Production fresh upload**: NOT YET VERIFIED. Existing production seed/read evidence proves delivery only, not a new write.

@@ -13,5 +13,5 @@
 | **Password Reset** | Mandatory change on first login & admin reset | `POST /api/auth/reset` | `users` | Verified | `COMPLETE` |
 | **Business Mgmt** | Create, edit, and update business location coordinates | `PUT /api/umkms/:id` | `umkms` | Verified | `COMPLETE` |
 | **Product CRUD** | Create, edit, archive, restore, and delete products | `/api/products/*` | `products` | Verified | `COMPLETE` |
-| **Media Upload** | Upload product/UMKM photos with WebP conversion | `POST /api/media/upload`| `media_assets` | Verified | `COMPLETE` |
+| **Media Upload** | Upload product/UMKM photos with WebP conversion | `POST /api/manage/media/images` | `media_assets` | Local fresh upload E2E + isolated storage/integration PASS; production fresh write pending | `LOCAL COMPLETE; PROD OPEN`
 | **Inquiry Analytics**| Track inquiry clicks and display dashboard stats | `GET /api/analytics` | `public_events` | Verified | `COMPLETE` |
