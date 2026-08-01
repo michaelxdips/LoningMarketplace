@@ -62,11 +62,11 @@ export async function seedProducts(db: PostgresJsDatabase<typeof schema>) {
   ] as const;
 
   const imageByCategory = {
-    Kuliner: 'http://localhost:3001/media/media/catalog-kuliner.webp',
-    Kerajinan: 'http://localhost:3001/media/media/catalog-kerajinan.webp',
-    Jasa: 'http://localhost:3001/media/media/catalog-jasa.webp',
-    Sembako: 'http://localhost:3001/media/media/catalog-sembako.webp',
-    Pertanian: 'http://localhost:3001/media/media/catalog-pertanian.webp',
+    Kuliner: 'http://localhost:3001/media/catalog-kuliner.webp',
+    Kerajinan: 'http://localhost:3001/media/catalog-kerajinan.webp',
+    Jasa: 'http://localhost:3001/media/catalog-jasa.webp',
+    Sembako: 'http://localhost:3001/media/catalog-sembako.webp',
+    Pertanian: 'http://localhost:3001/media/catalog-pertanian.webp',
   } as const;
   const products = catalog.map(([umkmId, name, price, description, category, unit], index) => ({
     id: productDeterministicId(index + 1), umkmId, name, slug: slugify(name, 'produk'), price, description, category,

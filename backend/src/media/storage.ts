@@ -22,13 +22,15 @@ const safeKey = (key: string) => {
   if (key.length > 512 || !/^[a-z0-9][a-z0-9/_-]*\.[a-z0-9]+$/.test(key) || key.includes('..') || key.includes('\0') || path.isAbsolute(key)) throw new Error('Unsafe media storage key');
   return key;
 };
-const baseUrl = (value: string) => value.replace(/\/+$/, '');
+const baseUrl = (value: string) => value.replace(/\/+$/, '').replace(/\/media$/, '');
 
-// Canonical public URL builder. Single source of truth for media URLs.
-// Contract: url = <MEDIA_PUBLIC_BASE_URL (trailing slashes stripped)>/<object key (leading slashes stripped, per-segment encoded)>
-// With base `https://host/media` and key `media/{uuid}/card.webp` the result is
-// `https://host/media/media/{uuid}/card.webp` — served by the GET /media/* route in every environment.
-export const buildPublicMediaUrl = (publicBaseUrl: string, key: string) => `${baseUrl(publicBaseUrl)}/${safeKey(key).replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/')}`;
+// Canonical public URL builder. Object keys keep their media/ namespace in storage,
+// while public URLs expose that namespace exactly once via the /media/* route.
+// Transitional compatibility: a configured base ending in /media is normalized.
+export const buildPublicMediaUrl = (publicBaseUrl: string, key: string) => {
+  const publicKey = safeKey(key).replace(/^media\//, '');
+  return `${baseUrl(publicBaseUrl)}/media/${publicKey.split('/').map(encodeURIComponent).join('/')}`;
+};
 
 export class FilesystemMediaStorage implements MediaStorage {
   readonly root: string;

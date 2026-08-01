@@ -21,7 +21,7 @@ const envSchema = z.object({
   COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).optional(),
   MEDIA_STORAGE_DRIVER: z.enum(['filesystem', 's3']).default('filesystem'),
   MEDIA_FILESYSTEM_ROOT: z.string().trim().min(1).default('./storage'),
-  MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://localhost:3001/media'),
+  MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://localhost:3001'),
   MEDIA_MAX_BYTES: z.coerce.number().int().positive().max(50_000_000).default(5 * 1024 * 1024),
   MEDIA_MAX_WIDTH: z.coerce.number().int().positive().max(100_000).default(8_000),
   MEDIA_MAX_HEIGHT: z.coerce.number().int().positive().max(100_000).default(8_000),
@@ -42,7 +42,7 @@ export type MediaConfig = Pick<ParsedEnv, 'MEDIA_STORAGE_DRIVER' | 'MEDIA_FILESY
 export function mediaConfig(env: AppEnv): MediaConfig {
   return {
     MEDIA_STORAGE_DRIVER: env.MEDIA_STORAGE_DRIVER ?? 'filesystem', MEDIA_FILESYSTEM_ROOT: env.MEDIA_FILESYSTEM_ROOT ?? './storage',
-    MEDIA_PUBLIC_BASE_URL: env.MEDIA_PUBLIC_BASE_URL ?? 'http://localhost:3001/media', MEDIA_MAX_BYTES: env.MEDIA_MAX_BYTES ?? 5 * 1024 * 1024,
+    MEDIA_PUBLIC_BASE_URL: env.MEDIA_PUBLIC_BASE_URL ?? 'http://localhost:3001', MEDIA_MAX_BYTES: env.MEDIA_MAX_BYTES ?? 5 * 1024 * 1024,
     MEDIA_MAX_WIDTH: env.MEDIA_MAX_WIDTH ?? 8_000, MEDIA_MAX_HEIGHT: env.MEDIA_MAX_HEIGHT ?? 8_000, MEDIA_MAX_PIXELS: env.MEDIA_MAX_PIXELS ?? 40_000_000,
     MEDIA_ORPHAN_GRACE_HOURS: env.MEDIA_ORPHAN_GRACE_HOURS ?? 24, S3_BUCKET: env.S3_BUCKET, S3_REGION: env.S3_REGION,
     S3_ENDPOINT: env.S3_ENDPOINT, S3_ACCESS_KEY_ID: env.S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY: env.S3_SECRET_ACCESS_KEY,

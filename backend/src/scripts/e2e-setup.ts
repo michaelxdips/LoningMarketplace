@@ -6,6 +6,7 @@ import { createDatabase } from '../db/client.js';
 import { createRepository } from '../db/repository.js';
 import { security } from '../auth/security.js';
 import { products, umkms } from '../db/schema.js';
+import { buildPublicMediaUrl } from '../media/storage.js';
 import { UMKMS } from '../db/seeds/shared/ids.js';
 
 if (process.env.NODE_ENV === 'production') throw new Error('E2E setup is disabled in production');
@@ -15,7 +16,7 @@ const repository = createRepository(database.db);
 const password = 'local-e2e-passphrase-123';
 const umkmId = UMKMS.kuliner1;
 const storageRoot = path.resolve(process.env.MEDIA_FILESYSTEM_ROOT ?? './storage');
-const imageUrl = `${(process.env.MEDIA_PUBLIC_BASE_URL ?? 'http://localhost:3001/media').replace(/\/+$/, '')}/fixtures/e2e-product.webp`;
+const imageUrl = buildPublicMediaUrl(process.env.MEDIA_PUBLIC_BASE_URL ?? 'http://localhost:3001', 'fixtures/e2e-product.webp');
 const fixtures = [
   { id: 'e3000000-0000-4000-8000-000000000001', name: 'E2E Produk Stabilization Desktop', displayOrder: 9000 },
   { id: 'e3000000-0000-4000-8000-000000000002', name: 'E2E Produk Stabilization Mobile', displayOrder: 9001 },
