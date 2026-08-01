@@ -25,6 +25,8 @@ export async function seedUsers(db: PostgresJsDatabase<typeof schema>, cryptoHas
         role: sql`excluded.role`,
         isActive: sql`excluded.is_active`,
         mustChangePassword: sql`excluded.must_change_password`,
+        failedLoginCount: 0,
+        lockedUntil: null,
         updatedAt: sql`excluded.updated_at`
       }
     });
