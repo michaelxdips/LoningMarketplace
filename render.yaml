@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm ci && npm run build:backend
-    startCommand: npm start --workspace=backend
+    startCommand: npm run db:seed --workspace=backend && npm start --workspace=backend
     healthCheckPath: /api/health
     autoDeploy: false
     envVars:
