@@ -26,26 +26,85 @@ export const BENEFIT_CARDS = [
   }
 ];
 
-export const FAQS = [
+export interface FaqItem {
+  question: string;
+  answer: string;
+  category: 'transaksi' | 'umkm' | 'peta' | 'teknis';
+  categoryLabel: string;
+}
+
+export const FAQS: FaqItem[] = [
   {
-    question: 'Apakah pembelian dilakukan melalui website ini?',
-    answer: 'Tidak. Loning Maju bertindak sebagai direktori dan katalog pajangan produk. Tidak ada fitur keranjang belanja, gerbang pembayaran, ataupun transaksi di dalam sistem ini. Semua pemesanan atau pertanyaan diteruskan langsung ke kontak WhatsApp resmi pelaku usaha terkait.'
+    question: 'Apakah transaksi pembelian dilakukan langsung di dalam website ini?',
+    answer: 'Tidak. Platform Loning Maju bertindak murni sebagai etalase digital dan direktori UMKM Desa Loning. Tidak ada sistem keranjang belanja, kasir otomatis, ataupun potongan biaya komisi. Seluruh komunikasi, pemesanan, dan transaksi dilakukan secara langsung via WhatsApp antara pembeli dan pemilik UMKM.',
+    category: 'transaksi',
+    categoryLabel: 'Pembeli & Transaksi'
   },
   {
-    question: 'Bagaimana cara menghubungi pelaku UMKM?',
-    answer: 'Anda cukup mengklik tombol "Tanya Produk" atau "Hubungi via WhatsApp". Sistem akan otomatis menyiapkan teks pertanyaan awal yang memuat informasi nama produk dan nama usaha, lalu mengarahkan Anda ke aplikasi WhatsApp resmi milik penjual.'
+    question: 'Apakah ada biaya komisi transaksi atau biaya admin tambahan?',
+    answer: 'Sama sekali tidak (0% Komisi). Platform Loning Maju adalah fasilitas publik gratis dari Pemerintah Desa Loning untuk memajukan UMKM lokal. Seluruh nilai transaksi 100% masuk ke pemilik usaha tanpa potongan.',
+    category: 'transaksi',
+    categoryLabel: 'Pembeli & Transaksi'
   },
   {
-    question: 'Apakah harga produk selalu sama?',
-    answer: 'Harga yang dicantumkan bersifat informasi awal sebagai panduan atau referensi. Kepastian harga akhir, biaya pengiriman, serta metode ketersediaan barang sepenuhnya disepakati secara langsung antara pembeli dan penjual saat bertukar pesan di WhatsApp.'
+    question: 'Bagaimana alur menghubungi pelaku usaha UMKM di website ini?',
+    answer: 'Cukup pilih produk atau profil UMKM yang Anda minati, lalu klik tombol "Hubungi via WhatsApp". Sistem akan otomatis menyiapkan draf pesan awal yang memuat nama produk dan nama usaha agar memudahkan negosiasi stok dan harga.',
+    category: 'transaksi',
+    categoryLabel: 'Pembeli & Transaksi'
   },
   {
-    question: 'Apakah produk dapat dikirim ke luar desa?',
-    answer: 'Hal ini bergantung pada kesepakatan dan kemampuan logistik masing-masing pelaku UMKM. Anda dapat berdiskusi langsung mengenai opsi pengiriman atau COD (Bayar di Tempat) saat melakukan obrolan via WhatsApp.'
+    question: 'Apakah harga produk yang tercantum sudah bersifat final?',
+    answer: 'Harga yang dicantumkan merupakan referensi penawaran awal dari pelaku usaha. Anda dapat menanyakan langsung mengenai ketersediaan diskon grosir, promo khusus, atau perubahan harga terbaru saat berdiskusi di WhatsApp.',
+    category: 'transaksi',
+    categoryLabel: 'Pembeli & Transaksi'
   },
   {
-    question: 'Bagaimana pelaku UMKM bergabung ke dalam sistem?',
-    answer: 'Pendaftaran pelaku usaha dan katalog produk baru sepenuhnya dikelola dan diverifikasi oleh Administrator Desa (Balai Desa Loning) melalui panel kelola khusus pada sistem backend internal. Aplikasi publik ini tidak menyediakan pendaftaran mandiri demi menjaga keaslian data.'
+    question: 'Apakah produk UMKM Desa Loning bisa dikirim ke luar daerah?',
+    answer: 'Bisa. Opsi pengiriman disesuaikan dengan jenis produk dan kesepakatan dengan pelaku usaha. Untuk produk non-kuliner seperti mebel, kerajinan, atau makanan olahan kering umumnya dapat dikirim via layanan kurir ekspedisi.',
+    category: 'transaksi',
+    categoryLabel: 'Pembeli & Transaksi'
+  },
+  {
+    question: 'Saya warga Desa Loning yang memiliki usaha, bagaimana cara mendaftar ke platform?',
+    answer: 'Pendaftaran profil UMKM dan etalase produk baru dapat diajukan secara GRATIS melalui Pengelola Desa di Balai Desa Loning. Petugas admin desa akan memverifikasi keaslian usaha sebelum data diinput ke dalam sistem.',
+    category: 'umkm',
+    categoryLabel: 'Pendaftaran UMKM'
+  },
+  {
+    question: 'Bagaimana cara memperbarui foto produk, jam buka, atau nomor WhatsApp usaha saya?',
+    answer: 'Pelaku usaha yang sudah terdaftar dapat menghubungi Administrator Balai Desa Loning atau Pengelola Platform untuk memperbarui katalog produk, foto usaha, lokasi titik peta, maupun jam operasional usaha.',
+    category: 'umkm',
+    categoryLabel: 'Pendaftaran UMKM'
+  },
+  {
+    question: 'Siapa yang mengelola keaslian data UMKM di Loning Maju?',
+    answer: 'Data produk dan profil UMKM dikelola dan dikurasi secara berkala oleh Pemerintah Desa Loning demi menjamin keaslian data, keberadaan fisik usaha warga, serta keamanan pembeli.',
+    category: 'umkm',
+    categoryLabel: 'Pendaftaran UMKM'
+  },
+  {
+    question: 'Apakah peta lokasi UMKM di platform ini dapat digunakan untuk navigasi GPS?',
+    answer: 'Ya. Halaman Peta UMKM menyajikan titik koordinat presisi dari lokasi fisik usaha di Desa Loning. Anda dapat mengklik tombol petunjuk arah untuk langsung membuka Google Maps atau OpenStreetMap.',
+    category: 'peta',
+    categoryLabel: 'Peta & Lokasi'
+  },
+  {
+    question: 'Bagaimana jika alamat atau lokasi UMKM yang tertera di peta tidak tepat?',
+    answer: 'Jika terdapat ketidaksesuaian titik peta, pembeli dapat mengonfirmasi lokasi penjemputan patokan terdekat via WhatsApp pelaku usaha, atau melaporkannya ke tim admin desa.',
+    category: 'peta',
+    categoryLabel: 'Peta & Lokasi'
+  },
+  {
+    question: 'Bagaimana jika saya menemukan error atau kendala teknis saat membuka website?',
+    answer: 'Anda dapat melaporkan masalah teknis atau bug secara langsung kepada tim pengembang melalui tombol "Hubungi Developer" yang tersedia di bagian Footer bawah halaman.',
+    category: 'teknis',
+    categoryLabel: 'Bantuan Teknikal'
+  },
+  {
+    question: 'Apakah platform Loning Maju dapat diakses dengan lancar dari smartphone?',
+    answer: 'Tentu saja. Platform Loning Maju dirancang responsive, cepat, dan ringan agar dapat diakses dengan nyaman melalui berbagai perangkat smartphone, tablet, maupun komputer desktop.',
+    category: 'teknis',
+    categoryLabel: 'Bantuan Teknikal'
   }
 ];
 

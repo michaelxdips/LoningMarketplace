@@ -1,15 +1,33 @@
-import { useState } from 'react';
-import { Search, BookOpen, MessageCircle, ArrowRight, ChevronDown } from 'lucide-react';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { useState, useMemo } from 'react';
+import { Search, BookOpen, MessageCircle, ArrowRight, ChevronDown, HelpCircle, X, ShieldCheck, Code2, Store } from 'lucide-react';
 import { Link } from 'react-router';
 import PublicPageShell from '../components/layout/PublicPageShell';
 import { FAQS, GUIDE_STEPS } from '../data';
 import { usePageMetadata } from '../lib/seo';
+import DeveloperContactDialog from '../components/shared/DeveloperContactDialog';
 
-const icons = [Search, BookOpen, MessageCircle];
+const stepIcons = [Search, BookOpen, MessageCircle];
+
+const categoryTabs = [
+  { id: 'all', label: 'Semua FAQ', icon: <HelpCircle size={15} /> },
+  { id: 'transaksi', label: 'Pembeli & Transaksi', icon: <ShieldCheck size={15} /> },
+  { id: 'umkm', label: 'Pendaftaran UMKM', icon: <Store size={15} /> },
+  { id: 'peta', label: 'Peta & Lokasi', icon: <Search size={15} /> },
+  { id: 'teknis', label: 'Bantuan Teknikal', icon: <Code2 size={15} /> },
+] as const;
 
 export default function FaqPage() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [openIndex, setOpenIndex] = useState<number | null>(0);
-  const description = 'Panduan menggunakan direktori Loning Maju dan jawaban tentang cara menghubungi pelaku UMKM Desa Loning.';
+  const [isDevDialogOpen, setIsDevDialogOpen] = useState(false);
+
+  const description = 'Panduan lengkap dan FAQ direktori Loning Maju: alur transaksi WhatsApp, cara pendaftaran UMKM Desa Loning, keakuratan peta, dan bantuan teknis.';
 
   usePageMetadata({
     title: 'Panduan & FAQ — Loning Maju',
@@ -25,102 +43,224 @@ export default function FaqPage() {
     }
   });
 
+  const filteredFaqs = useMemo(() => {
+    return FAQS.filter((faq) => {
+      const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
+      const query = searchQuery.toLowerCase().trim();
+      const matchesSearch = !query || faq.question.toLowerCase().includes(query) || faq.answer.toLowerCase().includes(query);
+      return matchesCategory && matchesSearch;
+    });
+  }, [searchQuery, selectedCategory]);
+
   return (
     <PublicPageShell>
-      <header className="mx-auto max-w-3xl px-5 pb-14 pt-20 text-center sm:pt-28">
-        <p className="editorial-label">Panduan Pengunjung</p>
-        <h1 className="text-balance mt-4 break-words text-4xl font-extrabold tracking-[-0.035em] text-charcoal sm:text-6xl">
-          Menemukan usaha lokal, tanpa alur yang rumit.
+      {/* Header Banner */}
+      <header className="mx-auto max-w-3xl px-5 pb-10 pt-20 text-center sm:pt-28">
+        <p className="editorial-label">Pusat Informasi & Panduan</p>
+        <h1 className="text-balance mt-4 break-words text-4xl font-extrabold tracking-[-0.035em] text-charcoal sm:text-5xl">
+          Pertanyaan Umum & Cara Penggunaan Loning Maju
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-warm-gray sm:text-base">
-          Loning Maju adalah direktori. Temukan informasi, kenali pelaku usaha, lalu lanjutkan percakapan langsung melalui WhatsApp.
+          Temukan jawaban seputar alur pemesanan via WhatsApp, pendaftaran UMKM warga Desa Loning, peta lokasi usaha, hingga bantuan teknis platform.
         </p>
+
+        {/* Live Search Input */}
+        <div className="relative mx-auto mt-8 max-w-xl">
+          <div className="relative flex items-center">
+            <Search size={18} className="absolute left-4 text-warm-gray/60" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari pertanyaan... (contoh: transaksi, komisi, pendaftaran, peta)"
+              className="focus-ring w-full rounded-2xl border border-sage-border bg-cream-card py-3.5 pl-11 pr-10 text-xs text-charcoal shadow-sm placeholder:text-warm-gray/50 sm:text-sm"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Hapus kata kunci pencarian"
+                className="absolute right-3 rounded-full p-1 text-warm-gray hover:bg-sage-light hover:text-charcoal"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        </div>
       </header>
 
-      <section aria-labelledby="steps-title" className="mx-auto max-w-6xl px-5 pb-20">
+      {/* 3 Step Quick Guide */}
+      <section aria-labelledby="steps-title" className="mx-auto max-w-6xl px-5 pb-16">
         <h2 id="steps-title" className="sr-only">Tiga langkah penggunaan</h2>
         <div className="grid gap-px overflow-hidden rounded-2xl border border-sage-border bg-sage-border md:grid-cols-3">
           {GUIDE_STEPS.map((step, index) => {
-            const Icon = icons[index];
+            const Icon = stepIcons[index];
             return (
               <article key={step.number} className="bg-cream-card p-7 sm:p-9">
                 <div className="flex items-center justify-between">
-                  <Icon size={22} className="text-forest" aria-hidden="true"/>
+                  <Icon size={22} className="text-forest" aria-hidden="true" />
                   <span className="font-mono text-xs font-bold text-terracotta">{step.number}</span>
                 </div>
-                <h3 className="mt-10 text-lg font-bold text-charcoal">{step.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-warm-gray">{step.description}</p>
+                <h3 className="mt-8 text-base font-bold text-charcoal sm:text-lg">{step.title}</h3>
+                <p className="mt-2 text-xs leading-6 text-warm-gray sm:text-sm">{step.description}</p>
               </article>
             );
           })}
         </div>
       </section>
 
+      {/* Main FAQ List Section */}
       <section aria-labelledby="faq-title" className="border-y editorial-rule bg-cream-card">
-        <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.75fr_1.25fr]">
-          <div className="min-w-0">
-            <p className="editorial-label">Hal yang sering ditanyakan</p>
-            <h2 id="faq-title" className="mt-3 break-words text-3xl font-extrabold tracking-tight text-charcoal">
-              Sebelum menghubungi pelaku usaha.
+        <div className="mx-auto max-w-6xl px-5 py-16">
+          
+          <div className="mb-10 text-center md:text-left">
+            <p className="editorial-label">Hal Yang Sering Ditanyakan</p>
+            <h2 id="faq-title" className="mt-2 text-2xl font-extrabold tracking-tight text-charcoal sm:text-3xl">
+              Temukan Jawaban Atas Pertanyaan Anda
             </h2>
-            <p className="mt-4 text-sm leading-7 text-warm-gray">
-              Harga, ketersediaan, pembayaran, dan pengiriman disepakati di luar platform.
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="mb-10 flex flex-wrap gap-2 justify-center md:justify-start">
+            {categoryTabs.map((tab) => {
+              const isSelected = selectedCategory === tab.id;
+              const count = tab.id === 'all'
+                ? FAQS.length
+                : FAQS.filter((f) => f.category === tab.id).length;
+
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(tab.id);
+                    setOpenIndex(0);
+                  }}
+                  className={`focus-ring touch-target inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
+                    isSelected
+                      ? 'bg-forest text-white shadow-sm'
+                      : 'border border-sage-border bg-white text-warm-gray hover:border-forest/40 hover:text-charcoal'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                  <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-sage-light text-warm-gray'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Accordions List */}
+          {filteredFaqs.length > 0 ? (
+            <div className="divide-y divide-sage-border border-y border-sage-border bg-white rounded-2xl p-2 sm:p-4 shadow-xs">
+              {filteredFaqs.map((item, index) => {
+                const answerId = `faq-answer-${index}`;
+                const isOpen = openIndex === index;
+
+                return (
+                  <article key={item.question} className="py-2 px-2 sm:px-4">
+                    <h3>
+                      <button
+                        id={`faq-question-${index}`}
+                        type="button"
+                        aria-expanded={isOpen}
+                        aria-controls={answerId}
+                        onClick={() => setOpenIndex(isOpen ? null : index)}
+                        className="focus-ring flex w-full items-center justify-between gap-4 rounded-xl py-4 text-left text-sm font-bold text-charcoal hover:text-forest transition-colors"
+                      >
+                        <div className="flex items-start gap-3 min-w-0 pr-2">
+                          <span className="shrink-0 rounded-md bg-forest/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-forest mt-0.5">
+                            {item.categoryLabel}
+                          </span>
+                          <span className="min-w-0 break-words leading-relaxed">{item.question}</span>
+                        </div>
+                        <ChevronDown
+                          size={18}
+                          className={`shrink-0 text-terracotta transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </h3>
+                    {isOpen && (
+                      <div
+                        id={answerId}
+                        role="region"
+                        aria-labelledby={`faq-question-${index}`}
+                        className="pb-5 pt-1 pl-3 sm:pl-4 text-xs leading-relaxed text-warm-gray sm:text-sm sm:leading-7 animate-in fade-in duration-150"
+                      >
+                        <p className="max-w-3xl break-words">{item.answer}</p>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-sage-border bg-white p-12 text-center">
+              <HelpCircle size={40} className="mx-auto text-warm-gray/40 mb-3" />
+              <h3 className="text-base font-bold text-charcoal">Tidak ada hasil pertanyaan yang cocok</h3>
+              <p className="mt-1 text-xs text-warm-gray">
+                Coba gunakan kata kunci lain seperti &quot;transaksi&quot;, &quot;pendaftaran&quot;, atau &quot;peta&quot;.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                }}
+                className="focus-ring touch-target mt-4 rounded-xl bg-forest px-4 py-2 text-xs font-bold uppercase tracking-wider text-white"
+              >
+                Tampilkan Semua FAQ
+              </button>
+            </div>
+          )}
+
+        </div>
+      </section>
+
+      {/* Bottom Interactive Support Banner */}
+      <section className="mx-auto max-w-6xl px-5 py-16">
+        <div className="overflow-hidden rounded-3xl border border-sage-border bg-charcoal p-8 text-cream-tint sm:p-12 md:flex md:items-center md:justify-between gap-8 shadow-xl">
+          <div className="space-y-3 max-w-xl">
+            <span className="editorial-label text-terracotta">Bantuan & Layanan Developer</span>
+            <h2 className="text-2xl font-extrabold text-white sm:text-3xl">
+              Punya Pertanyaan Lain atau Menemukan Kendala?
+            </h2>
+            <p className="text-xs leading-relaxed text-cream-tint/75 sm:text-sm">
+              Tim pengembang platform Loning Maju siap membantu pertanyaan teknis, kendala tampilan, atau konsultasi pendaftaran UMKM.
             </p>
           </div>
 
-          <div className="min-w-0 divide-y divide-sage-border border-y border-sage-border">
-            {FAQS.map((item, index) => {
-              const answerId = `faq-answer-${index}`;
-              const isOpen = openIndex === index;
-              return (
-                <article key={item.question} className="py-1">
-                  <h3>
-                    <button
-                      id={`faq-question-${index}`}
-                      type="button"
-                      aria-expanded={isOpen}
-                      aria-controls={answerId}
-                      onClick={() => setOpenIndex(isOpen ? null : index)}
-                      className="focus-ring flex w-full items-center justify-between gap-5 rounded-lg py-5 px-1 text-left text-sm font-bold text-charcoal hover:text-forest transition-colors"
-                    >
-                      <span className="min-w-0 break-words">{item.question}</span>
-                      <ChevronDown
-                        size={18}
-                        className={`shrink-0 text-terracotta transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </h3>
-                  {isOpen && (
-                    <p
-                      id={answerId}
-                      role="region"
-                      aria-labelledby={`faq-question-${index}`}
-                      className="max-w-2xl break-words pb-6 px-1 pr-8 text-sm leading-7 text-warm-gray"
-                    >
-                      {item.answer}
-                    </p>
-                  )}
-                </article>
-              );
-            })}
+          <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:mt-0 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsDevDialogOpen(true)}
+              className="focus-ring touch-target flex items-center justify-center gap-2 rounded-xl bg-terracotta px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-terracotta/90 transition-colors shadow-sm"
+            >
+              <Code2 size={16} />
+              <span>Hubungi Developer</span>
+            </button>
+
+            <Link
+              to="/#featured-products"
+              className="focus-ring touch-target flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-white/20 transition-colors"
+            >
+              <span>Jelajahi Produk</span>
+              <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>
 
-      <aside className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 px-5 py-14 sm:flex-row sm:items-center">
-        <div>
-          <p className="editorial-label">Mulai menjelajah</p>
-          <p className="mt-2 text-xl font-bold text-charcoal">Lihat produk dan profil usaha warga.</p>
-        </div>
-        <Link
-          to="/#featured-products"
-          className="focus-ring touch-target inline-flex items-center gap-2 rounded-lg bg-forest px-5 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-forest-hover transition-colors"
-        >
-          <span>Buka Direktori</span>
-          <ArrowRight size={14}/>
-        </Link>
-      </aside>
+      {/* Developer Form Chat Modal */}
+      <DeveloperContactDialog
+        isOpen={isDevDialogOpen}
+        onClose={() => setIsDevDialogOpen(false)}
+      />
     </PublicPageShell>
   );
 }
