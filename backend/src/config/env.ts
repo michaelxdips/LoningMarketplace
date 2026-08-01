@@ -18,7 +18,7 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().max(100000).default(100),
   TRUST_PROXY: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   COOKIE_SECURE: z.enum(['true', 'false']).transform((value) => value === 'true').optional(),
-  COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
+  COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).optional(),
   MEDIA_STORAGE_DRIVER: z.enum(['filesystem', 's3']).default('filesystem'),
   MEDIA_FILESYSTEM_ROOT: z.string().trim().min(1).default('./storage'),
   MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://localhost:3001/media'),
@@ -36,7 +36,7 @@ const envSchema = z.object({
 });
 
 type ParsedEnv = z.infer<typeof envSchema>;
-export type AppEnv = Omit<ParsedEnv, 'DATABASE_URL' | 'PUBLIC_SITE_URL' | keyof MediaConfig> & { DATABASE_URL: string; PUBLIC_SITE_URL?: string } & Partial<MediaConfig>;
+export type AppEnv = Omit<ParsedEnv, 'DATABASE_URL' | 'PUBLIC_SITE_URL' | keyof MediaConfig> & { DATABASE_URL: string; PUBLIC_SITE_URL?: string; COOKIE_SAMESITE?: 'lax' | 'strict' | 'none' } & Partial<MediaConfig>;
 export type MediaConfig = Pick<ParsedEnv, 'MEDIA_STORAGE_DRIVER' | 'MEDIA_FILESYSTEM_ROOT' | 'MEDIA_PUBLIC_BASE_URL' | 'MEDIA_MAX_BYTES' | 'MEDIA_MAX_WIDTH' | 'MEDIA_MAX_HEIGHT' | 'MEDIA_MAX_PIXELS' | 'MEDIA_ORPHAN_GRACE_HOURS' | 'S3_BUCKET' | 'S3_REGION' | 'S3_ENDPOINT' | 'S3_ACCESS_KEY_ID' | 'S3_SECRET_ACCESS_KEY' | 'S3_FORCE_PATH_STYLE'>;
 
 export function mediaConfig(env: AppEnv): MediaConfig {
