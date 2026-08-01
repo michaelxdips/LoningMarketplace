@@ -20,7 +20,7 @@ export function setUnauthorizedHandler(handler: () => void) { unauthorizedHandle
 
 function getBaseUrl() {
   const value = import.meta.env.VITE_API_URL;
-  if (!value) throw new Error('VITE_API_URL is not configured. Copy .env.example to .env.local and set the API URL.');
+  if (!value) return '/api';
   return value.replace(/\/+$/, '');
 }
 
@@ -40,6 +40,14 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   const { skipUnauthorizedHandler, ...requestOptions } = options;
   const headers = new Headers(requestOptions.headers);
   if (requestOptions.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  try {
+    const localToken = localStorage.getItem('loning_session_token');
+    if (localToken && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${localToken}`);
+    }
+  } catch {
+    /* ignore */
+  }
   const response = await fetchApi(`${getBaseUrl()}${path}`, { ...requestOptions, headers, credentials: 'include' });
   const body = await response.json().catch(() => ({})) as { data?: T } & ErrorEnvelope;
   if (!response.ok) {

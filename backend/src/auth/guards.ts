@@ -8,16 +8,27 @@ export type AuthContext = { user: SessionUser; sessionId: string; csrfTokenHash:
 declare module 'fastify' { interface FastifyRequest { auth?: AuthContext } }
 const fail = (reply: FastifyReply, status: number, message: string, code: string) => reply.code(status).send({ error: { message, code } });
 
+export function isOriginAllowed(origin: string | undefined, corsOrigin: string): boolean {
+  if (!origin) return false;
+  const allowed = (corsOrigin || '').split(',').map((s) => s.trim()).filter(Boolean);
+  if (allowed.includes(origin) || allowed.includes('*')) return true;
+  if (/^https:\/\/[a-zA-Z0-9_-]+\.vercel\.app$/i.test(origin)) return true;
+  return false;
+}
+
 export function createGuards(repository: Repository, crypto: Security, env: AppEnv, now: () => Date) {
   const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
-    const token = request.cookies[env.SESSION_COOKIE_NAME];
+    let token = request.cookies[env.SESSION_COOKIE_NAME];
+    if (!token && typeof request.headers.authorization === 'string' && request.headers.authorization.startsWith('Bearer ')) {
+      token = request.headers.authorization.slice(7).trim();
+    }
     if (!token) return fail(reply, 401, 'Authentication required', 'UNAUTHENTICATED');
     const at = now();
     const session = await repository.findSession(crypto.hashToken(token), at);
     if (!session) return fail(reply, 401, 'Session is invalid or expired', 'UNAUTHENTICATED');
     if (!session.user.isActive || !isSupportedUserRole(session.user.role)) {
       await repository.revokeSession(session.sessionId, at);
-      reply.clearCookie(env.SESSION_COOKIE_NAME, { path: '/', sameSite: 'lax', secure: env.COOKIE_SECURE });
+      reply.clearCookie(env.SESSION_COOKIE_NAME, { path: '/', sameSite: env.COOKIE_SAMESITE ?? 'lax', secure: env.COOKIE_SECURE });
       return fail(reply, 403, 'Akun Anda tidak memiliki akses yang valid ke dashboard.', 'ROLE_INVALID');
     }
     if (session.user.mustChangePassword && !request.url.startsWith('/api/auth/')) {
@@ -26,8 +37,8 @@ export function createGuards(repository: Repository, crypto: Security, env: AppE
     request.auth = session;
   };
   const origin = async (request: FastifyRequest, reply: FastifyReply) => {
-    const origin = request.headers.origin;
-    if (origin !== env.CORS_ORIGIN) return fail(reply, 403, 'Invalid request origin', 'ORIGIN_INVALID');
+    const reqOrigin = request.headers.origin;
+    if (!isOriginAllowed(reqOrigin, env.CORS_ORIGIN)) return fail(reply, 403, 'Invalid request origin', 'ORIGIN_INVALID');
   };
   const csrf = async (request: FastifyRequest, reply: FastifyReply) => {
     const token = request.headers['x-csrf-token'];

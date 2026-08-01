@@ -20,13 +20,18 @@ export interface SessionUser {
   isActive: boolean;
   mustChangePassword: boolean;
 }
-export interface Session { user: SessionUser; csrfToken: string; expiresAt?: string }
+export interface Session { user: SessionUser; sessionToken?: string; csrfToken: string; expiresAt?: string }
 export interface PasswordChanged { passwordChanged: true }
 
 export const sessionKey = ['auth', 'session'] as const;
 export const csrfKey = ['auth', 'csrf'] as const;
 
 export function rememberSession(queryClient: QueryClient, session: Session | null) {
+  if (session?.sessionToken) {
+    try { localStorage.setItem('loning_session_token', session.sessionToken); } catch { /* ignore */ }
+  } else if (session === null) {
+    try { localStorage.removeItem('loning_session_token'); } catch { /* ignore */ }
+  }
   queryClient.setQueryData(sessionKey, session);
   queryClient.setQueryData(csrfKey, session?.csrfToken ?? null);
 }
