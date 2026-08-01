@@ -39,6 +39,9 @@ export default defineConfig(({ command, mode }) => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+    },
     test: {
       env: {
         VITE_API_URL: 'https://api.example.invalid/api',
