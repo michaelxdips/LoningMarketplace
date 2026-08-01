@@ -18,6 +18,7 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().max(100000).default(100),
   TRUST_PROXY: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   COOKIE_SECURE: z.enum(['true', 'false']).transform((value) => value === 'true').optional(),
+  COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
   MEDIA_STORAGE_DRIVER: z.enum(['filesystem', 's3']).default('filesystem'),
   MEDIA_FILESYSTEM_ROOT: z.string().trim().min(1).default('./storage'),
   MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://localhost:3001/media'),
@@ -67,7 +68,9 @@ export function parseEnv(input: NodeJS.ProcessEnv, requireDatabase = true): AppE
     if (u.pathname !== '/' || u.search || u.hash || u.username || u.password) throw new Error('PUBLIC_SITE_URL must be a plain origin without path, query, or credentials');
   }
   if (parsed.data.CORS_ORIGIN === '*' || parsed.data.CORS_ORIGIN.includes(',')) throw new Error('CORS_ORIGIN must be one explicit origin');
-  return { ...parsed.data, COOKIE_SECURE: parsed.data.COOKIE_SECURE ?? parsed.data.NODE_ENV === 'production', DATABASE_URL: parsed.data.DATABASE_URL ?? '' };
+  const cookieSecure = parsed.data.COOKIE_SECURE ?? parsed.data.NODE_ENV === 'production';
+  const cookieSameSite = input.COOKIE_SAMESITE ? (input.COOKIE_SAMESITE as 'lax' | 'strict' | 'none') : (parsed.data.NODE_ENV === 'production' ? 'none' : parsed.data.COOKIE_SAMESITE);
+  return { ...parsed.data, COOKIE_SECURE: cookieSecure, COOKIE_SAMESITE: cookieSameSite, DATABASE_URL: parsed.data.DATABASE_URL ?? '' };
 }
 
 export function loadEnv(requireDatabase = true): AppEnv {
