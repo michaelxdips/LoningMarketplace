@@ -4,16 +4,121 @@
  */
 
 import { Link } from 'react-router';
-import { Compass, HelpCircle } from 'lucide-react';
+import { Compass, MapPin, Clock, MessageSquare, ArrowUpRight } from 'lucide-react';
 import { brand } from '../../config/brand';
 
 export default function Footer() {
-  return <footer className="border-t border-white/10 bg-charcoal pb-8 pt-12 text-cream-tint"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div className="grid gap-10 border-b border-white/10 pb-10 md:grid-cols-[1.25fr_.75fr_1fr]">
-      <div><Link to="/" className="focus-ring flex w-fit items-center gap-2 rounded text-white"><Compass size={22} className="text-terracotta"/><span className="text-base font-extrabold uppercase tracking-wide" aria-label={brand.name}>Loning<span className="text-terracotta">Maju</span></span></Link><p className="mt-4 max-w-sm text-xs leading-6 text-cream-tint/65">Direktori dan etalase produk digital Desa Loning, Kecamatan Petarukan, Kabupaten Pemalang. Membantu karya warga lebih mudah ditemukan.</p></div>
-      <div><h2 className="text-[10px] font-bold uppercase tracking-widest text-white">Peta Situs</h2><nav aria-label="Peta situs" className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-xs"><a href="/#featured-products" className="focus-ring rounded text-cream-tint/65 hover:text-white">Produk</a><a href="/#umkm" className="focus-ring rounded text-cream-tint/65 hover:text-white">Profil UMKM</a><Link to="/tentang-desa" className="focus-ring rounded text-cream-tint/65 hover:text-white">Tentang Desa</Link><Link to="/faq" className="focus-ring rounded text-cream-tint/65 hover:text-white">FAQ</Link><Link to="/login" className="focus-ring rounded text-cream-tint/65 hover:text-white">Pengelola</Link></nav></div>
-      <div><h2 className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white"><HelpCircle size={12} className="text-terracotta"/>Pemberitahuan Transaksi</h2><p className="mt-4 text-[11px] leading-6 text-cream-tint/55">Seluruh transaksi, negosiasi harga, pengiriman, dan pembayaran dilakukan langsung antara pengunjung dan pelaku usaha melalui WhatsApp. Loning Maju tidak memproses transaksi.</p></div>
-    </div>
-    <div className="flex flex-col gap-3 pt-6 text-[11px] text-cream-tint/35 sm:flex-row sm:items-center sm:justify-between"><span>&copy; {new Date().getFullYear()} {brand.name}.</span><span>Dirawat untuk Desa Loning</span></div>
-  </div></footer>;
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <footer className="border-t border-white/10 bg-charcoal pb-8 pt-12 text-cream-tint">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        
+        {/* Main Footer Grid */}
+        <div className="grid gap-10 border-b border-white/10 pb-12 sm:grid-cols-2 lg:grid-cols-4">
+          
+          {/* Column 1: Brand & Village Address */}
+          <div className="space-y-4">
+            <Link
+              to="/"
+              onClick={scrollToTop}
+              className="focus-ring flex w-fit items-center gap-2 rounded text-white transition-opacity hover:opacity-90"
+            >
+              <Compass size={24} className="text-terracotta" />
+              <span className="text-base font-extrabold uppercase tracking-wide" aria-label={brand.name}>
+                Loning<span className="text-terracotta">Maju</span>
+              </span>
+            </Link>
+
+            <p className="text-xs leading-relaxed text-cream-tint/70">
+              Direktori resmi dan etalase digital produk UMKM Desa Loning, Kecamatan Petarukan, Kabupaten Pemalang, Jawa Tengah.
+            </p>
+
+            <div className="flex items-start gap-2 pt-2 text-xs text-cream-tint/80">
+              <MapPin size={16} className="mt-0.5 shrink-0 text-terracotta" />
+              <span>Desa Loning, Kec. Petarukan, Kab. Pemalang, Jawa Tengah 52362</span>
+            </div>
+          </div>
+
+          {/* Column 2: Quick Navigation (Peta Situs) */}
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-white">Peta Situs & Navigasi</h2>
+            <nav aria-label="Peta situs" className="mt-4 flex flex-col gap-2.5 text-xs">
+              <a href="/#featured-products" className="focus-ring flex items-center gap-1.5 rounded text-cream-tint/70 transition-colors hover:text-white">
+                <span>Katalog Produk</span>
+                <ArrowUpRight size={12} className="text-cream-tint/40" />
+              </a>
+              <a href="/#umkm" className="focus-ring flex items-center gap-1.5 rounded text-cream-tint/70 transition-colors hover:text-white">
+                <span>Profil Pelaku UMKM</span>
+                <ArrowUpRight size={12} className="text-cream-tint/40" />
+              </a>
+              <Link to="/peta-umkm" className="focus-ring rounded text-cream-tint/70 transition-colors hover:text-white">
+                Peta Lokasi UMKM
+              </Link>
+              <Link to="/tentang-desa" className="focus-ring rounded text-cream-tint/70 transition-colors hover:text-white">
+                Tentang Desa Loning
+              </Link>
+              <Link to="/faq" className="focus-ring rounded text-cream-tint/70 transition-colors hover:text-white">
+                Pertanyaan Umum (FAQ)
+              </Link>
+              <Link to="/login" className="focus-ring rounded text-cream-tint/70 transition-colors hover:text-terracotta font-medium">
+                Masuk Pengelola
+              </Link>
+            </nav>
+          </div>
+
+          {/* Column 3: Operational & Information */}
+          <div className="space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-white">Jam Layanan & Info</h2>
+            <div className="space-y-3 text-xs text-cream-tint/75">
+              <div className="flex items-start gap-2">
+                <Clock size={16} className="mt-0.5 shrink-0 text-terracotta" />
+                <div>
+                  <p className="font-semibold text-white">Jam Operasional Usaha</p>
+                  <p className="text-[11px] text-cream-tint/60">Senin – Minggu: 08.00 – 17.00 WIB</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 pt-1">
+                <MessageSquare size={16} className="mt-0.5 shrink-0 text-terracotta" />
+                <div>
+                  <p className="font-semibold text-white">Pesan Langsung WhatsApp</p>
+                  <p className="text-[11px] text-cream-tint/60">Tanya stok dan negosiasi langsung dengan pemilik UMKM.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 4: Direct Transaction Notice (Bebas Komisi) */}
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+            <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-terracotta">
+              💡 Transaksi Bebas Komisi
+            </h2>
+            <p className="text-[11px] leading-relaxed text-cream-tint/70">
+              Platform ini tidak memotong biaya atau memproses pembayaran. Transaksi dilakukan 100% secara langsung antara pembeli dan pelaku UMKM via WhatsApp.
+            </p>
+          </div>
+
+        </div>
+
+        {/* Bottom Credits & Copyright */}
+        <div className="flex flex-col gap-3 pt-6 text-[11px] text-cream-tint/40 sm:flex-row sm:items-center sm:justify-between">
+          <span>&copy; {new Date().getFullYear()} {brand.name}. Hak Cipta Dilindungi.</span>
+          <div className="flex items-center gap-4">
+            <Link to="/login" className="focus-ring rounded text-cream-tint/60 hover:text-white transition-colors underline underline-offset-2">
+              Masuk Pengelola
+            </Link>
+            <button
+              onClick={scrollToTop}
+              className="focus-ring rounded text-cream-tint/60 hover:text-white transition-colors underline underline-offset-2"
+            >
+              Kembali ke atas &uarr;
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </footer>
+  );
 }

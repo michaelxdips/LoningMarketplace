@@ -19,7 +19,6 @@ import FeaturedProductsSection from './components/home/FeaturedProductsSection';
 import FeaturedBusinessesSection from './components/home/FeaturedBusinessesSection';
 import MissionSection from './components/home/MissionSection';
 import EditorialTeasers from './components/home/EditorialTeasers';
-import FinalCtaSection from './components/home/FinalCtaSection';
 
 // Dialog Components
 import WhatsAppInquiryDialog from './components/shared/WhatsAppInquiryDialog';
@@ -217,13 +216,6 @@ export default function App() {
 
         {/* 7. Editorial route teasers */}
         <EditorialTeasers />
-
-        {/* 10. Final Call to Action */}
-        <FinalCtaSection 
-          onBrowseProducts={() => handleScrollToSection('categories')}
-          onBrowseUMKMs={() => handleScrollToSection('umkm')}
-        />
-
       </main>
 
       {/* Footer segment */}

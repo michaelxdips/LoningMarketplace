@@ -21,7 +21,7 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
     { name: 'Kerajinan', label: 'Kerajinan', icon: <Hammer size={14} /> },
     { name: 'Pertanian', label: 'Pertanian', icon: <Sprout size={14} /> },
     { name: 'Sembako', label: 'Sembako', icon: <ShoppingBag size={14} /> },
-    { name: 'Jasa', label: 'Jasa & Mebel', icon: <Truck size={14} /> }
+    { name: 'Jasa', label: 'Jasa', icon: <Truck size={14} /> }
   ];
 
   return (

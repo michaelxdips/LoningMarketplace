@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { ArrowRight, Store, MessageSquare } from 'lucide-react';
+import { ArrowRight, Store } from 'lucide-react';
 import { ProductImage } from '../product/ProductImage';
 
 interface HeroSectionProps {
@@ -30,12 +30,6 @@ export default function HeroSection({ onBrowseProducts, onBrowseUMKMs }: HeroSec
           
           {/* Hero Content Column */}
           <div className="lg:col-span-7 space-y-5 text-left">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-forest/5 border border-forest/10 rounded-full">
-              <span className="w-1.5 h-1.5 bg-forest rounded-full animate-pulse" />
-              <span className="text-[10px] font-bold text-forest uppercase tracking-widest">
-                Direktori Resmi Desa Loning
-              </span>
-            </div>
 
             <div className="space-y-3.5">
               <h1 className="text-3xl md:text-5xl font-extrabold text-charcoal tracking-tight leading-tight">
@@ -64,14 +58,6 @@ export default function HeroSection({ onBrowseProducts, onBrowseUMKMs }: HeroSec
                 <Store size={14} className="text-terracotta" />
                 <span>Lihat Daftar UMKM</span>
               </button>
-            </div>
-
-            {/* Crucial Note about WhatsApp Transition */}
-            <div className="flex items-center gap-2 text-[11px] text-warm-gray bg-white/60 border border-sage-border rounded-lg p-2.5 max-w-xl">
-              <MessageSquare size={14} className="text-terracotta shrink-0" />
-              <span>
-                <strong>Catatan Penting:</strong> Transaksi dilanjutkan secara langsung dengan pelaku UMKM melalui WhatsApp. Platform ini bebas komisi.
-              </span>
             </div>
           </div>
 
