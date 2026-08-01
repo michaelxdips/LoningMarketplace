@@ -13,6 +13,7 @@ export function isOriginAllowed(origin: string | undefined, corsOrigin: string):
   const allowed = (corsOrigin || '').split(',').map((s) => s.trim()).filter(Boolean);
   if (allowed.includes(origin) || allowed.includes('*')) return true;
   if (/^https:\/\/[a-zA-Z0-9_-]+\.vercel\.app$/i.test(origin)) return true;
+  if (/^https:\/\/(www\.)?loningmaju\.my\.id$/i.test(origin)) return true;
   return false;
 }
 

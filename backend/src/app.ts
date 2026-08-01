@@ -59,6 +59,7 @@ export async function buildApp(env: AppEnv, repository: Repository, dependencies
     if (!origin) return true;
     if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) return true;
     if (/^https:\/\/[a-zA-Z0-9_-]+\.vercel\.app$/i.test(origin)) return true;
+    if (/^https:\/\/(www\.)?loningmaju\.my\.id$/i.test(origin)) return true;
     return false;
   };
   await app.register(cors, {
