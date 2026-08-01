@@ -47,6 +47,12 @@ export const FAQS: FaqItem[] = [
     categoryLabel: 'Pembeli & Transaksi'
   },
   {
+    question: 'Apakah pembeli wajib mendaftar atau membuat akun terlebih dahulu?',
+    answer: 'Tidak perlu. Pengunjung dan calon pembeli dapat langsung menjelajah seluruh katalog produk, lokasi peta, dan informasi UMKM secara bebas tanpa perlu membuat akun atau login sama sekali.',
+    category: 'transaksi',
+    categoryLabel: 'Pembeli & Transaksi'
+  },
+  {
     question: 'Bagaimana alur menghubungi pelaku usaha UMKM di website ini?',
     answer: 'Cukup pilih produk atau profil UMKM yang Anda minati, lalu klik tombol "Hubungi via WhatsApp". Sistem akan otomatis menyiapkan draf pesan awal yang memuat nama produk dan nama usaha agar memudahkan negosiasi stok dan harga.',
     category: 'transaksi',
@@ -71,6 +77,12 @@ export const FAQS: FaqItem[] = [
     categoryLabel: 'Pendaftaran UMKM'
   },
   {
+    question: 'Apakah ada batasan jumlah produk yang bisa dipajang oleh satu UMKM?',
+    answer: 'Tidak ada batasan. Setiap pelaku UMKM warga Desa Loning yang terdaftar dapat memajang seluruh daftar variasi produk unggulannya di etalase direktori ini.',
+    category: 'umkm',
+    categoryLabel: 'Pendaftaran UMKM'
+  },
+  {
     question: 'Bagaimana cara memperbarui foto produk, jam buka, atau nomor WhatsApp usaha saya?',
     answer: 'Pelaku usaha yang sudah terdaftar dapat menghubungi Administrator Balai Desa Loning atau Pengelola Platform untuk memperbarui katalog produk, foto usaha, lokasi titik peta, maupun jam operasional usaha.',
     category: 'umkm',
@@ -89,6 +101,12 @@ export const FAQS: FaqItem[] = [
     categoryLabel: 'Peta & Lokasi'
   },
   {
+    question: 'Apakah titik peta lokasi usaha yang tampil sudah terverifikasi resmi?',
+    answer: 'Ya. Titik lokasi usaha dan patokan alamat yang ditampilkan di peta telah diverifikasi langsung bersama pelaku usaha warga untuk memudahkan rute penjemputan barang maupun survei tempat.',
+    category: 'peta',
+    categoryLabel: 'Peta & Lokasi'
+  },
+  {
     question: 'Bagaimana jika alamat atau lokasi UMKM yang tertera di peta tidak tepat?',
     answer: 'Jika terdapat ketidaksesuaian titik peta, pembeli dapat mengonfirmasi lokasi penjemputan patokan terdekat via WhatsApp pelaku usaha, atau melaporkannya ke tim admin desa.',
     category: 'peta',
@@ -103,6 +121,12 @@ export const FAQS: FaqItem[] = [
   {
     question: 'Apakah platform Loning Maju dapat diakses dengan lancar dari smartphone?',
     answer: 'Tentu saja. Platform Loning Maju dirancang responsive, cepat, dan ringan agar dapat diakses dengan nyaman melalui berbagai perangkat smartphone, tablet, maupun komputer desktop.',
+    category: 'teknis',
+    categoryLabel: 'Bantuan Teknikal'
+  },
+  {
+    question: 'Apakah layanan informasi di website ini beroperasi 24 jam?',
+    answer: 'Website Loning Maju dapat diakses 24 jam nonstop setiap hari. Namun, balasan obrolan via WhatsApp disesuaikan dengan jam operasional aktif masing-masing pemilik usaha (umumnya pukul 08.00–17.00 WIB).',
     category: 'teknis',
     categoryLabel: 'Bantuan Teknikal'
   }
