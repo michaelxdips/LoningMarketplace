@@ -68,7 +68,7 @@ export async function buildApp(env: AppEnv, repository: Repository, dependencies
     },
     credentials: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'X-CSRF-Token'],
+    allowedHeaders: ['Content-Type', 'X-CSRF-Token', 'Authorization', 'x-csrf-token', 'authorization'],
   });
   await app.register(multipart, { limits: { fileSize: env.MEDIA_MAX_BYTES ?? 10_000_000, files: 1 } });
   if (env.NODE_ENV !== 'production' && media instanceof FilesystemMediaStorage) { await mkdir(media.root, { recursive: true }); const mediaSubdir = join(media.root, 'media'); const staticRoot = existsSync(mediaSubdir) ? mediaSubdir : media.root; await app.register(fastifyStatic, { root: staticRoot, prefix: '/media/', decorateReply: false, dotfiles: 'ignore', list: false, setHeaders: (reply) => { reply.header('Access-Control-Allow-Origin', env.CORS_ORIGIN); reply.header('Cross-Origin-Resource-Policy', 'cross-origin'); reply.header('Cache-Control', 'public, max-age=3600'); } }); }
