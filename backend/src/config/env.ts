@@ -67,7 +67,6 @@ export function parseEnv(input: NodeJS.ProcessEnv, requireDatabase = true): AppE
     if (u.hostname === 'localhost' || u.hostname.endsWith('.example.com') || u.hostname === 'example.com') throw new Error('PUBLIC_SITE_URL cannot use localhost or example placeholders in production');
     if (u.pathname !== '/' || u.search || u.hash || u.username || u.password) throw new Error('PUBLIC_SITE_URL must be a plain origin without path, query, or credentials');
   }
-  if (parsed.data.CORS_ORIGIN === '*' || parsed.data.CORS_ORIGIN.includes(',')) throw new Error('CORS_ORIGIN must be one explicit origin');
   const cookieSecure = parsed.data.COOKIE_SECURE ?? parsed.data.NODE_ENV === 'production';
   const cookieSameSite = input.COOKIE_SAMESITE ? (input.COOKIE_SAMESITE as 'lax' | 'strict' | 'none') : (parsed.data.NODE_ENV === 'production' ? 'none' : parsed.data.COOKIE_SAMESITE);
   return { ...parsed.data, COOKIE_SECURE: cookieSecure, COOKIE_SAMESITE: cookieSameSite, DATABASE_URL: parsed.data.DATABASE_URL ?? '' };
