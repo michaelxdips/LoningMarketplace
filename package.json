@@ -51,5 +51,8 @@
     "@playwright/test": "^1.52.0",
     "@types/node": "^22.14.0",
     "concurrently": "^9.2.4"
+  },
+  "dependencies": {
+    "pg": "^8.22.0"
   }
 }

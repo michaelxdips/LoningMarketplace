@@ -25,6 +25,8 @@ async function createAsset(
   const thumb = await sharp(card).resize(240, 168, { fit: 'cover' }).webp({ quality: 82 }).toBuffer();
   const cardKey = `media/${storageSlug}.webp`;
   const thumbKey = `media/${storageSlug}-thumb.webp`;
+  await storage.deleteObject(cardKey);
+  await storage.deleteObject(thumbKey);
   await storage.putObject(cardKey, { body: card, contentType: 'image/webp', cacheControl: 'public, max-age=31536000' });
   await storage.putObject(thumbKey, { body: thumb, contentType: 'image/webp', cacheControl: 'public, max-age=31536000' });
   await db.insert(schema.mediaAssets).values({
