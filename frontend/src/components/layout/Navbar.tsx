@@ -84,13 +84,6 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
               </Link>
             );
           })}
-          <a
-            href="/#featured-products"
-            onClick={(event) => goHomeSection(event, '/#featured-products')}
-            className="focus-ring rounded-lg bg-forest px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition-all duration-200 hover:bg-forest-hover hover:shadow-md"
-          >
-            Jelajahi Produk
-          </a>
         </div>
 
         <button
@@ -128,15 +121,6 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
               </Link>
             )
           )}
-          <div className="mt-3 border-t border-sage-border pt-3">
-            <a
-              href="/#featured-products"
-              onClick={(event) => goHomeSection(event, '/#featured-products')}
-              className="focus-ring touch-target flex items-center justify-center rounded-lg bg-forest py-2.5 text-xs font-bold uppercase tracking-wider text-white"
-            >
-              Jelajahi Produk
-            </a>
-          </div>
         </div>
       )}
     </nav>
