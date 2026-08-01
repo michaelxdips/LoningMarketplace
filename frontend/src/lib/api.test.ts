@@ -129,6 +129,16 @@ describe('uploadMedia XHR', () => {
     expect(res).toEqual({ id: 'img1' });
   });
 
+  it('sends the stored bearer session token with the multipart upload', async () => {
+    vi.stubGlobal('localStorage', { getItem: vi.fn().mockReturnValue('session-token') });
+    const promise = uploadMedia(new File([], 'test.jpg'), 'alt', 'csrf');
+    expect(xhrMock.setRequestHeader).toHaveBeenCalledWith('Authorization', 'Bearer session-token');
+    xhrMock.status = 200;
+    xhrMock.responseText = JSON.stringify({ data: { id: 'img1' } });
+    xhrMock.onload();
+    await expect(promise).resolves.toEqual({ id: 'img1' });
+  });
+
   it('invokes unauthorized handler exactly once on 401', async () => {
     const promise = uploadMedia(new File([], 'test.jpg'), 'alt', 'csrf');
     xhrMock.status = 401;

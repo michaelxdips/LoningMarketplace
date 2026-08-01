@@ -24,6 +24,7 @@ import { authRoutes } from './routes/auth.js';
 import { adminRoutes } from './routes/admin.js';
 import { manageRoutes } from './routes/manage.js';
 import { mediaRoutes } from './routes/media.js';
+import { mediaServeRoutes } from './routes/media-serve.js';
 import { eventRoutes } from './routes/events.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { sitemapRoutes } from './routes/sitemap.js';
@@ -51,7 +52,7 @@ export async function buildApp(env: AppEnv, repository: Repository, dependencies
   const app = Fastify({ logger: env.NODE_ENV !== 'test', trustProxy: env.TRUST_PROXY });
   const crypto = dependencies.security ?? security; const now = dependencies.now ?? (() => new Date()); const id = dependencies.id ?? randomUUID;
   const guards = createGuards(repository, crypto, env, now); const media = dependencies.storage ?? createMediaStorage(mediaConfig(env));
-  await app.register(helmet, { crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: { directives: { frameSrc: ["'self'", 'https://www.openstreetmap.org'] } } });
+  await app.register(helmet, { crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: { directives: { imgSrc: ["'self'", 'data:', 'https:'], frameSrc: ["'self'", 'https://www.openstreetmap.org'] } } });
   await app.register(cookie);
   await app.register(rateLimit, { max: env.RATE_LIMIT_MAX, timeWindow: '1 minute' });
   const allowedOrigins = (env.CORS_ORIGIN || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -72,7 +73,10 @@ export async function buildApp(env: AppEnv, repository: Repository, dependencies
     allowedHeaders: ['Content-Type', 'X-CSRF-Token', 'Authorization', 'x-csrf-token', 'authorization'],
   });
   await app.register(multipart, { limits: { fileSize: env.MEDIA_MAX_BYTES ?? 10_000_000, files: 1 } });
-  if (env.NODE_ENV !== 'production' && media instanceof FilesystemMediaStorage) { await mkdir(media.root, { recursive: true }); const mediaSubdir = join(media.root, 'media'); const staticRoot = existsSync(mediaSubdir) ? mediaSubdir : media.root; await app.register(fastifyStatic, { root: staticRoot, prefix: '/media/', decorateReply: false, dotfiles: 'ignore', list: false, setHeaders: (reply) => { reply.header('Access-Control-Allow-Origin', env.CORS_ORIGIN); reply.header('Cross-Origin-Resource-Policy', 'cross-origin'); reply.header('Cache-Control', 'public, max-age=3600'); } }); }
+  // Serve media objects at /media/* in every environment via streaming (filesystem + S3).
+  // Deterministic: no startup-time filesystem probing; bucket stays private.
+  if (media instanceof FilesystemMediaStorage) await mkdir(media.root, { recursive: true });
+  await mediaServeRoutes(app, media, env.CORS_ORIGIN);
   app.setErrorHandler((error, _request, reply) => { app.log.error(error); if (error instanceof SlugConflictError) return reply.code(error.statusCode).send(errorEnvelope(error.message, error.code)); const statusCode = typeof error === 'object' && error !== null && 'statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : 500; const message = error instanceof Error ? error.message : 'Request failed'; return reply.code(statusCode < 500 ? statusCode : 500).send(errorEnvelope(statusCode < 500 ? message : 'Internal server error', statusCode < 500 ? 'REQUEST_ERROR' : 'INTERNAL_ERROR')); });
   await app.register(async (api) => { await healthRoutes(api, repository); await umkmRoutes(api, repository); await productRoutes(api, repository); await eventRoutes(api, repository, now); await authRoutes(api, repository, guards, crypto, env, now); await adminRoutes(api, repository, guards, crypto, now); await analyticsRoutes(api, repository, guards); await manageRoutes(api, repository, guards, now, id); await mediaRoutes(api, repository, guards, media, env, id); }, { prefix: '/api' });
   await sitemapRoutes(app, repository, env);
