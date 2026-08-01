@@ -77,6 +77,7 @@ export async function seedProducts(db: PostgresJsDatabase<typeof schema>) {
   }));
 
   // Seed-only cleanup: manual records and E2E fixtures use different ID namespaces.
+  await db.delete(schema.publicEvents).where(sql`${schema.publicEvents.productId}::text LIKE 'e3000000-%'`);
   await db.delete(schema.products).where(sql`${schema.products.id}::text LIKE 'e3000000-%'`);
   for (let i = 0; i < products.length; i += 20) {
     await db.insert(schema.products).values(products.slice(i, i + 20));
