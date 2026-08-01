@@ -17,9 +17,19 @@ export async function authRoutes(app: FastifyInstance, repository: Repository, g
     const found = identifier.includes('@')
       ? await repository.findUserByEmail(identifier)
       : usernameSchema.safeParse(identifier).success ? await repository.findUserByUsername(normalizeUsername(identifier)) : undefined;
-    const at = now(); const verified = await crypto.verifyPassword(found?.passwordHash ?? DUMMY_HASH, parsed.data.password);
-    if (!found || !found.isActive || (found.lockedUntil && found.lockedUntil > at) || !verified) {
-      await repository.transaction(async (tx) => { if (found && found.isActive && (!found.lockedUntil || found.lockedUntil <= at)) { const count = found.lockedUntil ? 1 : found.failedLoginCount + 1; await tx.recordLoginFailure(found.id, count, count >= env.LOGIN_MAX_ATTEMPTS ? new Date(at.getTime() + env.LOGIN_LOCKOUT_MINUTES * 60_000) : null, at); } await tx.addAudit({ actorUserId: found?.id ?? null, action: 'auth.login_failed', entityType: 'auth', metadata: {}, ...info(request) }); });
+    const at = now();
+    if (found && found.isActive && found.lockedUntil && found.lockedUntil > at) {
+      return reply.code(429).send(error('Akun terkunci sementara karena terlalu banyak percobaan login yang gagal. Silakan coba beberapa menit lagi.', 'ACCOUNT_LOCKED'));
+    }
+    const verified = await crypto.verifyPassword(found?.passwordHash ?? DUMMY_HASH, parsed.data.password);
+    if (!found || !found.isActive || !verified) {
+      await repository.transaction(async (tx) => {
+        if (found && found.isActive && (!found.lockedUntil || found.lockedUntil <= at)) {
+          const count = found.failedLoginCount + 1;
+          await tx.recordLoginFailure(found.id, count, count >= env.LOGIN_MAX_ATTEMPTS ? new Date(at.getTime() + env.LOGIN_LOCKOUT_MINUTES * 60_000) : null, at);
+        }
+        await tx.addAudit({ actorUserId: found?.id ?? null, action: 'auth.login_failed', entityType: 'auth', metadata: {}, ...info(request) });
+      });
       return reply.code(401).send(error('Email/username atau kata sandi salah.', 'INVALID_CREDENTIALS'));
     }
     if (!isSupportedUserRole(found.role)) {
