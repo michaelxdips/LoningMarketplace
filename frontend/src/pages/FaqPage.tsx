@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Search, BookOpen, MessageCircle, ArrowRight, ChevronDown, HelpCircle, X, ShieldCheck, Code2, Store } from 'lucide-react';
+import { Search, BookOpen, MessageCircle, ArrowRight, ChevronDown, HelpCircle, X, ShieldCheck, Code2, Store, MapPin } from 'lucide-react';
 import { Link } from 'react-router';
 import PublicPageShell from '../components/layout/PublicPageShell';
 import { FAQS, GUIDE_STEPS } from '../data';
@@ -17,14 +17,14 @@ const categoryTabs = [
   { id: 'all', label: 'Semua FAQ', icon: <HelpCircle size={15} /> },
   { id: 'transaksi', label: 'Pembeli & Transaksi', icon: <ShieldCheck size={15} /> },
   { id: 'umkm', label: 'Pendaftaran UMKM', icon: <Store size={15} /> },
-  { id: 'peta', label: 'Peta & Lokasi', icon: <Search size={15} /> },
+  { id: 'peta', label: 'Peta & Lokasi', icon: <MapPin size={15} /> },
   { id: 'teknis', label: 'Bantuan Teknikal', icon: <Code2 size={15} /> },
 ] as const;
 
 export default function FaqPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [openQuestion, setOpenQuestion] = useState<string | null>(FAQS[0]?.question || null);
   const [isDevDialogOpen, setIsDevDialogOpen] = useState(false);
 
   const description = 'Panduan lengkap dan FAQ direktori Loning Maju: alur transaksi WhatsApp, cara pendaftaran UMKM Desa Loning, keakuratan peta, dan bantuan teknis.';
@@ -52,6 +52,20 @@ export default function FaqPage() {
     });
   }, [searchQuery, selectedCategory]);
 
+  // Group by category when viewing 'all' and no active search query
+  const groupedFaqs = useMemo(() => {
+    if (selectedCategory !== 'all' || searchQuery.trim()) return null;
+
+    const groups: { [key: string]: typeof FAQS } = {};
+    filteredFaqs.forEach((faq) => {
+      if (!groups[faq.categoryLabel]) {
+        groups[faq.categoryLabel] = [];
+      }
+      groups[faq.categoryLabel].push(faq);
+    });
+    return Object.entries(groups);
+  }, [filteredFaqs, selectedCategory, searchQuery]);
+
   return (
     <PublicPageShell>
       {/* Header Banner */}
@@ -73,7 +87,7 @@ export default function FaqPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari pertanyaan... (contoh: transaksi, komisi, pendaftaran, peta)"
-              className="focus-ring w-full rounded-2xl border border-sage-border bg-cream-card py-3.5 pl-11 pr-10 text-xs text-charcoal shadow-sm placeholder:text-warm-gray/50 sm:text-sm"
+              className="focus-ring w-full rounded-2xl border border-sage-border bg-cream-card py-3.5 pl-11 pr-10 text-xs text-charcoal shadow-xs placeholder:text-warm-gray/50 sm:text-sm"
             />
             {searchQuery && (
               <button
@@ -92,16 +106,18 @@ export default function FaqPage() {
       {/* 3 Step Quick Guide */}
       <section aria-labelledby="steps-title" className="mx-auto max-w-6xl px-5 pb-16">
         <h2 id="steps-title" className="sr-only">Tiga langkah penggunaan</h2>
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-sage-border bg-sage-border md:grid-cols-3">
+        <div className="grid gap-px overflow-hidden rounded-2xl border border-sage-border bg-sage-border md:grid-cols-3 shadow-xs">
           {GUIDE_STEPS.map((step, index) => {
             const Icon = stepIcons[index];
             return (
               <article key={step.number} className="bg-cream-card p-7 sm:p-9">
                 <div className="flex items-center justify-between">
-                  <Icon size={22} className="text-forest" aria-hidden="true" />
+                  <div className="p-2.5 rounded-xl bg-forest/10 text-forest">
+                    <Icon size={20} aria-hidden="true" />
+                  </div>
                   <span className="font-mono text-xs font-bold text-terracotta">{step.number}</span>
                 </div>
-                <h3 className="mt-8 text-base font-bold text-charcoal sm:text-lg">{step.title}</h3>
+                <h3 className="mt-6 text-base font-bold text-charcoal sm:text-lg">{step.title}</h3>
                 <p className="mt-2 text-xs leading-6 text-warm-gray sm:text-sm">{step.description}</p>
               </article>
             );
@@ -111,9 +127,9 @@ export default function FaqPage() {
 
       {/* Main FAQ List Section */}
       <section aria-labelledby="faq-title" className="border-y editorial-rule bg-cream-card">
-        <div className="mx-auto max-w-6xl px-5 py-16">
+        <div className="mx-auto max-w-5xl px-5 py-16">
           
-          <div className="mb-10 text-center md:text-left">
+          <div className="mb-8 text-center">
             <p className="editorial-label">Hal Yang Sering Ditanyakan</p>
             <h2 id="faq-title" className="mt-2 text-2xl font-extrabold tracking-tight text-charcoal sm:text-3xl">
               Temukan Jawaban Atas Pertanyaan Anda
@@ -121,7 +137,7 @@ export default function FaqPage() {
           </div>
 
           {/* Category Filter Pills */}
-          <div className="mb-10 flex flex-wrap gap-2 justify-center md:justify-start">
+          <div className="mb-10 flex flex-wrap items-center justify-center gap-2">
             {categoryTabs.map((tab) => {
               const isSelected = selectedCategory === tab.id;
               const count = tab.id === 'all'
@@ -134,12 +150,12 @@ export default function FaqPage() {
                   type="button"
                   onClick={() => {
                     setSelectedCategory(tab.id);
-                    setOpenIndex(0);
+                    setOpenQuestion(null);
                   }}
                   className={`focus-ring touch-target inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
                     isSelected
-                      ? 'bg-forest text-white shadow-sm'
-                      : 'border border-sage-border bg-white text-warm-gray hover:border-forest/40 hover:text-charcoal'
+                      ? 'bg-forest text-white shadow-sm ring-2 ring-forest/20'
+                      : 'border border-sage-border bg-white text-warm-gray hover:border-forest/40 hover:text-charcoal shadow-2xs'
                   }`}
                 >
                   {tab.icon}
@@ -154,51 +170,107 @@ export default function FaqPage() {
             })}
           </div>
 
-          {/* Accordions List */}
+          {/* Render Grouped List or Flat Filtered List */}
           {filteredFaqs.length > 0 ? (
-            <div className="divide-y divide-sage-border border-y border-sage-border bg-white rounded-2xl p-2 sm:p-4 shadow-xs">
-              {filteredFaqs.map((item, index) => {
-                const answerId = `faq-answer-${index}`;
-                const isOpen = openIndex === index;
+            groupedFaqs ? (
+              /* Grouped View for Clean Structure */
+              <div className="space-y-10">
+                {groupedFaqs.map(([groupLabel, items]) => (
+                  <div key={groupLabel} className="space-y-3">
+                    <div className="flex items-center gap-2 pb-1 border-b border-sage-border">
+                      <span className="text-xs font-extrabold uppercase tracking-widest text-forest">
+                        {groupLabel}
+                      </span>
+                      <span className="text-xs text-warm-gray/60 font-medium">({items.length})</span>
+                    </div>
 
-                return (
-                  <article key={item.question} className="py-2 px-2 sm:px-4">
-                    <h3>
+                    <div className="space-y-3">
+                      {items.map((item) => {
+                        const isOpen = openQuestion === item.question;
+                        return (
+                          <div
+                            key={item.question}
+                            className={`rounded-2xl border transition-all overflow-hidden ${
+                              isOpen
+                                ? 'border-forest/40 bg-white shadow-md ring-1 ring-forest/10'
+                                : 'border-sage-border bg-white hover:border-forest/30 shadow-2xs'
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              aria-expanded={isOpen}
+                              onClick={() => setOpenQuestion(isOpen ? null : item.question)}
+                              className="focus-ring flex w-full items-center justify-between gap-4 p-5 text-left text-sm font-bold text-charcoal hover:text-forest transition-colors"
+                            >
+                              <span className="min-w-0 leading-snug">{item.question}</span>
+                              <div className={`shrink-0 rounded-full p-1 transition-colors ${
+                                isOpen ? 'bg-forest/10 text-forest' : 'bg-sage-light text-warm-gray'
+                              }`}>
+                                <ChevronDown
+                                  size={16}
+                                  className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                                  aria-hidden="true"
+                                />
+                              </div>
+                            </button>
+                            {isOpen && (
+                              <div className="border-t border-sage-border/60 bg-cream-card/60 p-5 pt-4 text-xs sm:text-sm leading-relaxed text-warm-gray animate-in fade-in duration-150">
+                                <p className="leading-7">{item.answer}</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Flat Filtered List (when searching or category selected) */
+              <div className="space-y-3">
+                {filteredFaqs.map((item) => {
+                  const isOpen = openQuestion === item.question;
+                  return (
+                    <div
+                      key={item.question}
+                      className={`rounded-2xl border transition-all overflow-hidden ${
+                        isOpen
+                          ? 'border-forest/40 bg-white shadow-md ring-1 ring-forest/10'
+                          : 'border-sage-border bg-white hover:border-forest/30 shadow-2xs'
+                      }`}
+                    >
                       <button
-                        id={`faq-question-${index}`}
                         type="button"
                         aria-expanded={isOpen}
-                        aria-controls={answerId}
-                        onClick={() => setOpenIndex(isOpen ? null : index)}
-                        className="focus-ring flex w-full items-center justify-between gap-4 rounded-xl py-4 text-left text-sm font-bold text-charcoal hover:text-forest transition-colors"
+                        onClick={() => setOpenQuestion(isOpen ? null : item.question)}
+                        className="focus-ring flex w-full items-center justify-between gap-4 p-5 text-left text-sm font-bold text-charcoal hover:text-forest transition-colors"
                       >
-                        <div className="flex items-start gap-3 min-w-0 pr-2">
-                          <span className="shrink-0 rounded-md bg-forest/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-forest mt-0.5">
+                        <div className="flex items-center gap-3 min-w-0 pr-2">
+                          <span className="shrink-0 rounded-md bg-forest/10 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-forest">
                             {item.categoryLabel}
                           </span>
-                          <span className="min-w-0 break-words leading-relaxed">{item.question}</span>
+                          <span className="min-w-0 leading-snug">{item.question}</span>
                         </div>
-                        <ChevronDown
-                          size={18}
-                          className={`shrink-0 text-terracotta transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                          aria-hidden="true"
-                        />
+                        <div className={`shrink-0 rounded-full p-1 transition-colors ${
+                          isOpen ? 'bg-forest/10 text-forest' : 'bg-sage-light text-warm-gray'
+                        }`}>
+                          <ChevronDown
+                            size={16}
+                            className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                            aria-hidden="true"
+                          />
+                        </div>
                       </button>
-                    </h3>
-                    {isOpen && (
-                      <div
-                        id={answerId}
-                        role="region"
-                        aria-labelledby={`faq-question-${index}`}
-                        className="pb-5 pt-1 pl-3 sm:pl-4 text-xs leading-relaxed text-warm-gray sm:text-sm sm:leading-7 animate-in fade-in duration-150"
-                      >
-                        <p className="max-w-3xl break-words">{item.answer}</p>
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
+                      {isOpen && (
+                        <div className="border-t border-sage-border/60 bg-cream-card/60 p-5 pt-4 text-xs sm:text-sm leading-relaxed text-warm-gray animate-in fade-in duration-150">
+                          <p className="leading-7">{item.answer}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )
           ) : (
             <div className="rounded-2xl border border-sage-border bg-white p-12 text-center">
               <HelpCircle size={40} className="mx-auto text-warm-gray/40 mb-3" />
@@ -223,7 +295,7 @@ export default function FaqPage() {
       </section>
 
       {/* Bottom Interactive Support Banner */}
-      <section className="mx-auto max-w-6xl px-5 py-16">
+      <section className="mx-auto max-w-5xl px-5 py-16">
         <div className="overflow-hidden rounded-3xl border border-sage-border bg-charcoal p-8 text-cream-tint sm:p-12 md:flex md:items-center md:justify-between gap-8 shadow-xl">
           <div className="space-y-3 max-w-xl">
             <span className="editorial-label text-terracotta">Bantuan & Layanan Developer</span>
