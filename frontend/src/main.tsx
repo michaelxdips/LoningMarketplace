@@ -39,6 +39,7 @@ import './index.css';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: shouldRetryApiRequest } } });
 setUnauthorizedHandler(() => {
+  try { localStorage.removeItem('loning_session_token'); } catch { /* ignore */ }
   void queryClient.cancelQueries({ queryKey: ['auth'] });
   queryClient.removeQueries({ queryKey: ['manage'] }); queryClient.removeQueries({ queryKey: ['admin'] });
   queryClient.setQueryData(['auth', 'session'], null); queryClient.setQueryData(['auth', 'csrf'], null);

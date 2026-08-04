@@ -16,20 +16,26 @@ export function useSession() {
 }
 
 export function useCsrfToken() {
-  return useQuery({ queryKey: csrfKey, queryFn: () => null as string | null, staleTime: Infinity }).data ?? undefined;
+  const client = useQueryClient();
+  return useQuery({ queryKey: csrfKey, queryFn: () => client.getQueryData<string | null>(csrfKey) ?? null, staleTime: Infinity }).data ?? undefined;
 }
 
 export function useLogin() {
   const client = useQueryClient();
-  return useMutation({ mutationFn: authApi.login, onSuccess: (session) => rememberSession(client, session) });
+  return useMutation({ mutationFn: authApi.login, onSuccess: (session) => { rememberSession(client, session); client.invalidateQueries({ queryKey: csrfKey, refetchType: 'none' }); } });
 }
 
 export function useLogout() {
   const client = useQueryClient();
   const csrf = useCsrfToken();
-  return useMutation({ mutationFn: () => authApi.logout(csrf), onSettled: async () => {
-    await Promise.all([client.cancelQueries({ queryKey: ['auth'] }), client.cancelQueries({ queryKey: ['manage'] }), client.cancelQueries({ queryKey: ['admin'] })]);
-    client.removeQueries({ queryKey: ['manage'] }); client.removeQueries({ queryKey: ['admin'] });
-    rememberSession(client, null);
-  } });
+  return useMutation({
+    mutationFn: async () => {
+      await Promise.all([client.cancelQueries({ queryKey: ['auth'] }), client.cancelQueries({ queryKey: ['manage'] }), client.cancelQueries({ queryKey: ['admin'] })]);
+      return authApi.logout(csrf);
+    },
+    onSettled: () => {
+      client.removeQueries({ queryKey: ['manage'] }); client.removeQueries({ queryKey: ['admin'] });
+      rememberSession(client, null);
+    },
+  });
 }

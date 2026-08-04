@@ -43,6 +43,7 @@ export default defineConfig(({ command, mode }) => {
       chunkSizeWarningLimit: 1000,
     },
     test: {
+      environment: 'jsdom',
       env: {
         VITE_API_URL: 'https://api.example.invalid/api',
         VITE_PUBLIC_SITE_URL: 'https://site.example.invalid',
