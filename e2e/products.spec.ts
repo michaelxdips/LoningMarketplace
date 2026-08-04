@@ -158,7 +158,7 @@ async function saveAndCapturePatch(page: Page, fixture: Fixture, events?: Return
   const responsePromise = page.waitForResponse(response => response.request().method() === 'PATCH' && response.url().endsWith(`/manage/products/${fixture.id}`));
   const pendingDashboardRequests = new Set<Request>();
   const onRequest = (request: Request) => {
-    if (events && request.method() === 'GET' && /^http:\/\/localhost:3(?:001|101)\/api\/manage\/(?:products|umkms)(?:\?.*)?$/.test(request.url())) pendingDashboardRequests.add(request);
+    if (events && request.method() === 'GET' && /^http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/manage\/(?:products|umkms)(?:\?.*)?$/.test(request.url())) pendingDashboardRequests.add(request);
   };
   const onRequestDone = (request: Request) => { pendingDashboardRequests.delete(request); };
   const waitForDashboardQuiet = async () => {
@@ -170,7 +170,7 @@ async function saveAndCapturePatch(page: Page, fixture: Fixture, events?: Return
     page.off('requestfinished', onRequestDone);
     page.off('requestfailed', onRequestDone);
   };
-  const transition = events?.beginExpectedTransition({ reason: `save:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3(?:001|101)\/api\/manage\/(?:products|umkms)(?:\?.*)?$/ }, ...additionalTransitionRequests.map(url => ({ method: 'GET' as const, url }))] });
+  const transition = events?.beginExpectedTransition({ reason: `save:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/manage\/(?:products|umkms)(?:\?.*)?$/ }, ...additionalTransitionRequests.map(url => ({ method: 'GET' as const, url }))] });
   if (events) {
     page.on('request', onRequest);
     page.on('requestfinished', onRequestDone);
@@ -342,7 +342,7 @@ test('product mutations, price contract, external image, archive, and restore ar
     if (request.url() === CORRUPT_IMAGE) corruptImageRequests += 1;
   });
   try {
-    const detailTransition = externalEvents.beginExpectedTransition({ reason: `open-product:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/localhost:3(?:001|101)\/api\/manage\/(?:products(?:\/[^?]+)?|umkms)(?:\?.*)?$/ }] });
+    const detailTransition = externalEvents.beginExpectedTransition({ reason: `open-product:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/manage\/(?:products(?:\/[^?]+)?|umkms)(?:\?.*)?$/ }] });
     try { await page.goto(`/dashboard/products/${fixture.id}`); await page.waitForLoadState('networkidle'); } finally { detailTransition.complete(); }
     await expect(page.getByRole('radio', { name: 'Pakai URL gambar eksternal' })).toBeVisible();
     await page.getByRole('radio', { name: 'Pakai URL gambar eksternal' }).check();
@@ -472,7 +472,7 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   }
 
   const productListRefresh = page.waitForResponse(response => response.request().method() === 'GET' && response.url() === `${API_BASE}/manage/products?limit=100`);
-  const managedPatch = await saveAndCapturePatch(page, fixture, browserEvents, true, [/http:\/\/localhost:3(?:001|101)\/api\/(?:products|umkms)$/]);
+  const managedPatch = await saveAndCapturePatch(page, fixture, browserEvents, true, [/http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:products|umkms)$/]);
   expect((await productListRefresh).status()).toBe(200);
   expect(managedPatch.payload).toMatchObject({ imageUrl: null, imageAssetId: uploaded.id });
   await expect(page).toHaveURL(/dashboard\/products$/);

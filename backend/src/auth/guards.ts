@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { AppEnv } from '../config/env.js';
 import type { Repository, SessionUser } from '../db/repository.js';
-import { hasCapability, isSupportedUserRole } from './policy.js';
+import { hasCapability, isSupportedUserRole, type Capability } from './policy.js';
 import { safeEqual, type Security } from './security.js';
 
 export type AuthContext = { user: SessionUser; sessionId: string; csrfTokenHash: string };
@@ -45,7 +45,7 @@ export function createGuards(repository: Repository, crypto: Security, env: AppE
     const token = request.headers['x-csrf-token'];
     if (!request.auth || typeof token !== 'string' || !safeEqual(crypto.hashToken(token), request.auth.csrfTokenHash)) return fail(reply, 403, 'Invalid CSRF token', 'CSRF_INVALID');
   };
-  const admin = async (request: FastifyRequest, reply: FastifyReply) => { if (!request.auth || !hasCapability(request.auth.user.role, 'manageUsers')) return fail(reply, 403, 'Admin access required', 'FORBIDDEN'); };
-  const manager = async (request: FastifyRequest, reply: FastifyReply) => { if (!request.auth || (!hasCapability(request.auth.user.role, 'manageOwnUmkms') && !hasCapability(request.auth.user.role, 'manageAllUmkms'))) return fail(reply, 403, 'Management access is not assigned to this role', 'FORBIDDEN'); };
-  return { authenticate, origin, csrf, admin, manager, secured: [authenticate, origin, csrf], managerSecured: [authenticate, origin, csrf, manager], adminSecured: [authenticate, origin, csrf, admin] };
+  const requireCapability = (capability: Capability) => async (request: FastifyRequest, reply: FastifyReply) => { if (!request.auth || !hasCapability(request.auth.user.role, capability)) return fail(reply, 403, 'Capability is not assigned to this role', 'FORBIDDEN'); };
+  const requireAnyCapability = (capabilities: readonly Capability[]) => async (request: FastifyRequest, reply: FastifyReply) => { if (!request.auth || !capabilities.some((capability) => hasCapability(request.auth!.user.role, capability))) return fail(reply, 403, 'Capability is not assigned to this role', 'FORBIDDEN'); };
+  return { authenticate, origin, csrf, requireCapability, requireAnyCapability, secured: [authenticate, origin, csrf] };
 }

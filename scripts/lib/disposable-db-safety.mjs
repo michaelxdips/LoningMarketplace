@@ -3,7 +3,7 @@ const DATABASE_SUFFIX = /_(?:test|e2e)$/;
 const PROJECT_NAME = /^marketplace-loning-(?:test|e2e)-[a-z0-9][a-z0-9-]{0,39}$/;
 const RESERVED_DATABASES = new Set(['loning_digital', 'postgres', 'template0', 'template1']);
 const PRODUCTION_LIKE_DATABASE = /(?:^|_)(?:prod|production|live)(?:_|$)/;
-const TEST_PORTS = new Set(['55432', '55433']);
+const FORBIDDEN_PORTS = new Set([5432]);
 
 export function assertDisposableDatabase(env) {
   if (env.NODE_ENV !== 'test') throw new Error('DISPOSABLE_DB_REFUSED: NODE_ENV must equal test');
@@ -13,7 +13,8 @@ export function assertDisposableDatabase(env) {
   try { url = new URL(env.DATABASE_URL); } catch { throw new Error('DISPOSABLE_DB_REFUSED: malformed DATABASE_URL'); }
   if (!['postgres:', 'postgresql:'].includes(url.protocol)) throw new Error('DISPOSABLE_DB_REFUSED: DATABASE_URL must use PostgreSQL');
   if (!LOOPBACK_HOSTS.has(url.hostname)) throw new Error('DISPOSABLE_DB_REFUSED: database host must be loopback');
-  if (!TEST_PORTS.has(url.port)) throw new Error('DISPOSABLE_DB_REFUSED: database port is not reserved for tests');
+  const port = Number(url.port);
+  if (!Number.isInteger(port) || port < 1024 || port > 65535 || FORBIDDEN_PORTS.has(port)) throw new Error('DISPOSABLE_DB_REFUSED: DATABASE_URL must use a non-development loopback port');
   if (!url.username || !url.password) throw new Error('DISPOSABLE_DB_REFUSED: explicit test username and password are required');
   let database;
   try { database = decodeURIComponent(url.pathname.slice(1)); } catch { throw new Error('DISPOSABLE_DB_REFUSED: malformed encoded database name'); }

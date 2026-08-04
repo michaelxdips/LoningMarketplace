@@ -44,7 +44,7 @@ export default function FeaturedBusinessesSection({ umkms, searchQuery, onSearch
             <p className="text-xs text-warm-gray mt-1.5 leading-relaxed max-w-xl">
               Kenali lebih dekat warga pegiat niaga mandiri yang menggerakkan roda ekonomi Desa Loning. Kunjungi profil untuk membaca informasi jam operasional dan melihat produk mereka.
             </p>
-            <p role="status" aria-live="polite" className="mt-3 text-xs font-medium text-forest">
+            <p role="status" aria-live="polite" className="mb-2 mt-3 text-xs font-medium text-forest">
               {isLoading ? 'Memuat UMKM…' : isError ? 'UMKM gagal dimuat.' : `${umkms.length} UMKM ditemukan`}
             </p>
           </div>

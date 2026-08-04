@@ -53,7 +53,7 @@ describe('FeaturedProductsSection discovery controls', () => {
     expect(onRetry).toHaveBeenCalledOnce();
 
     rerender(<FeaturedProductsSection {...baseProps} isError={false} searchQuery="kopi" onClearFilters={onClearFilters} />);
-    expect(screen.getByRole('status')).toHaveTextContent('0 produk ditemukan');
+    expect(screen.getByRole('status')).toHaveTextContent('0 produk tersedia');
     expect(screen.getByText('Produk Tidak Ditemukan')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Hapus Filter' }));
     expect(onClearFilters).toHaveBeenCalledOnce();

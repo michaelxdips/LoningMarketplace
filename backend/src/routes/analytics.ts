@@ -12,7 +12,7 @@ const parseUtcDate = (value: string) => {
 };
 
 export async function analyticsRoutes(app: FastifyInstance, repository: Repository, guards: ReturnTypeGuards) {
-  app.get('/admin/inquiry-analytics', { preHandler: [guards.authenticate, guards.admin] }, async (request, reply) => {
+  app.get('/admin/inquiry-analytics', { preHandler: [guards.authenticate, guards.requireCapability('analytics:view-global')] }, async (request, reply) => {
     const parsed = query.safeParse(request.query);
     if (!parsed.success) return reply.code(400).send(error('Invalid analytics date range', 'INVALID_DATE_RANGE'));
     const from = parseUtcDate(parsed.data.from), to = parseUtcDate(parsed.data.to);

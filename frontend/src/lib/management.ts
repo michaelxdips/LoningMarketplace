@@ -5,7 +5,7 @@ import { apiRequest } from './api';
 export type PublicationStatus = 'draft' | 'published' | 'archived';
 export interface ManagedUMKM extends UMKM { ownerUserId: string | null; publicationStatus: PublicationStatus; publishedAt?: string | null; archivedAt?: string | null; createdAt?: string; updatedAt?: string }
 export interface ManagedProduct extends Product { publicationStatus: PublicationStatus; publishedAt?: string | null; archivedAt?: string | null; createdAt?: string; updatedAt?: string }
-export interface ManagedUser { id: string; username: string; displayName: string; email?: string; role: UserRole; isActive: boolean; mustChangePassword: boolean; createdAt?: string; updatedAt?: string }
+export interface ManagedUser { id: string; username: string; displayName: string; email?: string; role: UserRole; roleLabel: string; isActive: boolean; mustChangePassword: boolean; createdAt?: string; updatedAt?: string }
 export interface AuditLog { id: string; action: string; entityType: string; entityId?: string | null; actor?: { id: string; displayName: string } | null; metadata?: Record<string, unknown>; createdAt: string }
 export type InquiryEventType = 'umkm_view' | 'product_view' | 'inquiry_started' | 'message_copied' | 'whatsapp_opened';
 export interface InquiryAnalytics { from: string; to: string; totals: Record<InquiryEventType, number>; inquiryStartRate: number; whatsappOpenRate: number; breakdown: Array<{ umkmId: string | null; umkmName: string | null; productId: string | null; productName: string | null; eventType: InquiryEventType; count: number }> }

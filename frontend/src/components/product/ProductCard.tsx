@@ -26,12 +26,12 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
     <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
       <div>
         <span className="text-[10px] font-bold text-terracotta uppercase tracking-widest block mb-1">{product.category}</span>
-        {props.variant === 'related' ? <h3 className="text-sm font-bold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">{product.name}</h3> : <h4 className="text-sm font-bold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">{product.name}</h4>}
+        {props.variant === 'related' ? <h3 title={product.name} className="text-sm font-bold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">{product.name}</h3> : <h4 title={product.name} className="text-sm font-bold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">{product.name}</h4>}
         <p className="text-xs text-warm-gray line-clamp-2 leading-relaxed mt-1">{product.description}</p>
       </div>
       <div className="pt-3 border-t border-sage-border/50 flex items-center justify-between mt-auto">
         <span className="text-[10px] font-bold text-warm-gray uppercase tracking-wider">Harga</span>
-        <span className="text-xs font-bold text-forest">{formatPrice(product.price, 'Hubungi Penjual')}</span>
+        <span className="text-[13px] font-extrabold text-forest">{formatPrice(product.price, 'Hubungi Penjual')}</span>
       </div>
     </div>
   </>;
@@ -47,7 +47,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
             {content}
           </button>
           <div className="mt-auto px-4 pb-4 flex items-center gap-2.5">
-            <Link to={`/produk/${encodeURIComponent(product.slug)}`} className="focus-ring touch-target inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-sage-border text-forest transition-colors hover:border-forest/30 hover:bg-sage-light" aria-label={`Buka halaman ${product.name}`}>
+            <Link to={`/produk/${encodeURIComponent(product.slug)}`} title="Buka halaman produk" className="focus-ring touch-target inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-sage-border text-forest transition-colors hover:border-forest/30 hover:bg-sage-light" aria-label={`Buka halaman ${product.name}`}>
               <Eye size={14} aria-hidden="true" />
             </Link>
             <button id={`product-cta-${product.id}`} type="button" onClick={() => props.onInquire(product)} className="focus-ring touch-target flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-forest px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-forest-hover">

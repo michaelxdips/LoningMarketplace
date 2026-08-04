@@ -27,19 +27,19 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
   return (
     <section 
       id="categories" 
-      className="py-10 bg-cream-card border-b border-sage-border px-4 sm:px-6 lg:px-8"
+      className="border-b border-sage-border bg-cream-card px-4 py-10 sm:px-6 md:py-12 lg:px-8"
     >
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <span className="text-[10px] font-bold text-terracotta uppercase tracking-widest block mb-1">
-              Pilih Kategori Usaha
+            <span className="editorial-label mb-2 block">
+              Mulai Jelajah
             </span>
-            <h2 className="text-2xl font-extrabold text-charcoal tracking-tight sm:text-3xl">
-              Kategori Niaga Desa Loning
+            <h2 className="text-3xl font-extrabold tracking-tight text-charcoal sm:text-4xl">
+              Pilih Kategori Usaha
             </h2>
-            <p className="text-xs text-warm-gray mt-1.5 leading-relaxed max-w-xl">
-              Saring direktori produk berdasarkan bidang usaha lokal untuk memudahkan pencarian Anda.
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-warm-gray md:text-base">
+              Temukan kuliner, kerajinan, hasil tani, kebutuhan harian, dan layanan dari warga Desa Loning.
             </p>
           </div>
         </div>
@@ -63,7 +63,7 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
                   key={cat.name}
                   aria-pressed={isSelected}
                   onClick={() => onSelectCategory(cat.name)}
-                  className={`snap-center flex items-center gap-2 px-5 py-3 rounded-full text-xs font-semibold tracking-wider uppercase whitespace-nowrap transition-all touch-target focus-ring shrink-0 border ${
+                  className={`focus-ring touch-target snap-center flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-full border px-5 py-2.5 text-[13px] font-semibold uppercase tracking-wide transition-all ${
                     isSelected
                       ? 'bg-forest text-white border-forest shadow-sm'
                       : 'bg-cream-bg text-warm-gray border-sage-border hover:bg-sage-light/40 hover:text-charcoal'
@@ -83,7 +83,7 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
         </div>
         
         {/* Helper Hint for mobile */}
-        <div className="flex justify-center md:hidden text-[10px] text-warm-gray/60 italic mt-1.5">
+        <div className="mt-1.5 flex justify-center text-xs italic text-warm-gray/70 md:hidden">
           Geser ke samping untuk melihat kategori lainnya
         </div>
       </div>

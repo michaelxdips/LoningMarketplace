@@ -46,24 +46,24 @@ export default function FeaturedProductsSection({
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
-          <div className="flex-1 min-w-0">
-            <span className="text-[10px] font-bold text-terracotta uppercase tracking-widest block mb-1">
+        <div className="mb-6 grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)] md:items-center">
+          <div className="min-w-0">
+            <span className="editorial-label mb-1.5 block">
               Etalase Niaga Desa
             </span>
-            <h2 id="featured-products-heading" className="text-2xl font-extrabold text-charcoal tracking-tight sm:text-3xl">
+            <h2 id="featured-products-heading" className="text-2xl font-extrabold tracking-tight text-charcoal sm:text-3xl">
               Katalog Produk Warga
             </h2>
-            <p className="text-xs text-warm-gray mt-1.5 leading-relaxed max-w-xl">
+            <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-warm-gray sm:text-sm">
               Telusuri aneka produk pilihan hasil karya mandiri masyarakat Desa Loning. Klik tombol tanya produk untuk tersambung ke WhatsApp penjual.
             </p>
-            <p role="status" aria-live="polite" className="mt-3 text-xs font-medium text-forest">
-              {isLoading ? 'Memuat produk…' : isError ? 'Produk gagal dimuat.' : `${products.length} produk ditemukan`}
+            <p role="status" aria-live="polite" className="mt-2.5 text-xs font-semibold text-forest">
+              {isLoading ? 'Memuat produk…' : isError ? 'Produk gagal dimuat.' : `${products.length} produk tersedia`}
             </p>
           </div>
 
           {/* Search Box with Accessible Labels */}
-          <div className="relative w-full md:w-80 lg:w-[24rem] shrink-0">
+          <div className="w-full md:justify-self-end">
             <DiscoverySearchForm
               id="search-products-input"
               label="Cari produk lokal"
@@ -78,7 +78,7 @@ export default function FeaturedProductsSection({
 
         {/* Dynamic Category Filtering Info Badge */}
         {selectedCategory !== 'Semua' && (
-          <div className="flex items-center gap-2 mb-6 text-xs text-warm-gray bg-sage-light/40 border border-sage-border rounded-lg p-2.5 w-fit">
+          <div className="mb-4 flex w-fit items-center gap-2 rounded-lg border border-sage-border bg-sage-light/40 p-2.5 text-xs text-warm-gray">
             <Grid size={12} className="text-forest" />
             <span>
               Menampilkan kategori: <strong className="text-forest">{selectedCategory}</strong>

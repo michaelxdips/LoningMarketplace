@@ -21,6 +21,7 @@ import {
 import { CATEGORIES, type Category } from "../types";
 import { useSession } from "../hooks/useAuth";
 import { useCsrfToken } from "../hooks/useAuth";
+import { hasCapability } from "../lib/auth";
 import { deleteMedia, updateMediaAltText, uploadMedia } from "../lib/api";
 import {
   ConfirmDialog,
@@ -140,7 +141,8 @@ export function UMKMFormPage() {
   const navigate = useNavigate();
   const client = useQueryClient();
   const csrf = useCsrfToken();
-  const admin = useSession().data!.user.role === "admin";
+  const sessionUser = useSession().data!.user;
+  const canAssignOwner = hasCapability(sessionUser, "umkms:assign-owner");
   const item = useManagedItem("umkms", id, managementApi.umkms.get);
   const media = usePendingMedia(
     item.data && !item.data.imageAssetId ? item.data.imageUrl : undefined,
@@ -153,7 +155,7 @@ export function UMKMFormPage() {
     "users",
     ownerParams,
     (signal) => managementApi.users.list(ownerParams, signal),
-    admin,
+    canAssignOwner,
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const save = useManagedMutation<UMKMInput, ManagedUMKM>(
@@ -220,7 +222,7 @@ export function UMKMFormPage() {
         imageAssetId,
         address: text(data, "address"),
         workingHours: text(data, "workingHours") || undefined,
-        ...(admin ? { ownerUserId: text(data, "ownerUserId") || null } : {}),
+        ...(canAssignOwner ? { ownerUserId: text(data, "ownerUserId") || null } : {}),
       };
       await save.mutateAsync(input);
       entitySaved = true;
@@ -245,7 +247,7 @@ export function UMKMFormPage() {
         void deleteMedia(uploaded.id, csrf).catch(() => undefined);
     }
   };
-  if ((editing && item.isPending) || (admin && owners.isPending))
+  if ((editing && item.isPending) || (canAssignOwner && owners.isPending))
     return <LoadingPanel />;
   const value = item.data;
   return (
@@ -273,7 +275,7 @@ export function UMKMFormPage() {
           <Field label="Nama pemilik usaha" error={errors.owner}>
             <Input name="owner" required defaultValue={value?.owner} />
           </Field>
-          {admin && (
+          {canAssignOwner && (
             <Field
               label="Akun pemilik"
               hint="Pilih akun dashboard yang bertanggung jawab."
@@ -373,6 +375,7 @@ export function ProductFormPage() {
   const editing = Boolean(id);
   const navigate = useNavigate();
   const csrf = useCsrfToken();
+  const sessionUser = useSession().data!.user;
   const item = useManagedItem("products", id, managementApi.products.get);
   const media = usePendingMedia();
   const params = { limit: 100 };
@@ -503,7 +506,7 @@ export function ProductFormPage() {
             <Input name="name" required defaultValue={value?.name} />
           </Field>
           <Field label="UMKM" error={errors.umkmId}>
-            <Select name="umkmId" required defaultValue={value?.umkmId}>
+            <Select name="umkmId" required defaultValue={value?.umkmId} disabled={editing && !hasCapability(sessionUser, 'products:transfer-owner')}>
               <option value="">Pilih UMKM</option>
               {pageItems(umkms.data)
                 .filter(
@@ -648,11 +651,13 @@ export function UserFormPage() {
   const { id } = useParams();
   const editing = Boolean(id);
   const navigate = useNavigate();
+  const sessionUser = useSession().data!.user;
   const params = { limit: 100 };
   const users = useManagedList("admin", "users", params, (signal) =>
     managementApi.users.list(params, signal),
   );
   const value = pageItems(users.data).find((user) => user.id === id);
+  const editingSelf = Boolean(editing && value?.id === sessionUser.id);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pendingInput, setPendingInput] = useState<
     UserCreateInput | UserUpdateInput | null
@@ -740,13 +745,11 @@ export function UserFormPage() {
             </Field>
           )}
           <Field label="Peran" error={errors.role}>
-            <Select name="role" required defaultValue={value?.role}>
+            <Select name="role" required defaultValue={value?.role} disabled={editingSelf}>
               <option value="">Pilih peran</option>
-              <option value="superadmin">Superadmin</option>
-              <option value="admin">Admin</option>
-              <option value="perangkat_desa">Perangkat desa</option>
-              <option value="pelaku_umkm">Pelaku UMKM</option>
+              {sessionUser.assignableUserRoleOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </Select>
+            {editingSelf && <input type="hidden" name="role" value={value?.role} />}
           </Field>
           {editing && (
             <label className="flex min-h-11 items-center gap-3 text-sm font-bold">

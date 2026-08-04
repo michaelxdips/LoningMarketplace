@@ -319,25 +319,22 @@ Lihat `backend/.env.example` untuk pengaturan lengkap: session TTL, rate limit, 
 
 </details>
 
-### Membuat Admin Pertama
+### Membuat Super Admin Pertama
 
-```bash
-# Set temporary environment variables (jangan commit)
-# Windows:
-set BOOTSTRAP_ADMIN_EMAIL=admin@example.com
-set BOOTSTRAP_ADMIN_PASSWORD=ganti-dengan-password-12-karakter
-set BOOTSTRAP_ADMIN_DISPLAY_NAME=Administrator
+Bootstrap ini membuat tepat satu akun `superadmin`. Tidak ada password default dan command tidak pernah dijalankan otomatis oleh migration, seed, atau startup.
 
-# macOS/Linux:
-export BOOTSTRAP_ADMIN_EMAIL=admin@example.com
-export BOOTSTRAP_ADMIN_PASSWORD=ganti-dengan-password-12-karakter
-export BOOTSTRAP_ADMIN_DISPLAY_NAME=Administrator
-
-# Buat admin
-npm --prefix backend run admin:create
-
-# Hapus variable setelah selesai
+```powershell
+$env:BOOTSTRAP_ADMIN_EMAIL="admin@example.com"
+$env:BOOTSTRAP_ADMIN_USERNAME="superadmin"
+$env:BOOTSTRAP_ADMIN_PASSWORD="ganti-dengan-password-12-karakter"
+$env:BOOTSTRAP_ADMIN_DISPLAY_NAME="Administrator"
+$env:ALLOW_ADMIN_BOOTSTRAP="1"
+$env:BOOTSTRAP_CONFIRM="CREATE_SUPERADMIN"
+npm run db:bootstrap-admin
+# Hapus seluruh variable BOOTSTRAP_* dan ALLOW_ADMIN_BOOTSTRAP setelah selesai.
 ```
+
+`admin:create` adalah compatibility alias lama yang sengaja gagal. Bootstrap menolak target production-like, menolak bila sudah ada user, dan tidak mencetak password atau URL database penuh.
 
 > [!CAUTION]
 > Jangan commit file `.env` atau credential ke repository. File `.env` sudah masuk `.gitignore`.
@@ -359,12 +356,17 @@ npm --prefix backend run admin:create
 
 | Command | Keterangan |
 |---|---|
-| `npm run db:local:setup` | Start PostgreSQL + migrate + seed |
+| `npm run db:local:setup` | Start PostgreSQL development + migrate + `db:seed:dev` |
+| `npm run db:migrate` | Jalankan migrasi tanpa seed/bootstrap |
+| `npm run db:seed:dev` | Seed explicit; hanya target development loopback yang marker-nya cocok |
+| `npm run db:seed:test` | Seed explicit; hanya dipanggil harness pada DB disposable test |
+| `npm run db:seed:preview` | Dinonaktifkan dan sengaja gagal |
+| `npm run verify:seed-determinism` | Verifikasi clean repeatability + same-target idempotency di DB disposable |
 | `npm run db:local:up` | Start PostgreSQL container |
 | `npm run db:local:down` | Stop PostgreSQL container |
 | `npm run db:local:wait` | Tunggu PostgreSQL ready |
-| `npm run db:local:reset` | ⚠️ Hapus volume database (destructive) |
-| `npm run db:local:reset-safe` | Reset data tanpa hapus volume |
+| `npm run db:local:reset` | ⚠️ Hapus volume database development (destructive) |
+| `npm run db:local:reset-safe` | Reset data development tanpa hapus volume |
 | `npm run db:local:logs` | Lihat PostgreSQL logs |
 
 ### Build Commands
@@ -400,8 +402,12 @@ VITE_PUBLIC_SITE_URL="https://loningmaju.desa.id" npm run build
 | `npm --prefix backend run media:cleanup` | Bersihkan media orphan |
 | `npm --prefix backend run analytics:retention:apply` | Terapkan retensi data analytics |
 | `npm --prefix backend run db:generate` | Generate migrasi baru |
-| `npm --prefix backend run db:migrate` | Jalankan migrasi |
-| `npm --prefix backend run db:seed` | Jalankan seed data |
+| `npm --prefix backend run db:migrate` | Jalankan migrasi tanpa seed/bootstrap |
+| `npm run db:seed:dev` | Jalankan development seed dengan profile explicit |
+| `npm run db:bootstrap-admin` | Bootstrap satu Super Admin dengan konfirmasi explicit |
+
+> [!IMPORTANT]
+> Production startup/deploy hanya menjalankan migration lalu server. Production tidak menjalankan seed atau bootstrap. Legacy `db:seed` dan `admin:create` tetap ada hanya sebagai hard-fail compatibility stubs.
 
 ---
 
@@ -565,9 +571,16 @@ npm --prefix backend run db:migrate
 
 Development seed menyediakan **52 produk** di **15 profil UMKM** fiktif dengan 5 kategori. Foto produk dan profil adalah ilustrasi AI-generated, bukan foto bisnis nyata. Seed bersifat idempotent dan hanya mengganti data di namespace ID `e3000000-...`.
 
-```bash
-npm --prefix backend run db:seed
+```powershell
+$env:NODE_ENV="development"
+$env:APP_ENV="development"
+$env:DATABASE_ENVIRONMENT="development"
+$env:ALLOW_SEED="1"
+npm run db:seed:dev
+Remove-Item Env:ALLOW_SEED
 ```
+
+`db:seed:test` hanya dijalankan harness isolated terhadap database disposable dengan marker test yang cocok. `ALLOW_SEED=1` hanya diberikan kepada child seed; migration, server, Vitest, Playwright, integration runner, dan E2E fixture setup tidak mewarisinya. `db:seed:preview` dinonaktifkan. Compatibility alias `db:seed` sengaja hard-fail.
 
 ---
 

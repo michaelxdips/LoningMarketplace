@@ -38,10 +38,14 @@ describe('deployment configuration', () => {
     expect(railway).toMatch(/^healthcheckPath = "\/api\/health"\s*$/m);
   });
 
-  it('migrates without seeding on Render restart and keeps automatic deploy disabled', async () => {
-    const render = await readRepositoryFile('render.yaml');
+  it('migrates without seed or bootstrap on deployment restart and keeps automatic deploy disabled', async () => {
+    const [render, railway] = await Promise.all([
+      readRepositoryFile('render.yaml'),
+      readRepositoryFile('backend/railway.toml'),
+    ]);
     expect(render).toMatch(/^\s*startCommand: npm run db:migrate --workspace=backend && npm start --workspace=backend\s*$/m);
-    expect(render).not.toMatch(/^\s*startCommand:.*db:seed/m);
+    expect(render).not.toMatch(/^\s*startCommand:.*(?:db:seed|db:bootstrap-admin|admin:create)/m);
+    expect(railway).not.toMatch(/(?:db:seed|db:bootstrap-admin|admin:create)/);
     expect(render).toMatch(/^\s*autoDeploy: false\s*$/m);
   });
 

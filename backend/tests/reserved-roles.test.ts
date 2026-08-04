@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
-import { CAPABILITIES, hasCapability, type UserRole } from '../src/auth/policy.js';
+import { hasCapability, roleLabel, type UserRole } from '../src/auth/policy.js';
 import type { Security } from '../src/auth/security.js';
 import type { AppEnv } from '../src/config/env.js';
 import type { Repository, SessionUser } from '../src/db/repository.js';
@@ -8,7 +8,7 @@ import type { Repository, SessionUser } from '../src/db/repository.js';
 const env: AppEnv = { DATABASE_URL: '', PORT: 3001, HOST: 'localhost', CORS_ORIGIN: 'http://localhost:3000', NODE_ENV: 'test', SESSION_TTL_HOURS: 2, SESSION_RETENTION_DAYS: 30, SESSION_COOKIE_NAME: 'loning_session', LOGIN_MAX_ATTEMPTS: 3, LOGIN_LOCKOUT_MINUTES: 10, LOGIN_RATE_LIMIT_MAX: 100, LOGIN_RATE_LIMIT_WINDOW: '1 minute', RATE_LIMIT_MAX: 100, TRUST_PROXY: false, COOKIE_SECURE: false };
 const now = new Date('2026-07-30T00:00:00.000Z');
 const roles = ['admin', 'pelaku_umkm', 'superadmin', 'perangkat_desa', 'unknown'] as const;
-const supported = new Set(['admin', 'pelaku_umkm']);
+const supported = new Set(['admin', 'pelaku_umkm', 'superadmin', 'perangkat_desa']);
 const crypto: Security = {
   hashPassword: async (value) => `hash-password:${value}`,
   verifyPassword: async (hash, value) => hash === `hash-password:${value}`,
@@ -68,20 +68,29 @@ describe('reserved role policy', () => {
     await app.close();
   });
 
-  it.each(['superadmin', 'perangkat_desa'] as const)('assigns zero capabilities to %s', (role) => {
-    expect(CAPABILITIES.every((capability) => !hasCapability(role, capability))).toBe(true);
+  it('assigns the intended four-role capabilities and labels', () => {
+    expect(roleLabel('superadmin')).toBe('Super Admin');
+    expect(roleLabel('admin')).toBe('Admin Desa');
+    expect(roleLabel('perangkat_desa')).toBe('Perangkat Desa');
+    expect(roleLabel('pelaku_umkm')).toBe('Pelaku UMKM');
+    expect(hasCapability('superadmin', 'users:create-superadmin')).toBe(true);
+    expect(hasCapability('admin', 'users:create-admin')).toBe(false);
+    expect(hasCapability('perangkat_desa', 'products:publish')).toBe(true);
+    expect(hasCapability('perangkat_desa', 'audit:view-global')).toBe(false);
+    expect(hasCapability('pelaku_umkm', 'products:archive-own')).toBe(true);
+    expect(hasCapability('pelaku_umkm', 'products:publish')).toBe(false);
   });
 
-  it.each(['superadmin', 'perangkat_desa'] as const)('rejects admin assignment of %s', async (role) => {
+  it.each(['superadmin', 'admin'] as const)('rejects admin assignment of %s', async (role) => {
     const state = fixture('admin');
     const app = await buildApp(env, state.repository, { security: crypto, now: () => now });
     const response = await app.inject({ method: 'POST', url: '/api/admin/users', headers: { cookie: 'loning_session=admin', origin: env.CORS_ORIGIN, 'x-csrf-token': 'csrf' }, payload: { email: 'new@example.test', username: 'new-user', displayName: 'New User', temporaryPassword: 'temporary-password', role } });
-    expect(response.statusCode).toBe(400);
-    expect(response.json().error.code).toBe('VALIDATION_ERROR');
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error.code).toBe('FORBIDDEN');
     await app.close();
   });
 
   it('keeps unknown roles outside the typed capability policy', () => {
-    expect(hasCapability('unknown' as UserRole, 'accessDashboard')).toBe(false);
+    expect(hasCapability('unknown' as UserRole, 'dashboard:view')).toBe(false);
   });
 });

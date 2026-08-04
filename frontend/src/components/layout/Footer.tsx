@@ -111,14 +111,31 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Column 4: Direct Transaction Notice (Bebas Komisi) */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-              <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-terracotta">
-                💡 Transaksi Bebas Komisi
-              </h2>
-              <p className="text-[11px] leading-relaxed text-cream-tint/70">
-                Platform ini tidak memotong biaya atau memproses pembayaran. Transaksi dilakukan 100% secara langsung antara pembeli dan pelaku UMKM via WhatsApp.
-              </p>
+            {/* Column 4: Developer Profile */}
+            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-4 transition-colors hover:border-terracotta/40 hover:bg-white/[0.07]">
+              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-terracotta/10 blur-2xl transition-colors group-hover:bg-terracotta/20" aria-hidden="true" />
+              <div className="relative space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-terracotta/30 bg-terracotta/10 text-terracotta">
+                    <Code2 size={19} aria-hidden="true" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">Tentang Developer</p>
+                    <h2 className="mt-0.5 text-sm font-bold text-white">Stephen Michael</h2>
+                  </div>
+                </div>
+                <div className="text-[11px] leading-relaxed text-cream-tint/70">
+                  <p className="font-semibold text-cream-tint/85">KKN Reguler Tim II UNDIP 2026</p>
+                  <p>Desa Loning</p>
+                </div>
+                <Link
+                  to="/tentang-kami"
+                  className="focus-ring flex w-fit items-center gap-1.5 rounded text-[11px] font-semibold text-terracotta transition-colors hover:text-white"
+                >
+                  <span>Tentang Kami</span>
+                  <ArrowUpRight size={12} aria-hidden="true" />
+                </Link>
+              </div>
             </div>
 
           </div>
@@ -135,9 +152,6 @@ export default function Footer() {
                 <span>Hubungi Developer</span>
                 <MessageSquare size={10} />
               </button>
-              <Link to="/login" className="focus-ring rounded text-cream-tint/60 hover:text-white transition-colors underline underline-offset-2">
-                Masuk Pengelola
-              </Link>
               <button
                 type="button"
                 onClick={scrollToTop}
@@ -159,3 +173,4 @@ export default function Footer() {
     </>
   );
 }
+

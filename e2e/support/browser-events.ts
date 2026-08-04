@@ -61,16 +61,21 @@ export function observeBrowserEvents(page: Page): BrowserEvents {
   const pageErrors: PageErrorEvent[] = [];
   const rawConsoleErrors: ApplicationConsoleError[] = [];
   let transition: ExpectedTransition | undefined;
+  const requestTransitions = new WeakMap<Request, ExpectedTransition>();
   let finalized = false;
   let disposed = false;
 
   const onResponse = (response: Response) => {
     if (response.status() >= 400) httpErrors.push({ method: response.request().method(), url: response.url(), status: response.status(), statusText: response.statusText(), resourceType: response.request().resourceType() });
   };
+  const onRequest = (request: Request) => {
+    if (transition?.active) requestTransitions.set(request, { ...transition, expectedRequests: [...transition.expectedRequests] });
+  };
   const onRequestFailed = (request: Request) => {
     const failure = { method: request.method(), url: request.url(), resourceType: request.resourceType(), errorText: request.failure()?.errorText };
     requestFailures.push(failure);
-    const classification = classifyRequestFailure({ ...failure, transition });
+    const classification = classifyRequestFailure({ ...failure, transition: requestTransitions.get(request) });
+    requestTransitions.delete(request);
     if (classification === 'expected-route-transition-abort' || classification === 'expected-viewport-image-abort' || classification === 'expected-map-frame-abort') expectedRouteTransitionAborts.push(failure);
     else if (classification === 'mutation-abort') mutationAborts.push(failure);
     else if (classification === 'orb-failure') orbFailures.push(failure);
@@ -84,7 +89,7 @@ export function observeBrowserEvents(page: Page): BrowserEvents {
     if (message.type() === 'error') consoleErrors.push(event); else consoleWarnings.push(event);
   };
   const onPageError = (error: Error) => pageErrors.push({ message: error.message });
-  page.on('response', onResponse); page.on('requestfailed', onRequestFailed); page.on('console', onConsole); page.on('pageerror', onPageError);
+  page.on('request', onRequest); page.on('response', onResponse); page.on('requestfailed', onRequestFailed); page.on('console', onConsole); page.on('pageerror', onPageError);
 
   return {
     httpErrors, requestFailures, expectedRouteTransitionAborts, unexpectedRequestFailures, mutationAborts, orbFailures,
@@ -107,7 +112,7 @@ export function observeBrowserEvents(page: Page): BrowserEvents {
     dispose: () => {
       if (disposed) return;
       if (transition?.active) { transition.active = false; transition = undefined; }
-      page.off('response', onResponse); page.off('requestfailed', onRequestFailed); page.off('console', onConsole); page.off('pageerror', onPageError);
+      page.off('request', onRequest); page.off('response', onResponse); page.off('requestfailed', onRequestFailed); page.off('console', onConsole); page.off('pageerror', onPageError);
       disposed = true;
     },
   };

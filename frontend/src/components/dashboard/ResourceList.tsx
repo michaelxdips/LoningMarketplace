@@ -65,6 +65,8 @@ export default function ResourceList<
   itemName,
   canCreate = true,
   canPublish = true,
+  canArchive = false,
+  canRestore = false,
   extraAction,
 }: {
   resource: "umkms" | "products";
@@ -82,6 +84,8 @@ export default function ResourceList<
   itemName: (item: T) => string;
   canCreate?: boolean;
   canPublish?: boolean;
+  canArchive?: boolean;
+  canRestore?: boolean;
   extraAction?: (item: T) => ReactNode;
 }) {
   const [search, setSearch] = useState("");
@@ -151,7 +155,7 @@ export default function ResourceList<
           Batalkan publikasi
         </button>
       )}
-      {item.publicationStatus !== "archived" && (
+      {canArchive && item.publicationStatus !== "archived" && (
         <button
           className={dangerButtonClass}
           onClick={() => request(item, "archive")}
@@ -161,7 +165,7 @@ export default function ResourceList<
           Arsipkan
         </button>
       )}
-      {item.publicationStatus === "archived" && (
+      {canRestore && item.publicationStatus === "archived" && (
         <button
           className={secondaryButtonClass}
           onClick={() => request(item, "restore")}

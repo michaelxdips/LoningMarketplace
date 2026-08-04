@@ -1,59 +1,22 @@
-import { spawn, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
+import { resolve } from 'node:path';
 
 const root = process.cwd();
-const npmCli = process.env.npm_execpath;
-if (!npmCli) throw new Error('npm_execpath is required for shell-free npm execution');
-const backendOutput = [];
+const harness = resolve(root, 'scripts', 'run-isolated.mjs');
+const result = spawnSync(process.execPath, [harness, 'integration', ...process.argv.slice(2)], {
+  cwd: root,
+  env: process.env,
+  stdio: 'inherit',
+  shell: false,
+  windowsHide: true,
+});
 
-function run(command, args, options = {}) {
-  const result = spawnSync(command, args, { cwd: root, stdio: 'inherit', shell: false, ...options });
-  if (result.error) throw new Error(`${command} ${args.join(' ')} failed to start: ${result.error.message}`);
-  if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} failed with exit code ${result.status}${result.signal ? ` and signal ${result.signal}` : ''}`);
+if (result.error) {
+  console.error(`ISOLATED_INTEGRATION_DELEGATION_FAILURE: ${result.error.message}`);
+  process.exitCode = 1;
+} else if (result.signal) {
+  console.error(`ISOLATED_INTEGRATION_DELEGATION_FAILURE: child terminated by ${result.signal}`);
+  process.exitCode = 1;
+} else {
+  process.exitCode = result.status ?? 1;
 }
-
-function runNpm(args) { run(process.execPath, [npmCli, ...args]); }
-
-async function waitForReady(timeout = 120_000) {
-  const deadline = Date.now() + timeout;
-  let lastError;
-  while (Date.now() < deadline) {
-    try {
-      const response = await fetch('http://localhost:3001/api/ready');
-      if (response.ok) return;
-      lastError = new Error(`Readiness returned ${response.status}`);
-    } catch (error) {
-      lastError = error;
-    }
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  throw new Error(`Backend did not become ready: ${lastError?.message ?? 'timeout'}\n${backendOutput.join('')}`);
-}
-
-function stopOwnedBackend(child) {
-  if (!child?.pid) return;
-  if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
-  else child.kill('SIGTERM');
-}
-
-async function main() {
-  runNpm(['run', 'db:local:up']);
-  runNpm(['run', 'db:local:wait']);
-  runNpm(['--prefix', 'backend', 'run', 'db:migrate']);
-  runNpm(['--prefix', 'backend', 'run', 'db:seed']);
-  runNpm(['--prefix', 'backend', 'run', 'e2e:setup']);
-
-  const backend = spawn(process.execPath, [npmCli, '--prefix', 'backend', 'run', 'dev'], { cwd: root, shell: false, env: process.env });
-  backend.stdout.on('data', data => backendOutput.push(String(data)));
-  backend.stderr.on('data', data => backendOutput.push(String(data)));
-  try {
-    await waitForReady();
-    run(process.execPath, ['scripts/integration-smoke.mjs'], { env: { ...process.env, API_BASE_URL: 'http://localhost:3001/api' } });
-  } catch (error) {
-    if (backendOutput.length) console.error(`Backend output:\n${backendOutput.slice(-120).join('')}`);
-    throw error;
-  } finally {
-    stopOwnedBackend(backend);
-  }
-}
-
-try { await main(); } catch (error) { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; }

@@ -36,18 +36,18 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
       <div className="p-4 flex-1 flex flex-col justify-between gap-3">
         <div className="space-y-1.5">
           {/* Owner metadata */}
-          <span className="text-[10px] font-bold text-terracotta uppercase tracking-wider block">
-            Pengelola: {umkm.owner}
+          <span className="block text-[10px] font-semibold uppercase tracking-wider text-warm-gray">
+            <span className="font-bold text-terracotta">Pengelola:</span> {umkm.owner}
           </span>
           
           {/* Business Name */}
-          <h3 className="text-base font-bold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">
+          <h3 className="line-clamp-1 text-base font-extrabold text-charcoal transition-colors group-hover:text-forest">
             {umkm.name}
           </h3>
 
           {/* Simple Address */}
-          <div className="flex items-center gap-1.5 text-xs text-warm-gray">
-            <MapPin size={13} className="text-terracotta shrink-0" />
+          <div className="flex items-center gap-1.5 text-[13px] text-warm-gray">
+            <MapPin size={14} className="shrink-0 text-terracotta" />
             <span className="line-clamp-1">{umkm.address}</span>
           </div>
 
@@ -63,18 +63,19 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
             type="button"
             onClick={() => onViewDetails(umkm)}
             aria-label={`Lihat ringkasan ${umkm.name}`}
-            className="focus-ring touch-target inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-sage-border text-forest transition-colors hover:bg-sage-light hover:border-forest/30"
+            title="Lihat ringkasan"
+            className="focus-ring touch-target inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-sage-border text-forest transition-colors hover:border-forest/30 hover:bg-sage-light"
           >
-            <Eye size={15}/>
+            <Eye size={15} aria-hidden="true" />
           </button>
           <Link
             id={`business-cta-${umkm.id}`}
             to={`/umkm/${encodeURIComponent(umkm.slug)}`}
-            className="focus-ring touch-target flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-sage-border bg-cream-bg px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider text-forest transition-colors hover:bg-sage-light hover:text-forest-hover hover:border-forest/30"
+            className="focus-ring touch-target flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-sage-border bg-cream-bg px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-forest transition-colors hover:border-forest/30 hover:bg-sage-light hover:text-forest-hover"
           >
-            <Store size={13} />
+            <Store size={14} aria-hidden="true" />
             <span className="truncate">Kunjungi Profil</span>
-            <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5 shrink-0" />
+            <ArrowRight size={14} aria-hidden="true" className="shrink-0 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
       </div>

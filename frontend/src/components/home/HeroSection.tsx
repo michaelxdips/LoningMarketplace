@@ -13,103 +13,91 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ onBrowseProducts, onBrowseUMKMs }: HeroSectionProps) {
+  const trustPoints = [
+    { value: 'Terverifikasi', label: 'UMKM desa' },
+    { value: 'Langsung', label: 'ke pemilik usaha' },
+    { value: 'Tanpa perantara', label: 'via WhatsApp' },
+  ];
+
   return (
-    <section 
-      id="home" 
-      className="relative overflow-hidden bg-cream-tint border-b border-sage-border pt-12 pb-16 md:pt-20 md:pb-24 px-4 sm:px-6 lg:px-8"
+    <section
+      id="home"
+      className="relative overflow-hidden border-b border-sage-border bg-cream-tint px-4 py-14 sm:px-6 md:py-20 lg:px-8"
     >
-      {/* Editorial Decorative Leaf/Flower Background Overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03]" aria-hidden="true">
-        <svg className="absolute right-0 top-0 w-96 h-96" viewBox="0 0 100 100" fill="currentColor">
-          <path d="M50,0 C60,20 80,40 100,50 C80,60 60,80 50,100 C40,80 20,60 0,50 C20,40 40,20 50,0 Z" />
-        </svg>
-      </div>
-
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          
-          {/* Hero Content Column */}
-          <div className="lg:col-span-7 space-y-5 text-left">
-
-            <div className="space-y-3.5">
-              <h1 className="text-3xl md:text-5xl font-extrabold text-charcoal tracking-tight leading-tight">
-                Temukan Produk Lokal <br className="hidden md:inline" />
+      <div className="mx-auto max-w-7xl">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="space-y-7 text-left lg:col-span-7">
+            <div className="space-y-4">
+              <span className="editorial-label block">Pasar digital warga Desa Loning</span>
+              <h1 className="max-w-3xl text-balance text-4xl font-extrabold leading-[1.08] tracking-tight text-charcoal md:text-6xl">
+                Temukan Produk Lokal{' '}
                 <span className="editorial-serif font-normal italic text-forest">dari Desa Loning</span>
               </h1>
-              <p className="text-sm md:text-base text-warm-gray leading-relaxed max-w-2xl">
-                Jelajahi produk dan usaha lokal Desa Loning, kenali pelaku usahanya, lalu hubungi langsung melalui WhatsApp. Dukung pertumbuhan usaha warga pedesaan secara berkelanjutan.
+              <p className="max-w-2xl text-base font-semibold leading-relaxed text-forest md:text-lg">
+                Langsung dari pengrajin dan pelaku usaha desa.
+              </p>
+              <p className="max-w-2xl text-sm leading-7 text-warm-gray md:text-base">
+                Jelajahi produk dan usaha lokal, kenali pelaku usahanya, lalu hubungi langsung melalui WhatsApp. Setiap pilihan Anda ikut menggerakkan ekonomi Desa Loning.
               </p>
             </div>
 
-            {/* Quick Actions Panel */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+            <div className="flex flex-col items-stretch gap-3 pt-1 sm:flex-row sm:items-center">
               <button
+                id="hero-browse-products"
+                type="button"
                 onClick={onBrowseProducts}
-                className="px-6 py-3 bg-forest hover:bg-forest-hover text-white text-xs font-bold uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 transition-colors shadow-xs hover:shadow focus-ring touch-target"
+                className="focus-ring touch-target flex items-center justify-center gap-2 rounded-xl bg-forest px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-forest-hover hover:shadow-lg"
               >
-                <span>Jelajahi Produk</span>
-                <ArrowRight size={14} />
+                <span>Jelajahi Produk Loning</span>
+                <ArrowRight size={16} />
               </button>
-              
               <button
+                id="hero-browse-umkms"
+                type="button"
                 onClick={onBrowseUMKMs}
-                className="px-6 py-3 bg-cream-card hover:bg-sage-light text-charcoal text-xs font-bold uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 transition-colors border border-sage-border focus-ring touch-target"
+                className="focus-ring touch-target flex items-center justify-center gap-2 rounded-xl border border-forest/20 bg-cream-card px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-charcoal shadow-xs transition-all hover:border-forest/40 hover:bg-sage-light"
               >
-                <Store size={14} className="text-terracotta" />
+                <Store size={16} className="text-terracotta" />
                 <span>Lihat Daftar UMKM</span>
               </button>
             </div>
+
+            <dl className="grid max-w-2xl grid-cols-1 gap-3 border-t border-forest/10 pt-5 sm:grid-cols-3">
+              {trustPoints.map((point) => (
+                <div key={point.value} className="flex items-center gap-3 sm:block">
+                  <dt className="text-sm font-extrabold text-charcoal">{point.value}</dt>
+                  <dd className="text-xs leading-5 text-warm-gray">{point.label}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
 
-          {/* Hero Media Columns */}
-          <div className="lg:col-span-5 relative">
-            <div className="grid grid-cols-2 gap-4">
-              
-              {/* Product Photography Column */}
+          <div className="relative lg:col-span-5">
+            <div className="grid grid-cols-2 gap-4" aria-label="Pilihan produk dan usaha Desa Loning">
               <div className="space-y-4">
-                <div className="h-44 md:h-52 overflow-hidden rounded-2xl border border-sage-border/80 shadow-xs relative">
-                  <ProductImage
-                    src="https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=400&q=80"
-                    alt="Anyaman Bambu Loning"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-                </div>
-                <div className="h-32 md:h-36 overflow-hidden rounded-2xl border border-sage-border/80 shadow-xs relative">
-                  <ProductImage
-                    src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80"
-                    alt="Kuliner Tradisional Loning"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-                </div>
+                <HeroPhoto src="/images/hero/produk-loning-1.jpg" alt="Produk lokal Desa Loning" label="Produk lokal" className="h-56 md:h-64" />
+                <HeroPhoto src="/images/hero/produk-loning-2.jpg" alt="Produk kuliner Desa Loning" label="Kuliner" className="h-36 md:h-40" />
               </div>
-
-              {/* Farmer and Weaver photography column (offset) */}
-              <div className="space-y-4 pt-6">
-                <div className="h-32 md:h-36 overflow-hidden rounded-2xl border border-sage-border/80 shadow-xs relative">
-                  <ProductImage
-                    src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&w=400&q=80"
-                    alt="Hasil Tani Kopi Loning"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-                </div>
-                <div className="h-44 md:h-52 overflow-hidden rounded-2xl border border-sage-border/80 shadow-xs relative">
-                  <ProductImage
-                    src="https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=400&q=80"
-                    alt="Mebel Kayu Loning"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-                </div>
+              <div className="space-y-4 pt-8">
+                <HeroPhoto src="/images/hero/produk-loning-3.jpg" alt="Layanan usaha warga Desa Loning" label="Jasa" className="h-36 md:h-40" />
+                <HeroPhoto src="/images/hero/pelaku-umkm-loning.jpg" alt="Pelaku UMKM Desa Loning" label="Pelaku UMKM" className="h-56 md:h-64" />
               </div>
-
             </div>
           </div>
-
         </div>
       </div>
     </section>
+  );
+}
+
+function HeroPhoto({ src, alt, label, className }: { src: string; alt: string; label: string; className: string }) {
+  return (
+    <figure className={`group relative overflow-hidden rounded-2xl border border-sage-border/80 bg-sage-light shadow-sm ${className}`}>
+      <ProductImage src={src} alt={alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/55 via-transparent to-transparent" />
+      <figcaption className="absolute bottom-3 left-3 rounded-full border border-white/20 bg-charcoal/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+        {label}
+      </figcaption>
+    </figure>
   );
 }

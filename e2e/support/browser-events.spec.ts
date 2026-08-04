@@ -19,15 +19,16 @@ test.describe('browser event classifier', () => {
     expect(classifyRequestFailure({ ...failure({ errorText: undefined }), transition: transition() })).toBe('unexpected');
   });
 
-  test('production collector records expected failures and disposes listeners', () => {
+  test('production collector retains request-start ownership for a late abort and disposes listeners', () => {
     const listeners = new Map<string, Set<(...args: any[]) => void>>();
     const page = { on: (name: string, listener: (...args: any[]) => void) => { if (!listeners.has(name)) listeners.set(name, new Set()); listeners.get(name)!.add(listener); }, off: (name: string, listener: (...args: any[]) => void) => listeners.get(name)?.delete(listener) } as any;
     const emit = (name: string, ...args: any[]) => { for (const listener of listeners.get(name) ?? []) listener(...args); };
     const events = observeBrowserEvents(page);
     const route = events.beginExpectedTransition({ reason: 'products', expectedRequests: [{ method: 'GET', url: /\/api\/products/ }] });
     const request = { method: () => 'GET', url: () => 'http://localhost:3001/api/products', resourceType: () => 'fetch', failure: () => ({ errorText: 'net::ERR_ABORTED' }) };
-    emit('requestfailed', request);
+    emit('request', request);
     route.complete();
+    emit('requestfailed', request);
     expect(events.expectedRouteTransitionAborts).toHaveLength(1);
     expect(events.requestFailures).toHaveLength(1);
     events.dispose();

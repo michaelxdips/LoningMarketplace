@@ -33,10 +33,14 @@ for (const viewport of [{ width: 1024, height: 768 }, { width: 320, height: 700 
     await page.evaluate(() => window.scrollTo(0, 0));
     if (viewport.width < 768) {
       await page.getByRole('button', { name: 'Buka atau tutup navigasi' }).click();
-      await expect(page.locator('#mobile-nav-menu')).toBeVisible();
-      await page.getByRole('link', { name: 'Masuk Pengelola' }).click();
+      const mobileNavigation = page.getByRole('navigation', { name: 'Navigasi seluler' });
+      await expect(mobileNavigation).toBeVisible();
+      await mobileNavigation.getByRole('link', { name: 'Masuk Pengelola', exact: true }).click();
     } else {
-      await page.getByRole('navigation').getByRole('link', { name: 'Masuk Pengelola' }).click();
+      await page
+        .getByRole('navigation', { name: 'Navigasi utama' })
+        .getByRole('link', { name: 'Masuk Pengelola', exact: true })
+        .click();
     }
     await expect(page).toHaveURL(/\/login$/);
     await page.getByLabel('Email atau username').fill(loginFixture.identifier);

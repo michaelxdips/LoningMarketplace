@@ -4,8 +4,8 @@ import * as schema from '../../schema.js';
 import { USERS } from '../shared/ids.js';
 import { SEED_DATES } from '../shared/dates.js';
 
-export async function seedUsers(db: PostgresJsDatabase<typeof schema>, cryptoHashPassword: (password: string) => Promise<string>) {
-  const hash = await cryptoHashPassword('admin1234');
+export async function seedUsers(db: PostgresJsDatabase<typeof schema>, cryptoHashPassword: (password: string) => Promise<string>, developmentPassword: string) {
+  const hash = await cryptoHashPassword(developmentPassword);
   
   const users = [
     { id: USERS.admin1, email: 'admin1@local.test', username: 'admin1', displayName: 'Administrator Utama', passwordHash: hash, role: 'admin' as const, isActive: true, mustChangePassword: false, createdAt: SEED_DATES.old, updatedAt: SEED_DATES.old },

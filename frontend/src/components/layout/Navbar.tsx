@@ -5,7 +5,7 @@
 
 import { useState, type MouseEvent } from 'react';
 import { Link, useLocation } from 'react-router';
-import { Menu, X, Compass } from 'lucide-react';
+import { Menu, X, Compass, LogIn } from 'lucide-react';
 import { brand } from '../../config/brand';
 
 interface NavbarProps {
@@ -19,6 +19,7 @@ const navItems = [
   { label: 'Peta UMKM', href: '/peta-umkm' },
   { label: 'Tentang Desa', href: '/tentang-desa' },
   { label: 'FAQ', href: '/faq' },
+  { label: 'Masuk Pengelola', href: '/login' },
 ] as const;
 
 export default function Navbar({ onScrollToSection, activeSection }: NavbarProps) {
@@ -42,20 +43,20 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
 
   return (
     <nav aria-label="Navigasi utama" className="sticky top-0 z-30 w-full border-b border-sage-border bg-cream-card/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link
           to="/"
           onClick={handleLogoClick}
           aria-label={`${brand.name} — kembali ke beranda`}
-          className="focus-ring flex items-center gap-2 rounded-lg px-1.5 py-1 text-forest transition-opacity hover:opacity-90"
+          className="focus-ring flex items-center gap-2.5 rounded-lg px-1.5 py-1 text-forest transition-opacity hover:opacity-90"
         >
-          <Compass size={22} className="text-terracotta" />
-          <span className="text-sm font-extrabold uppercase tracking-wide md:text-base">
+          <Compass size={24} className="text-terracotta" />
+          <span className="text-base font-extrabold uppercase tracking-wide md:text-lg">
             Loning<span className="text-terracotta">Maju</span>
           </span>
         </Link>
 
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-5 md:flex">
           {navItems.map((item) => {
             const active = item.href.startsWith('/#')
               ? location.pathname === '/' && activeSection === item.href.split('#')[1]
@@ -66,7 +67,7 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
                 key={item.href}
                 href={item.href}
                 onClick={(event) => goHomeSection(event, item.href)}
-                className={`focus-ring rounded px-2 py-2 text-xs font-bold uppercase tracking-wider transition-colors hover:text-forest ${
+                className={`focus-ring rounded-lg px-2.5 py-2 text-[13px] font-bold uppercase tracking-wider transition-colors hover:bg-sage-light/60 hover:text-forest ${
                   active ? 'text-forest' : 'text-warm-gray'
                 }`}
               >
@@ -76,10 +77,12 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
               <Link
                 key={item.href}
                 to={item.href}
-                className={`focus-ring rounded px-2 py-2 text-xs font-bold uppercase tracking-wider transition-colors hover:text-forest ${
-                  active ? 'text-forest' : 'text-warm-gray'
-                }`}
+                className={item.href === '/login'
+                  ? 'focus-ring ml-1 inline-flex min-h-10 items-center gap-2 rounded-lg bg-forest px-4 py-2 text-[12px] font-bold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-forest-hover'
+                  : `focus-ring rounded-lg px-2.5 py-2 text-[13px] font-bold uppercase tracking-wider transition-colors hover:bg-sage-light/60 hover:text-forest ${active ? 'text-forest' : 'text-warm-gray'}`
+                }
               >
+                {item.href === '/login' && <LogIn size={15} aria-hidden="true" />}
                 {item.label}
               </Link>
             );
@@ -99,14 +102,18 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
       </div>
 
       {isMobileMenuOpen && (
-        <div id="mobile-nav-menu" className="border-t border-sage-border bg-cream-card px-4 py-4 shadow-lg md:hidden">
+        <nav
+          id="mobile-nav-menu"
+          aria-label="Navigasi seluler"
+          className="border-t border-sage-border bg-cream-card px-4 py-4 shadow-lg md:hidden"
+        >
           {navItems.map((item) =>
             item.href.startsWith('/#') ? (
               <a
                 key={item.href}
                 href={item.href}
                 onClick={(event) => goHomeSection(event, item.href)}
-                className="focus-ring touch-target flex items-center rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider text-warm-gray hover:bg-sage-light"
+                className="focus-ring touch-target flex items-center rounded-lg px-3 py-2.5 text-sm font-bold uppercase tracking-wider text-warm-gray hover:bg-sage-light"
               >
                 {item.label}
               </a>
@@ -115,13 +122,17 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
                 key={item.href}
                 to={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="focus-ring touch-target flex items-center rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider text-warm-gray hover:bg-sage-light"
+                className={item.href === '/login'
+                  ? 'focus-ring touch-target mt-3 flex items-center justify-center gap-2 rounded-lg border-t border-sage-border bg-forest px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-forest-hover'
+                  : 'focus-ring touch-target flex items-center rounded-lg px-3 py-2.5 text-sm font-bold uppercase tracking-wider text-warm-gray hover:bg-sage-light'
+                }
               >
+                {item.href === '/login' && <LogIn size={16} aria-hidden="true" />}
                 {item.label}
               </Link>
             )
           )}
-        </div>
+        </nav>
       )}
     </nav>
   );

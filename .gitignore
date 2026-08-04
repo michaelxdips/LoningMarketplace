@@ -15,3 +15,11 @@ test-results/
 playwright-report/
 playwright/.auth/
 .phase0-runtime/
+backend/audit-media-temp-*.jpg
+backend/audit-media-temp-*.jpeg
+backend/audit-media-temp-*.png
+backend/audit-media-temp-*.webp
+*.dump
+*.backup
+*.bak
+*.sql.gz

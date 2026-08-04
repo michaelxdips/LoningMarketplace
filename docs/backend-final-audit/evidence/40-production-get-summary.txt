@@ -1,0 +1,98 @@
+﻿[2026-08-04T20:36:36+07:00] /api/health
+  Status: 200
+  Content-Type: application/json; charset=utf-8
+  Content-Length: 15
+  Cache-Control: 
+  Access-Control-Allow-Origin: 
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Server: cloudflare
+  Body: {"status":"ok"}
+
+[2026-08-04T20:36:36+07:00] /api/ready
+  Status: 200
+  Content-Type: application/json; charset=utf-8
+  Content-Length: 15
+  Cache-Control: 
+  Access-Control-Allow-Origin: 
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Server: cloudflare
+  Body: {"status":"ok"}
+
+[2026-08-04T20:36:37+07:00] /api/products?limit=5
+  Status: 200
+  Content-Type: application/json; charset=utf-8
+  Content-Length: 3528
+  Cache-Control: 
+  Access-Control-Allow-Origin: 
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Server: cloudflare
+  Body: {"data":[{"id":"e3000000-0000-4000-8000-000000000001","slug":"nasi-megono-komplit","umkmId":"e2000000-0000-4000-8000-000000000001","umkmName":"Warung Nasi Khas Loning","name":"Nasi Megono Komplit","price":18000,"description":"Nasi megono khas Pemalang dengan ayam goreng, telur, dan sambal daun jeruk...[truncated]
+
+[2026-08-04T20:36:37+07:00] /api/umkms?limit=5
+  Status: 200
+  Content-Type: application/json; charset=utf-8
+  Content-Length: 4463
+  Cache-Control: 
+  Access-Control-Allow-Origin: 
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Server: cloudflare
+  Body: {"data":[{"id":"e2000000-0000-4000-8000-000000000001","slug":"warung-nasi-khas-loning","name":"Warung Nasi Khas Loning","owner":"Siti Aminah","description":"Masakan rumahan khas Pemalang, nasi megono, dan lauk harian yang dimasak segar setiap pagi.","phone":"6281234567890","category":"Kuliner","imag...[truncated]
+
+[2026-08-04T20:36:37+07:00] /api/products?category=Kuliner&limit=3
+  Status: 200
+  Content-Type: application/json; charset=utf-8
+  Content-Length: 2112
+  Cache-Control: 
+  Access-Control-Allow-Origin: 
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Server: cloudflare
+  Body: {"data":[{"id":"e3000000-0000-4000-8000-000000000001","slug":"nasi-megono-komplit","umkmId":"e2000000-0000-4000-8000-000000000001","umkmName":"Warung Nasi Khas Loning","name":"Nasi Megono Komplit","price":18000,"description":"Nasi megono khas Pemalang dengan ayam goreng, telur, dan sambal daun jeruk...[truncated]
+
+[2026-08-04T20:36:37+07:00] /sitemap.xml
+  Status: 200
+  Content-Type: application/xml; charset=utf-8
+  Content-Length: 4925
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+  Access-Control-Allow-Origin: 
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Server: cloudflare
+  Body: <?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.loningmaju.my.id/</loc>
+  </url>
+  <url>
+    <loc>https://www.loningmaju.my.id/faq</loc>
+  </url>
+  <url>
+    <loc>https://www.loningmaju.my.id/tentang-desa</loc>
+  </url>...[truncated]
+
+[2026-08-04T20:36:37+07:00] /robots.txt
+  Status: 200
+  Content-Type: text/plain; charset=utf-8
+  Content-Length: 127
+  Cache-Control: public, max-age=86400
+  Access-Control-Allow-Origin: 
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Server: cloudflare
+  Body: User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /api/
+
+Sitemap: https://www.loningmaju.my.id/sitemap.xml
+
+[2026-08-04T20:36:38+07:00] /api/products/nonexistent-slug-audit-12345
+  Status: 404
+  Error: The remote server returned an error: (404) Not Found.
+  Body: {"error":{"message":"Product not found","code":"NOT_FOUND"}}
+

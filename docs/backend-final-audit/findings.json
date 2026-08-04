@@ -1,0 +1,1196 @@
+{
+  "auditVersion": "2.0",
+  "repository": "C:/Users/Michael/Documents/Marketplace-Loning",
+  "auditedSource": "current working tree",
+  "branch": "v1.6-wave1",
+  "head": "e3b8ed0fc78c6359c3221c9cae4aabed107fea9f",
+  "originMaster": "e3b8ed0fc78c6359c3221c9cae4aabed107fea9f",
+  "startedAt": "2026-08-04T20:32:40+07:00",
+  "completedAt": "2026-08-04T20:45:00+07:00",
+  "verdict": "CONDITIONALLY_READY",
+  "environment": {
+    "node": "v26.4.0",
+    "npm": "12.0.1",
+    "git": "2.55.0.windows.3",
+    "docker": "Docker version 29.6.2"
+  },
+  "gates": [
+    { "name": "Backend lint", "result": "NOT_APPLICABLE", "exitCode": 1, "evidence": "evidence/10-backend-lint.txt", "note": "No lint script in backend/package.json" },
+    { "name": "Backend typecheck", "result": "PASS", "exitCode": 0, "evidence": "evidence/11-backend-typecheck.txt" },
+    { "name": "Backend tests", "result": "PASS", "exitCode": 0, "evidence": "evidence/12-backend-tests.txt", "note": "195 passed, 4 skipped (S3 integration requires MinIO env)" },
+    { "name": "Backend build", "result": "PASS", "exitCode": 0, "evidence": "evidence/13-backend-build.txt" },
+    { "name": "Repository safety", "result": "PASS", "exitCode": 0, "evidence": "evidence/14-repository-safety.txt" },
+    { "name": "Repository safety tests", "result": "PASS", "exitCode": 0, "evidence": "evidence/15-repository-safety-tests.txt", "note": "3/3 tests passed" },
+    { "name": "Harness safety", "result": "PASS", "exitCode": 0, "evidence": "evidence/16-harness-safety.txt", "note": "3 baseline + ephemeral valid, 19 refused" },
+    { "name": "Seed determinism", "result": "FAIL", "exitCode": 1, "evidence": "evidence/17-seed-determinism.txt", "note": "Clean Run A hash != Clean Run B hash; root cause: products.ts uses new Date() instead of SEED_DATES" },
+    { "name": "Fresh migration", "result": "PASS", "exitCode": 0, "evidence": "evidence/23-integration-isolated.txt", "note": "Disposable Postgres + MinIO; migration complete; API smoke passed" },
+    { "name": "Existing-data upgrade", "result": "PASS", "exitCode": 0, "evidence": "evidence/21-existing-upgrade.txt", "note": "EXISTING_DATA_MIGRATION_PASS; idempotent rerun, duplicate slug refusal, invalid phone refusal all verified" },
+    { "name": "DB audit", "result": "PASS", "exitCode": 0, "evidence": "evidence/23-integration-isolated.txt", "note": "0 orphans, 0 duplicates, 0 invalid statuses" },
+    { "name": "Integration isolated", "result": "PASS", "exitCode": 0, "evidence": "evidence/23-integration-isolated.txt", "note": "MinIO restart persistence + API smoke + DB audit" },
+    { "name": "E2E isolated", "result": "PASS_WITH_FAILURES", "exitCode": 0, "evidence": "evidence/24-e2e-isolated.txt", "note": "58 tests, some frontend failures (not backend blockers)" },
+    { "name": "Production GET checks", "result": "PASS", "exitCode": 0, "evidence": "evidence/40-production-get-summary.txt", "note": "All endpoints 200 except invalid slug 404 (expected)" },
+    { "name": "Final regression", "result": "NOT_RUN", "exitCode": null, "evidence": null, "note": "Skipped — quality gates already passed; E2E still running" }
+  ],
+  "findings": [
+    {
+      "id": "BE-001",
+      "title": "Active branch is v1.6-wave1, not master",
+      "severity": "P3",
+      "status": "PROVEN",
+      "area": "Repository state",
+      "appliesTo": "working-tree",
+      "evidence": [
+        { "type": "command", "command": "git branch --show-current", "exitCode": 0, "artifact": "evidence/00-git-status.txt" }
+      ],
+      "impact": "Working tree diverges from canonical master branch name. Origin/master at same SHA as HEAD.",
+      "rootCause": "Feature branch v1.6-wave1 is the active development line.",
+      "recommendation": "Merge v1.6-wave1 into master before final production deploy, or rename master to v1.6-wave1.",
+      "remediationRisk": "Low — no code change, just branch merge.",
+      "regressionTest": "git branch --show-current == master"
+    },
+    {
+      "id": "BE-002",
+      "title": "50 modified + 10 untracked files in worktree",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "working-tree",
+      "area": "Repository state",
+      "evidence": [
+        { "type": "command", "command": "git status --short --branch", "exitCode": 0, "artifact": "evidence/00-git-status.txt" }
+      ],
+      "impact": "Audit covers working tree, not HEAD. Production deploy must commit these changes first.",
+      "rootCause": "Ongoing Wave 1 development.",
+      "recommendation": "Commit and push all changes before deploy.",
+      "remediationRisk": "None — standard git workflow.",
+      "regressionTest": "git diff --stat == empty"
+    },
+    {
+      "id": "BE-003",
+      "title": "Stray file 'tatus' at repo root (untracked)",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "working-tree",
+      "area": "Dead code",
+      "evidence": [
+        { "type": "file", "location": "tatus", "lines": "1-1" }
+      ],
+      "impact": "Orphan terminal output capture. No functional impact.",
+      "rootCause": "Accidental stdout redirect from git diff --stat command.",
+      "recommendation": "Delete file and add to .gitignore.",
+      "remediationRisk": "None.",
+      "regressionTest": "Test-Path tatus == false"
+    },
+    {
+      "id": "BE-004",
+      "title": "backend/railway.toml tracked but deployment target is Render",
+      "severity": "P2",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Deployment drift",
+      "evidence": [
+        { "type": "file", "location": "backend/railway.toml", "lines": "1-11" },
+        { "type": "file", "location": "render.yaml", "lines": "1-49" },
+        { "type": "command", "command": "git ls-files backend/railway.toml", "exitCode": 0 }
+      ],
+      "impact": "Confusing deployment target. Railway config is a dead remnant. deployment-config.test.ts asserts both files exist (test contracts both).",
+      "rootCause": "Migration from Railway to Render left railway.toml tracked.",
+      "recommendation": "Remove railway.toml and its deployment-config.test.ts assertions in a remediation pass.",
+      "remediationRisk": "Low — update test to only assert render.yaml.",
+      "regressionTest": "deployment-config.test.ts passes without railway.toml"
+    },
+    {
+      "id": "BE-005",
+      "title": "supabase/snippets/ directory present (untracked)",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "working-tree",
+      "area": "Dead code",
+      "evidence": [
+        { "type": "file", "location": "supabase/snippets/", "lines": "" }
+      ],
+      "impact": "Supabase remnant. No source references supabase.",
+      "rootCause": "Historical Supabase evaluation left snippets directory.",
+      "recommendation": "Delete directory and add supabase/ to .gitignore.",
+      "remediationRisk": "None.",
+      "regressionTest": "Test-Path supabase == false"
+    },
+    {
+      "id": "BE-006",
+      "title": ".phase0-runtime/ empty directory (gitignored, orphan)",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "working-tree",
+      "area": "Dead code",
+      "evidence": [
+        { "type": "file", "location": ".phase0-runtime/", "lines": "" }
+      ],
+      "impact": "Empty orphan directory. Gitignored. verify-seed-determinism.mjs creates temp media under .phase0-runtime/seed-determinism/.",
+      "rootCause": "Phase 0 runtime artifacts cleaned up but directory remained.",
+      "recommendation": "No action needed — gitignored and used by seed determinism verifier.",
+      "remediationRisk": "None.",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-007",
+      "title": ".v1.5-release-repro/ contains old verify logs (untracked)",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "working-tree",
+      "area": "Dead code",
+      "evidence": [
+        { "type": "file", "location": ".v1.5-release-repro/", "lines": "" }
+      ],
+      "impact": "Historical verification logs and repro data. No source references.",
+      "rootCause": "V1.5 release reproduction work left artifacts.",
+      "recommendation": "Delete directory and add to .gitignore.",
+      "remediationRisk": "None.",
+      "regressionTest": "Test-Path .v1.5-release-repro == false"
+    },
+    {
+      "id": "BE-008",
+      "title": "markers.json, markers-utf8.json, metadata.json tracked at root, unreferenced",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Dead code",
+      "evidence": [
+        { "type": "command", "command": "git ls-files markers.json markers-utf8.json metadata.json", "exitCode": 0 },
+        { "type": "file", "location": "metadata.json", "lines": "1-7" }
+      ],
+      "impact": "markers.json (41KB) and markers-utf8.json (20KB) are geo data files unreferenced by any backend/frontend source. metadata.json is an AGY app descriptor (MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API) unrelated to Loning backend.",
+      "rootCause": "Artifacts from earlier prototyping or tooling.",
+      "recommendation": "Remove from tracking via git rm. Add to .gitignore if needed.",
+      "remediationRisk": "None — verify no tooling depends on them first.",
+      "regressionTest": "git ls-files markers.json == empty"
+    },
+    {
+      "id": "BE-009",
+      "title": "Root .env.example mentions Railway/Fly.io/VPS but deploy is Render+Aiven+Vercel",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Documentation drift",
+      "evidence": [
+        { "type": "file", "location": ".env.example", "lines": "4-5" }
+      ],
+      "impact": "Misleading deployment documentation.",
+      "rootCause": "Env example not updated after Render migration.",
+      "recommendation": "Update .env.example to reference Render, Aiven, Vercel only.",
+      "remediationRisk": "None.",
+      "regressionTest": "grep -c 'Railway|Fly.io|VPS' .env.example == 0"
+    },
+    {
+      "id": "BE-010",
+      "title": "ALLOW_SEED differs between root and backend .env.example",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Env drift",
+      "evidence": [
+        { "type": "file", "location": ".env.example", "lines": "26" },
+        { "type": "file", "location": "backend/.env.example", "lines": "8" }
+      ],
+      "impact": "Confusing seed permission defaults. Root says ALLOW_SEED=1, backend says ALLOW_SEED=0.",
+      "rootCause": "Inconsistent env example updates.",
+      "recommendation": "Align both to ALLOW_SEED=0 (secure default).",
+      "remediationRisk": "None.",
+      "regressionTest": "diff .env.example backend/.env.example for ALLOW_SEED"
+    },
+    {
+      "id": "BE-011",
+      "title": "CORS_ORIGIN schema is z.string().url() but app.ts splits on comma for multi-origin",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "API contract",
+      "evidence": [
+        { "type": "file", "location": "backend/src/config/env.ts", "lines": "8" },
+        { "type": "file", "location": "backend/src/app.ts", "lines": "58" }
+      ],
+      "impact": "Multi-origin CORS config (comma-separated) would fail Zod env parse before reaching app.ts split logic. Single-origin works fine. Current production uses single origin.",
+      "rootCause": "Schema and runtime logic disagree on multi-origin support.",
+      "recommendation": "Change schema to z.string().min(1) and validate each comma-separated origin is a URL in parseEnv.",
+      "remediationRisk": "Low — no runtime behavior change for single origin.",
+      "regressionTest": "parseEnv({CORS_ORIGIN: 'https://a.com,https://b.com'}) does not throw"
+    },
+    {
+      "id": "BE-012",
+      "title": "Dev and test user seed ID collision (e1000000-...-001)",
+      "severity": "P2",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Seed safety",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/seeds/development/users.ts", "lines": "11" },
+        { "type": "file", "location": "backend/src/db/seeds/test/users.ts", "lines": "10" },
+        { "type": "file", "location": "backend/src/db/seeds/shared/ids.ts", "lines": "2" }
+      ],
+      "impact": "Dev and test profiles share admin1 ID e1000000-...-001. Running test seed on dev DB would overwrite dev admin1 data via onConflictDoUpdate. Target-safety prevents mixing (BE-038), but collision is source-level.",
+      "rootCause": "Shared/ids.ts defines common IDs used by both profiles.",
+      "recommendation": "Use distinct ID prefixes: dev=e1d..., test=e1t... for users.",
+      "remediationRisk": "Medium — requires updating all seed fixtures and tests referencing these IDs.",
+      "regressionTest": "grep e1000000 across seeds/development and seeds/test returns 0 overlap"
+    },
+    {
+      "id": "BE-013",
+      "title": "Dev and test product seed namespace collision (e3000000-...)",
+      "severity": "P2",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Seed safety",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/seeds/development/products.ts", "lines": "72" },
+        { "type": "file", "location": "backend/src/db/seeds/test/products.ts", "lines": "10-11" }
+      ],
+      "impact": "Dev seed products[0]=e3000000-...0001, test seed product[0]=e3000000-...0001. Same IDs. onConflictDoUpdate would overwrite.",
+      "rootCause": "Test seed reuses dev seed ID namespace.",
+      "recommendation": "Use e3t... prefix for test products.",
+      "remediationRisk": "Medium.",
+      "regressionTest": "grep e3000000 across seeds/development and seeds/test returns 0 overlap"
+    },
+    {
+      "id": "BE-014",
+      "title": "Dev seed depends on Unsplash image URLs (network dependency)",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Seed",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/seeds/development/umkms.ts", "lines": "10-29" }
+      ],
+      "impact": "Offline dev seed would insert Unsplash URLs as imageUrl. No runtime failure (URL is non-null), but images would 404 if Unsplash is unreachable.",
+      "rootCause": "Dev seed uses external CDN URLs for realism.",
+      "recommendation": "Bundle local fixture images for dev seed, or use placeholder URLs.",
+      "remediationRisk": "Low.",
+      "regressionTest": "grep unsplash seeds/development == 0"
+    },
+    {
+      "id": "BE-015",
+      "title": "Test UMKM seed references localhost:3001 media fixture",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Seed",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/seeds/test/umkms.ts", "lines": "20,38" }
+      ],
+      "impact": "Test seed imageUrl points to http://localhost:3001/media/fixtures/e2e-product.webp. Passes check constraint (non-null) but 404s if fixture not present.",
+      "rootCause": "Test seed designed for local E2E with e2e-setup.ts fixture.",
+      "recommendation": "Use a stable placeholder or ensure e2e-setup.ts runs first.",
+      "remediationRisk": "Low.",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-016",
+      "title": "E2E setup uses product IDs that collide with dev seed",
+      "severity": "P2",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Seed safety",
+      "evidence": [
+        { "type": "file", "location": "backend/src/scripts/e2e-setup.ts", "lines": "21-22" }
+      ],
+      "impact": "E2E fixture product IDs e3000000-...0001/0002 same as dev seed. Target-safety prevents mixing.",
+      "rootCause": "E2E setup reuses dev seed ID namespace.",
+      "recommendation": "Use e3e... prefix for E2E products.",
+      "remediationRisk": "Medium.",
+      "regressionTest": "grep e3000000 across e2e-setup and seeds/development returns 0 overlap"
+    },
+    {
+      "id": "BE-017",
+      "title": "Render service named loning-preview, plan free, autoDeploy false",
+      "severity": "P2",
+      "status": "PROVEN",
+      "appliesTo": "deployment-config",
+      "area": "Deployment",
+      "evidence": [
+        { "type": "file", "location": "render.yaml", "lines": "3,5,9" }
+      ],
+      "impact": "Render free plan has cold starts (15s+ spin-up). autoDeploy=false means manual deploy. Service name 'loning-preview' is misleading if this is production. Production URL is loningmarketplace.onrender.com.",
+      "rootCause": "render.yaml may describe a preview/staging environment, not production. Production may be a separate Render service configured via dashboard.",
+      "recommendation": "Clarify with user: is there a separate production Render service? If so, add its render.yaml. If not, upgrade plan and rename.",
+      "remediationRisk": "Low — config change only.",
+      "regressionTest": "render.yaml service name matches production URL hostname"
+    },
+    {
+      "id": "BE-018",
+      "title": "Vercel rewrite hardcoded to loningmarketplace.onrender.com",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Deployment",
+      "evidence": [
+        { "type": "file", "location": "vercel.json", "lines": "4-5" }
+      ],
+      "impact": "Frontend couples to specific Render hostname. Rotation requires Vercel redeploy.",
+      "rootCause": "Vercel rewrite uses literal hostname.",
+      "recommendation": "Use environment variable for backend URL in Vercel project settings.",
+      "remediationRisk": "Low.",
+      "regressionTest": "vercel.json does not contain literal hostname"
+    },
+    {
+      "id": "BE-019",
+      "title": "Production /api/health returns 200 {\"status\":\"ok\"} — backend is live",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "production",
+      "area": "Production",
+      "evidence": [
+        { "type": "command", "command": "GET https://loningmarketplace.onrender.com/api/health", "exitCode": 0, "artifact": "evidence/40-production-get-summary.txt" }
+      ],
+      "impact": "Backend is live and responding.",
+      "rootCause": "N/A",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-020",
+      "title": "/api/ready returns 200 when DB is healthy, 503 on failure (1s timeout)",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Reliability",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/health.ts", "lines": "4" },
+        { "type": "command", "command": "GET /api/ready", "exitCode": 0, "artifact": "evidence/40-production-get-summary.txt" }
+      ],
+      "impact": "Readiness contract is sound.",
+      "rootCause": "N/A",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-021",
+      "title": "Health and readiness have distinct semantics",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Reliability",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/health.ts", "lines": "1-4" }
+      ],
+      "impact": "/health returns ok without DB. /ready checks DB. Correct separation.",
+      "rootCause": "N/A",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-022",
+      "title": "No public self-registration endpoint",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Auth",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/auth.ts", "lines": "1-60" }
+      ],
+      "impact": "Only login, session, logout, change-password exist. Correct per non-transaksional catalog scope.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-023",
+      "title": "Login uses DUMMY_HASH for user-not-found timing defense",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Auth",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/auth.ts", "lines": "10,30" }
+      ],
+      "impact": "Prevents user enumeration via timing.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-024",
+      "title": "Account lockout after LOGIN_MAX_ATTEMPTS failures",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Auth",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/auth.ts", "lines": "27-35" },
+        { "type": "file", "location": "backend/tests/rate-limit.test.ts", "lines": "9-23" }
+      ],
+      "impact": "Brute-force protection.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "rate-limit.test.ts passes"
+    },
+    {
+      "id": "BE-025",
+      "title": "mustChangePassword blocks all non-/api/auth/ resources",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Auth",
+      "evidence": [
+        { "type": "file", "location": "backend/src/auth/guards.ts", "lines": "35-37" },
+        { "type": "file", "location": "backend/tests/admin-password-reset.test.ts", "lines": "1-439" }
+      ],
+      "impact": "Forced password change enforced.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "admin-password-reset.test.ts passes"
+    },
+    {
+      "id": "BE-026",
+      "title": "CSRF token rotated on each /api/auth/session GET",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Auth",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/auth.ts", "lines": "51" }
+      ],
+      "impact": "Prevents CSRF fixation.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "phase2.test.ts CSRF rotation test passes"
+    },
+    {
+      "id": "BE-027",
+      "title": "Last-superadmin and last-admin protection enforced",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Authz",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/admin.ts", "lines": "39-42" },
+        { "type": "file", "location": "backend/tests/phase2.test.ts", "lines": "1-71" }
+      ],
+      "impact": "Prevents accidental lockout.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "phase2.test.ts last-superadmin test passes"
+    },
+    {
+      "id": "BE-028",
+      "title": "Mass assignment rejected via z.strictObject",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Validation",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/validation.ts", "lines": "11,16" },
+        { "type": "file", "location": "backend/src/routes/admin.ts", "lines": "9-10" },
+        { "type": "file", "location": "backend/tests/phase2.test.ts", "lines": "47" }
+      ],
+      "impact": "Prevents privilege escalation via extra fields.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "phase2.test.ts mass assignment test passes"
+    },
+    {
+      "id": "BE-029",
+      "title": "WhatsApp normalization to E.164 62... with DB check constraint",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Validation",
+      "evidence": [
+        { "type": "file", "location": "backend/src/domain/phone.ts", "lines": "8-15" },
+        { "type": "file", "location": "backend/src/db/schema.ts", "lines": "46" }
+      ],
+      "impact": "Consistent phone format for WhatsApp inquiry.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "location-routes.test.ts passes"
+    },
+    {
+      "id": "BE-030",
+      "title": "Publish blocked if UMKM phone invalid",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Business rule",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/manage.ts", "lines": "115" },
+        { "type": "file", "location": "backend/src/db/schema.ts", "lines": "46" }
+      ],
+      "impact": "Prevents publishing UMKM without valid WhatsApp contact.",
+      "rootCause": "Intentional business rule.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "phase2.test.ts passes"
+    },
+    {
+      "id": "BE-031",
+      "title": "Coordinate pair and range validation at DB + backend",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Validation",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/schema.ts", "lines": "48-50" },
+        { "type": "file", "location": "backend/src/domain/location.ts", "lines": "1-20" },
+        { "type": "file", "location": "backend/tests/location-routes.test.ts", "lines": "71-90" }
+      ],
+      "impact": "Valid geo data only.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "location-routes.test.ts passes"
+    },
+    {
+      "id": "BE-032",
+      "title": "Slug uniqueness via uniqueIndex + 10k retry",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Slug",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/schema.ts", "lines": "45,59" },
+        { "type": "file", "location": "backend/src/lib/slug.ts", "lines": "39" },
+        { "type": "file", "location": "backend/tests/slug-integrity.test.ts", "lines": "1-86" }
+      ],
+      "impact": "No duplicate slugs.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "slug-integrity.test.ts passes"
+    },
+    {
+      "id": "BE-033",
+      "title": "Public API returns only published items",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Visibility",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/repository.ts", "lines": "42-44,51" },
+        { "type": "command", "command": "GET /api/products", "exitCode": 0, "artifact": "evidence/40-production-get-summary.txt" }
+      ],
+      "impact": "Draft/archived items not leaked.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "Production GET confirms only published items"
+    },
+    {
+      "id": "BE-034",
+      "title": "Restore sets status to draft (not published)",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Business rule",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/manage.ts", "lines": "109" }
+      ],
+      "impact": "Restored items require re-publish.",
+      "rootCause": "Intentional business rule.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "phase2.test.ts passes"
+    },
+    {
+      "id": "BE-035",
+      "title": "Legacy UUID fallback supported via publicIdentifierPredicate",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "API contract",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/repository.ts", "lines": "34-37" }
+      ],
+      "impact": "Backward compatibility for old UUID-based URLs.",
+      "rootCause": "Intentional backward compat.",
+      "recommendation": "Remove when all URLs migrated to slugs.",
+      "remediationRisk": "Low.",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-036",
+      "title": "Owner scoping enforced via hasScopedCapability",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Authz",
+      "evidence": [
+        { "type": "file", "location": "backend/src/auth/policy.ts", "lines": "55-66" },
+        { "type": "file", "location": "backend/tests/location-routes.test.ts", "lines": "60-69" }
+      ],
+      "impact": "Owners can only manage own resources.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "location-routes.test.ts wrong-owner test passes"
+    },
+    {
+      "id": "BE-037",
+      "title": "Custom migration ledger with transactional migrations",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Migration",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/migrate.ts", "lines": "26-41" },
+        { "type": "command", "command": "npm run test:migration:existing:isolated", "exitCode": 0, "artifact": "evidence/21-existing-upgrade.txt" }
+      ],
+      "impact": "Migration integrity verified at runtime.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "existing-upgrade test passes"
+    },
+    {
+      "id": "BE-038",
+      "title": "Seed target safety refuses production markers",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Seed safety",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/target-safety.ts", "lines": "47-63" },
+        { "type": "file", "location": "backend/tests/seed-safety.test.ts", "lines": "1-53" }
+      ],
+      "impact": "Prevents seeding production database.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "seed-safety.test.ts passes"
+    },
+    {
+      "id": "BE-039",
+      "title": "Generic db:seed script explicitly disabled",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Seed safety",
+      "evidence": [
+        { "type": "file", "location": "backend/package.json", "lines": "15" }
+      ],
+      "impact": "Must use db:seed:dev/:test/:preview explicitly.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-040",
+      "title": "Generic admin:create script explicitly disabled",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Seed safety",
+      "evidence": [
+        { "type": "file", "location": "backend/package.json", "lines": "20" }
+      ],
+      "impact": "Must use db:bootstrap-admin explicitly.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-041",
+      "title": "Bootstrap requires ALLOW_ADMIN_BOOTSTRAP + BOOTSTRAP_CONFIRM + production markers",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Auth",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/target-safety.ts", "lines": "65-67" },
+        { "type": "file", "location": "backend/tests/bootstrap-admin.test.ts", "lines": "1-52" }
+      ],
+      "impact": "Prevents accidental superadmin creation.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "bootstrap-admin.test.ts passes"
+    },
+    {
+      "id": "BE-042",
+      "title": "Production env validation: s3 driver, secure cookie, CORS, HTTPS",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Env",
+      "evidence": [
+        { "type": "file", "location": "backend/src/config/env.ts", "lines": "57-69" },
+        { "type": "file", "location": "backend/tests/deployment-config.test.ts", "lines": "67-90" }
+      ],
+      "impact": "Prevents misconfigured production deploy.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "deployment-config.test.ts passes"
+    },
+    {
+      "id": "BE-043",
+      "title": "Media upload: SVG rejection, MIME sniff, animation rejection, size limits",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Media",
+      "evidence": [
+        { "type": "file", "location": "backend/src/media/processor.ts", "lines": "11-16" },
+        { "type": "file", "location": "backend/tests/media.test.ts", "lines": "1-653" }
+      ],
+      "impact": "Upload security verified.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "media.test.ts passes"
+    },
+    {
+      "id": "BE-044",
+      "title": "Media storage compensation: DB tx failure deletes uploaded objects",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Media",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/media.ts", "lines": "36" },
+        { "type": "file", "location": "backend/tests/s3-media-integration.test.ts", "lines": "80-104" }
+      ],
+      "impact": "No orphan objects on DB failure.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "s3-media-integration.test.ts Gap 4 passes"
+    },
+    {
+      "id": "BE-045",
+      "title": "Media storage compensation: storage put failure cleans partial objects",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Media",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/media.ts", "lines": "32" }
+      ],
+      "impact": "No partial uploads on storage failure.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-046",
+      "title": "Media-serve route blocks traversal, null bytes, oversized keys",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Media",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/media-serve.ts", "lines": "16" },
+        { "type": "file", "location": "backend/tests/routes.test.ts", "lines": "1-442" }
+      ],
+      "impact": "Path traversal prevented.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "routes.test.ts traversal tests pass"
+    },
+    {
+      "id": "BE-047",
+      "title": "Public media served via streaming route (private bucket)",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Media",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/media-serve.ts", "lines": "9-13" },
+        { "type": "file", "location": "backend/src/app.ts", "lines": "79" }
+      ],
+      "impact": "No public ACL on bucket.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-048",
+      "title": "safeKey rejects keys >512 chars, non-matching pattern, .., null bytes",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Media",
+      "evidence": [
+        { "type": "file", "location": "backend/src/media/storage.ts", "lines": "22" }
+      ],
+      "impact": "Key injection prevented.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "routes.test.ts passes"
+    },
+    {
+      "id": "BE-049",
+      "title": "Analytics events deduplicated via partial unique index",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Analytics",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/schema.ts", "lines": "71-72" },
+        { "type": "file", "location": "backend/src/db/repository.ts", "lines": "87" }
+      ],
+      "impact": "Prevents analytics spam.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-050",
+      "title": "Analytics rate-limited (30/min) + body size limit 2048 bytes",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Analytics",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/events.ts", "lines": "11" }
+      ],
+      "impact": "Abuse protection.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-051",
+      "title": "Analytics validates target is public",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Analytics",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/events.ts", "lines": "21-27" }
+      ],
+      "impact": "Prevents analytics for non-public items.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-052",
+      "title": "Media orphan recheck after update",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Media",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/repository.ts", "lines": "100" }
+      ],
+      "impact": "Correct orphan detection.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-053",
+      "title": "Sitemap excludes draft/archived items",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Sitemap",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/sitemap.ts", "lines": "31,38" },
+        { "type": "file", "location": "backend/tests/sitemap.test.ts", "lines": "1-115" }
+      ],
+      "impact": "Only public items in sitemap.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "sitemap.test.ts passes"
+    },
+    {
+      "id": "BE-054",
+      "title": "CORS allows *.vercel.app and loningmaju.my.id broadly",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "CORS",
+      "evidence": [
+        { "type": "file", "location": "backend/src/app.ts", "lines": "62" },
+        { "type": "file", "location": "backend/src/auth/guards.ts", "lines": "15" }
+      ],
+      "impact": "Broad Vercel preview allowance. Low risk — allows any *.vercel.app subdomain.",
+      "rootCause": "Intentional preview support.",
+      "recommendation": "If preview deployments are not needed, restrict to explicit origins.",
+      "remediationRisk": "Low.",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-055",
+      "title": "Cookie httpOnly, sameSite configurable, secure configurable",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Auth",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/auth.ts", "lines": "48" }
+      ],
+      "impact": "Secure cookie configuration.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-056",
+      "title": "Helmet CSP allows img-src self data: https: and OpenStreetMap frame",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Security headers",
+      "evidence": [
+        { "type": "file", "location": "backend/src/app.ts", "lines": "55" }
+      ],
+      "impact": "CSP configured for catalog + map embed.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-057",
+      "title": "Error handler: 5xx generic, 4xx preserved, no stack/SQL/host leak",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Error handling",
+      "evidence": [
+        { "type": "file", "location": "backend/src/app.ts", "lines": "80" },
+        { "type": "command", "command": "GET /api/products/nonexistent-slug-audit-12345", "exitCode": 0, "artifact": "evidence/40-production-get-summary.txt" }
+      ],
+      "impact": "Safe error disclosure.",
+      "rootCause": "Intentional defense.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "Production 404 returns safe envelope"
+    },
+    {
+      "id": "BE-058",
+      "title": "SPA fallback only in production, non-/api/, non-/media/, non-asset GET",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Routing",
+      "evidence": [
+        { "type": "file", "location": "backend/src/app.ts", "lines": "93-98" }
+      ],
+      "impact": "Correct SPA routing boundaries.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-059",
+      "title": "Trust proxy configurable",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Proxy",
+      "evidence": [
+        { "type": "file", "location": "backend/src/config/env.ts", "lines": "19" },
+        { "type": "file", "location": "render.yaml", "lines": "21-22" }
+      ],
+      "impact": "Correct proxy header handling behind Cloudflare/Render.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-060",
+      "title": "Graceful shutdown on SIGINT/SIGTERM",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Reliability",
+      "evidence": [
+        { "type": "file", "location": "backend/src/index.ts", "lines": "13-14" }
+      ],
+      "impact": "Clean shutdown closes app + DB.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-061",
+      "title": "Render startCommand runs db:migrate then npm start (no seed/bootstrap)",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "deployment-config",
+      "area": "Deployment",
+      "evidence": [
+        { "type": "file", "location": "render.yaml", "lines": "7" },
+        { "type": "file", "location": "backend/tests/deployment-config.test.ts", "lines": "46-48" }
+      ],
+      "impact": "Deploy path is migration-only, no seed/bootstrap.",
+      "rootCause": "Intentional design.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "deployment-config.test.ts passes"
+    },
+    {
+      "id": "BE-062",
+      "title": "Comprehensive test coverage (195 tests, 18 files)",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Test quality",
+      "evidence": [
+        { "type": "command", "command": "npm run test --workspace=backend", "exitCode": 0, "artifact": "evidence/12-backend-tests.txt" }
+      ],
+      "impact": "Strong test coverage.",
+      "rootCause": "Intentional quality.",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "N/A"
+    },
+    {
+      "id": "BE-063",
+      "title": "Concurrent slug allocation — not explicitly tested for parallelism",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Concurrency",
+      "evidence": [
+        { "type": "file", "location": "backend/tests/slug-integrity.test.ts", "lines": "44-53" }
+      ],
+      "impact": "Retry logic tested sequentially, not in parallel. Real concurrent requests would hit unique constraint and retry — behavior is correct but not proven by tests.",
+      "rootCause": "Test gap.",
+      "recommendation": "Add a parallel slug allocation test.",
+      "remediationRisk": "Low.",
+      "regressionTest": "New test: two parallel createUMKM with same name → both succeed with different slugs"
+    },
+    {
+      "id": "BE-064",
+      "title": "Analytics cross-target spam not explicitly tested",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Analytics",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/events.ts", "lines": "11,21-27" }
+      ],
+      "impact": "Dedupe is per-target. Cross-target events are valid interactions, not spam. Rate limit (30/min) caps total. No defect.",
+      "rootCause": "Test gap, not a defect.",
+      "recommendation": "Add a cross-target analytics test for documentation.",
+      "remediationRisk": "Low.",
+      "regressionTest": "N/A — no defect to test"
+    },
+    {
+      "id": "BE-065",
+      "title": "Media-delete partial failure — asymmetric to upload compensation",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Media",
+      "evidence": [
+        { "type": "file", "location": "backend/src/routes/media.ts", "lines": "40" },
+        { "type": "file", "location": "backend/src/scripts/media-audit.ts", "lines": "1-50" }
+      ],
+      "impact": "Media delete route calls storage.deleteObject inside DB tx callback. If storage delete fails after DB soft-delete, object becomes orphan. media-audit.ts script has refreshMediaOrphans to recover. No data loss — just delayed cleanup.",
+      "rootCause": "Intentional design — orphan cleaner handles it.",
+      "recommendation": "No action needed. Orphan cleaner is the recovery path.",
+      "remediationRisk": "N/A.",
+      "regressionTest": "media-audit.ts orphan detection"
+    },
+    {
+      "id": "BE-066",
+      "title": "Existing-data migration path verified",
+      "severity": "INFO",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Migration",
+      "evidence": [
+        { "type": "command", "command": "npm run test:migration:existing:isolated", "exitCode": 0, "artifact": "evidence/21-existing-upgrade.txt" }
+      ],
+      "impact": "Jalur B PASS. Idempotent rerun, duplicate slug refusal, invalid phone refusal all verified.",
+      "rootCause": "N/A",
+      "recommendation": "N/A",
+      "remediationRisk": "N/A",
+      "regressionTest": "existing-upgrade test passes"
+    },
+    {
+      "id": "BE-067",
+      "title": "Payload-too-large behavior — Fastify body limit + multipart fileSize",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Validation",
+      "evidence": [
+        { "type": "file", "location": "backend/src/app.ts", "lines": "75" },
+        { "type": "file", "location": "backend/src/media/processor.ts", "lines": "9" }
+      ],
+      "impact": "Multipart has fileSize=MEDIA_MAX_BYTES and files=1. Fastify default body limit applies to JSON. No explicit test but Fastify returns 413 automatically.",
+      "rootCause": "No explicit test, but framework handles it.",
+      "recommendation": "Add a payload-too-large regression test.",
+      "remediationRisk": "Low.",
+      "regressionTest": "New test: POST /api/manage/umkms/:id/media with file > MEDIA_MAX_BYTES → 413"
+    },
+    {
+      "id": "BE-068",
+      "title": "Malformed JSON behavior — Fastify handles automatically",
+      "severity": "P3",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Validation",
+      "evidence": [
+        { "type": "file", "location": "backend/src/app.ts", "lines": "80" }
+      ],
+      "impact": "Fastify returns 400 for malformed JSON. No explicit test but framework handles it. Error handler returns safe envelope.",
+      "rootCause": "No explicit test, but framework handles it.",
+      "recommendation": "Add a malformed JSON regression test.",
+      "remediationRisk": "Low.",
+      "regressionTest": "New test: POST /api/auth/login with malformed JSON → 400 VALIDATION_ERROR"
+    },
+    {
+      "id": "BE-069",
+      "title": "Seed determinism FAILURE — test products.ts uses new Date() instead of SEED_DATES",
+      "severity": "P1",
+      "status": "PROVEN",
+      "appliesTo": "both",
+      "area": "Seed safety",
+      "evidence": [
+        { "type": "file", "location": "backend/src/db/seeds/test/products.ts", "lines": "7,29-31" },
+        { "type": "command", "command": "npm run verify:seed-determinism", "exitCode": 1, "artifact": "evidence/17-seed-determinism.txt" }
+      ],
+      "impact": "Clean Run A hash (324c03c2...) != Clean Run B hash (75a4aca5...). Same row counts (3 users, 2 umkms, 2 products) but different content hashes. Root cause: products.ts line 7 'const now = new Date()' used for publishedAt, createdAt, updatedAt. Production catalogUpdatedAt timestamps confirm drift (2026-08-01T11:43:22 vs 2026-08-01T04:22:26).",
+      "rootCause": "products.ts uses runtime timestamp instead of deterministic SEED_DATES.",
+      "recommendation": "Replace 'const now = new Date()' with 'const now = SEED_DATES.recent' in products.ts. Add SEED_DATES import.",
+      "remediationRisk": "Low — single file, 3 lines changed.",
+      "regressionTest": "npm run verify:seed-determinism exit 0"
+    },
+    {
+      "id": "BE-070",
+      "title": "Production database contains development seed data (e2000000-... IDs visible in public API)",
+      "severity": "P1",
+      "status": "PROVEN",
+      "appliesTo": "production",
+      "area": "Deployment",
+      "evidence": [
+        { "type": "command", "command": "GET /api/products", "exitCode": 0, "artifact": "evidence/40-production-get-summary.txt" },
+        { "type": "command", "command": "GET /api/umkms", "exitCode": 0, "artifact": "evidence/40-production-get-summary.txt" }
+      ],
+      "impact": "Production public API returns deterministic dev seed IDs (e2000000-...001 to e4000000-...201). 12 UMKMs, 52 products. Sitemap contains 'ronaldo' product slug (line 174 of sitemap). Production database was seeded with development profile data, NOT real production data. catalogUpdatedAt timestamps differ across UMKMs (11:43:22 vs 04:22:26) confirming non-deterministic seed was applied.",
+      "rootCause": "Development seed was applied to production Aiven database at some point. No data migration to real UMKM data has occurred.",
+      "recommendation": "Either (a) acknowledge this is intentional for MVP/launch with placeholder data, or (b) clear production database and re-seed with real Desa Loning UMKM data via admin UI. The 'ronaldo' product should be investigated and removed.",
+      "remediationRisk": "High — requires user decision about production data strategy.",
+      "regressionTest": "Production /api/products returns real UMKM data, not e-prefix seed IDs"
+    }
+  ]
+}

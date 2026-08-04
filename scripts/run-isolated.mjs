@@ -1,4 +1,5 @@
 import { rmSync } from 'node:fs';
+import { createServer } from 'node:net';
 import { spawn, spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { assertDisposableDatabase } from './lib/disposable-db-safety.mjs';
@@ -8,18 +9,47 @@ const npmCli = process.env.npm_execpath;
 if (!npmCli) throw new Error('npm_execpath is required for shell-free npm execution');
 const mode = process.argv[2];
 if (!['integration', 'e2e', 'full', 'migration', 'zoom-native'].includes(mode)) throw new Error('Usage: node scripts/run-isolated.mjs integration|e2e|full|migration|zoom-native [Playwright args]');
-const project = mode === 'e2e' || mode === 'zoom-native' ? 'marketplace-loning-e2e-phase0' : mode === 'migration' ? 'marketplace-loning-test-migration-v12' : 'marketplace-loning-test-phase0';
-const database = mode === 'e2e' || mode === 'zoom-native' ? 'loning_phase0_e2e' : mode === 'migration' ? 'loning_v12_migration_test' : 'loning_phase0_test';
-const port = mode === 'e2e' || mode === 'zoom-native' ? '55433' : '55432';
-const minioPort = mode === 'e2e' || mode === 'zoom-native' ? '59002' : '59000';
-const minioConsolePort = mode === 'e2e' || mode === 'zoom-native' ? '59003' : '59001';
-const artifactRoot = resolve(root, '.phase0-runtime', mode);
+const invocationId = `${process.pid}-${Date.now().toString(36)}`;
+const projectPrefix = mode === 'e2e' || mode === 'zoom-native' ? 'marketplace-loning-e2e' : mode === 'migration' ? 'marketplace-loning-test-migration' : 'marketplace-loning-test';
+const project = `${projectPrefix}-${invocationId}`.slice(0, 59);
+const database = mode === 'e2e' || mode === 'zoom-native' ? `loning_${invocationId.replaceAll('-', '_')}_e2e` : `loning_${invocationId.replaceAll('-', '_')}_test`;
+const artifactRoot = resolve(root, '.phase0-runtime', mode, invocationId);
 const artifactMediaRoot = resolve(artifactRoot, 'media');
-const frontendOrigin = 'http://localhost:3100';
-const backendOrigin = 'http://localhost:3101';
+const applicationSpecificKeys = [
+  'ALLOW_ADMIN_BOOTSTRAP', 'ALLOW_SEED', 'APP_ENV', 'AWS_ACCESS_KEY_ID', 'AWS_CONTAINER_CREDENTIALS_FULL_URI',
+  'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI', 'AWS_PROFILE', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN',
+  'AWS_WEB_IDENTITY_TOKEN_FILE', 'BOOTSTRAP_CONFIRM', 'BOOTSTRAP_ADMIN_EMAIL', 'BOOTSTRAP_ADMIN_PASSWORD',
+  'BOOTSTRAP_ADMIN_USERNAME', 'DATABASE_ENVIRONMENT', 'DATABASE_URL', 'GOOGLE_APPLICATION_CREDENTIALS',
+  'MEDIA_FILESYSTEM_ROOT', 'MEDIA_PUBLIC_BASE_URL', 'MEDIA_STORAGE_DRIVER', 'PUBLIC_SITE_URL',
+  'S3_ACCESS_KEY_ID', 'S3_BUCKET', 'S3_ENDPOINT', 'S3_FORCE_PATH_STYLE', 'S3_REGION', 'S3_SECRET_ACCESS_KEY',
+  'SEED_DEVELOPMENT_PASSWORD', 'SEED_PROFILE', 'VITE_API_URL', 'VITE_PUBLIC_SITE_URL',
+];
+const inheritedEnv = { ...process.env };
+for (const key of applicationSpecificKeys) delete inheritedEnv[key];
+
+async function findAvailablePorts(count) {
+  const servers = [];
+  try {
+    for (let index = 0; index < count; index += 1) {
+      const server = createServer();
+      await new Promise((accept, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', accept); });
+      servers.push(server);
+    }
+    return servers.map((server) => String(server.address().port));
+  } finally {
+    await Promise.all(servers.map((server) => new Promise((accept) => server.close(accept))));
+  }
+}
+
+const [port, minioPort, minioConsolePort, frontendPort, backendPort] = await findAvailablePorts(5);
+const frontendOrigin = `http://127.0.0.1:${frontendPort}`;
+const backendOrigin = `http://127.0.0.1:${backendPort}`;
 const env = {
-  ...process.env,
+  ...inheritedEnv,
   NODE_ENV: 'test',
+  APP_ENV: 'test',
+  DATABASE_ENVIRONMENT: 'test',
+  SEED_PROFILE: 'test',
   ALLOW_DISPOSABLE_DB_MUTATION: '1',
   DISPOSABLE_COMPOSE_PROJECT: project,
   DISPOSABLE_DB_PORT: port,
@@ -28,17 +58,12 @@ const env = {
   DISPOSABLE_MINIO_CONSOLE_PORT: minioConsolePort,
   DATABASE_URL: `postgresql://loning_test:loning_disposable_only@127.0.0.1:${port}/${database}`,
   COOKIE_SECURE: 'false',
-  PORT: '3101',
+  PORT: backendPort,
   CORS_ORIGIN: frontendOrigin,
+  PUBLIC_SITE_URL: frontendOrigin,
   MEDIA_STORAGE_DRIVER: 'filesystem',
   MEDIA_FILESYSTEM_ROOT: artifactMediaRoot,
   MEDIA_PUBLIC_BASE_URL: backendOrigin,
-  S3_ENDPOINT: `http://127.0.0.1:${minioPort}`,
-  S3_BUCKET: 'loning-test-media',
-  S3_REGION: 'us-east-1',
-  S3_ACCESS_KEY_ID: 'minioadmin',
-  S3_SECRET_ACCESS_KEY: 'minioadmin',
-  S3_FORCE_PATH_STYLE: 'true',
   RATE_LIMIT_MAX: '10000',
   LOGIN_RATE_LIMIT_MAX: '1000',
   VITE_API_URL: `${backendOrigin}/api`,
@@ -47,6 +72,7 @@ const env = {
   E2E_BASE_URL: frontendOrigin,
   E2E_FRONTEND_ORIGIN: frontendOrigin,
 };
+const seedEnv = { ...env, ALLOW_SEED: '1' };
 const target = assertDisposableDatabase(env);
 const compose = ['compose', '--project-name', project, '--file', 'compose.test.yaml'];
 const composeConfig = spawnSync('docker', [...compose, 'config', '--quiet'], { cwd: root, env, stdio: 'ignore', shell: false, windowsHide: true });
@@ -59,7 +85,8 @@ const backendOutput = [];
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { cwd: root, env, stdio: 'inherit', shell: false, windowsHide: true, ...options });
   if (result.error) throw new Error(`${command} ${args.join(' ')} failed to start: ${result.error.message}`);
-  if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} failed with exit code ${result.status}${result.signal ? ` and signal ${result.signal}` : ''}`);
+  if (result.signal) throw new Error(`${command} ${args.join(' ')} terminated by ${result.signal}`);
+  if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} failed with exit code ${result.status}`);
   return result;
 }
 function npm(args, options) { return run(process.execPath, [npmCli, ...args], options); }
@@ -160,7 +187,9 @@ function stop(child) {
   else child.kill('SIGTERM');
 }
 async function integration() {
-  const backend = spawn(process.execPath, [npmCli, '--prefix', 'backend', 'run', 'dev'], { cwd: root, env, shell: false, windowsHide: true });
+  const backendEnv = { ...env };
+  delete backendEnv.ALLOW_SEED;
+  const backend = spawn(process.execPath, [npmCli, '--prefix', 'backend', 'run', 'dev'], { cwd: root, env: backendEnv, shell: false, windowsHide: true });
   backend.stdout.on('data', data => backendOutput.push(String(data)));
   backend.stderr.on('data', data => backendOutput.push(String(data)));
   try { await waitForBackend(); run(process.execPath, ['scripts/integration-smoke.mjs'], { env: { ...env, API_BASE_URL: `${backendOrigin}/api`, FRONTEND_ORIGIN: frontendOrigin } }); }
@@ -278,17 +307,36 @@ function existingDataMigration() {
   console.log('EXISTING_DATA_MIGRATION_PASS');
 }
 
+let ownsResources = false;
 let failure;
+let cleanupFailure;
+let signalReceived;
+async function teardownOwnedResources() {
+  if (ownsResources) {
+    try { docker(['down', '--volumes', '--remove-orphans']); }
+    finally { ownsResources = false; }
+  }
+  rmSync(artifactRoot, { recursive: true, force: true });
+}
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+  process.once(signal, () => {
+    signalReceived = signal;
+    void teardownOwnedResources()
+      .catch((error) => console.error(`ISOLATED_${mode.toUpperCase()}_CLEANUP_FAILURE: ${error instanceof Error ? error.message : error}`))
+      .finally(() => process.exit(1));
+  });
+}
 console.log(`Disposable target: ${target.redactedUrl}; project=${target.project}; port=${target.port}`);
 try {
   docker(['up', '-d', 'postgres', 'minio']);
+  ownsResources = true;
   await waitForPostgres();
   await waitForMinIO();
   await verifyMinioRestartPersistence();
   if (mode === 'migration') existingDataMigration();
   else {
     npm(['--prefix', 'backend', 'run', 'db:migrate']);
-    npm(['--prefix', 'backend', 'run', 'db:seed']);
+    npm(['--prefix', 'backend', 'run', 'db:seed:test'], { env: seedEnv });
     if (mode === 'e2e' || mode === 'full') npm(['--prefix', 'backend', 'run', 'e2e:setup']);
     if (mode === 'zoom-native') npm(['exec', '--', 'playwright', 'test', '--config', 'playwright.zoom-native.config.ts']);
     else if (mode === 'e2e' || mode === 'full') npm(['exec', '--', 'playwright', 'test', ...process.argv.slice(3)]);
@@ -297,19 +345,11 @@ try {
   }
 } catch (error) {
   failure = error instanceof Error ? error : new Error(String(error));
-  try { docker(['logs', '--no-color', '--tail', '200', 'postgres']); } catch {}
+  if (ownsResources) { try { docker(['logs', '--no-color', '--tail', '200', 'postgres']); } catch {} }
+} finally {
+  try { await teardownOwnedResources(); }
+  catch (error) { cleanupFailure = error instanceof Error ? error : new Error(String(error)); }
 }
-let cleanupFailure;
-try {
-  docker(['down', '--volumes', '--remove-orphans']);
-} catch (error) {
-  cleanupFailure = error instanceof Error ? error : new Error(String(error));
-}
-try {
-  rmSync(artifactRoot, { recursive: true, force: true });
-} catch (error) {
-  const artifactCleanupFailure = error instanceof Error ? error : new Error(String(error));
-  cleanupFailure = cleanupFailure ? new Error(`${cleanupFailure.message}; artifact cleanup also failed: ${artifactCleanupFailure.message}`) : artifactCleanupFailure;
-}
+if (signalReceived) process.exitCode = 1;
 if (failure) { console.error(`ISOLATED_${mode.toUpperCase()}_FAILURE: ${failure.message}`); process.exitCode = 1; }
 if (cleanupFailure) { console.error(`ISOLATED_${mode.toUpperCase()}_CLEANUP_FAILURE: ${cleanupFailure.message}`); process.exitCode = 1; }

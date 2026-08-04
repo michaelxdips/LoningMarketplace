@@ -42,7 +42,7 @@ async function stabilizeLegacyImages(page: Page) {
   await page.route('https://images.unsplash.com/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: validPng }));
 }
 
-async function gotoWithExpectedTransition(events: ReturnType<typeof observeBrowserEvents>, page: Page, path: string, apiPattern: RegExp = /http:\/\/localhost:3(?:001|101)\/api\/(?:products|umkms|auth\/session)/) {
+async function gotoWithExpectedTransition(events: ReturnType<typeof observeBrowserEvents>, page: Page, path: string, apiPattern: RegExp = /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:products|umkms|auth\/session)/) {
   const escapedPath = path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const transition = events.beginExpectedTransition({ reason: `navigate:${path}`, expectedRequests: [{ method: 'GET', url: new RegExp(`${escapedPath}(?:\\?.*)?$`) }, { method: 'GET', url: apiPattern }] });
   try { await page.goto(path); await page.waitForLoadState('networkidle'); } finally { transition.complete(); }
@@ -82,7 +82,8 @@ test('public homepage loads the directory shell and core interactions', async ({
     expect(menuBoxes.every((box) => box !== null)).toBe(true);
     expect(menuBoxes.slice(1).every((box, index) => box!.x > menuBoxes[index]!.x)).toBe(true);
 
-    const desktopCta = navigation.getByRole('link', { name: 'Jelajahi Produk', exact: true });
+    const desktopCta = desktopMenuItems[0];
+    await expect(desktopCta).toHaveAttribute('href', '/#featured-products');
     await expect(desktopCta).toBeVisible();
     await expect(desktopCta).toBeEnabled();
     await desktopCta.focus();
@@ -103,7 +104,8 @@ test('public homepage loads the directory shell and core interactions', async ({
     const mobileMenuItems = mobileMenuLabels.map((name) => mobileMenu.getByRole('link', { name, exact: true }));
     for (const item of mobileMenuItems) await expect(item).toBeVisible();
 
-    const mobileCta = mobileMenu.getByRole('link', { name: 'Jelajahi Produk', exact: true });
+    const mobileCta = mobileMenuItems[0];
+    await expect(mobileCta).toHaveAttribute('href', '/#featured-products');
     await expect(mobileCta).toBeVisible();
     await expect(mobileCta).toBeEnabled();
     await mobileCta.click();
@@ -112,7 +114,7 @@ test('public homepage loads the directory shell and core interactions', async ({
 
     await toggle.click();
     await expect(mobileMenu).toBeVisible();
-    const reopenedMobileCta = mobileMenu.getByRole('link', { name: 'Jelajahi Produk', exact: true });
+    const reopenedMobileCta = mobileMenu.getByRole('link', { name: 'Produk', exact: true });
     await reopenedMobileCta.focus();
     await expect(reopenedMobileCta).toBeFocused();
     await reopenedMobileCta.press('Enter');
@@ -181,7 +183,7 @@ test('admin login settles and enforces password change', async ({ page, context 
   await gotoWithExpectedTransition(events, page, '/login');
   await page.getByLabel('Email atau username').fill(E2E_FIXTURES.credentials.adminMustChangePassword.identifier);
   await page.getByLabel('Kata sandi', { exact: true }).fill(E2E_FIXTURES.credentials.adminMustChangePassword.password);
-  await runExpectedAction(events, page, 'admin-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/change-password$/); }, /http:\/\/localhost:3(?:001|101)\/api\/(?:auth\/session|auth\/me)/);
+  await runExpectedAction(events, page, 'admin-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/change-password$/); }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:auth\/session|auth\/me)/);
   const cookies = await context.cookies();
   expect(cookies.find((cookie) => cookie.name === 'loning_session')?.httpOnly).toBe(true);
   expect(await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length }))).toEqual({ local: 0, session: 0 });
@@ -194,14 +196,14 @@ test('owner is blocked from admin routes and can logout', async ({ page }) => {
   await gotoWithExpectedTransition(events, page, '/login');
   await page.getByLabel('Email atau username').fill(E2E_FIXTURES.credentials.owner.identifier);
   await page.getByLabel('Kata sandi', { exact: true }).fill(E2E_FIXTURES.credentials.owner.password);
-  await runExpectedAction(events, page, 'owner-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/dashboard$/); }, /http:\/\/localhost:3(?:001|101)\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
+  await runExpectedAction(events, page, 'owner-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/dashboard$/); }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
   if (page.viewportSize()?.width === 390) await page.getByRole('button', { name: 'Buka navigasi' }).click();
   await expect(page.getByRole('link', { name: `${BRAND_NAME} — beranda` })).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  await gotoWithExpectedTransition(events, page, '/dashboard/users', /http:\/\/localhost:3(?:001|101)\/api\/manage\/(?:products|umkms)/);
+  await gotoWithExpectedTransition(events, page, '/dashboard/users', /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/manage\/(?:products|umkms)/);
   await expect(page).toHaveURL(/\/dashboard$/);
   if (page.viewportSize()?.width === 390) await page.getByRole('button', { name: 'Buka navigasi' }).click();
-  await runExpectedAction(events, page, 'owner-logout-redirect', async () => { await page.getByRole('button', { name: 'Keluar' }).click(); await expect(page).toHaveURL(/\/login$/); }, /http:\/\/localhost:3(?:001|101)\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
+  await runExpectedAction(events, page, 'owner-logout-redirect', async () => { await page.getByRole('button', { name: 'Keluar' }).click(); await expect(page).toHaveURL(/\/login$/); }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
   assertUnauthenticatedEvents(events);
   events.dispose();
 });

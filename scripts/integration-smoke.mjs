@@ -2,7 +2,7 @@ const baseUrl = (process.env.API_BASE_URL ?? 'http://localhost:3001/api').replac
 const frontendOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:3000';
 const fixtureId = 'e3000000-0000-4000-8000-000000000001';
 const testIdentifier = process.env.E2E_ADMIN_EMAIL ?? 'admin1@local.test';
-const testPassword = process.env.E2E_ADMIN_PASSWORD ?? 'admin1234';
+const testPassword = process.env.E2E_ADMIN_PASSWORD ?? 'test1234';
 
 async function request(path, options = {}, expected = [200]) {
   const response = await fetch(`${baseUrl}${path}`, options);
@@ -34,8 +34,11 @@ const invalidUmkmCategory = await request('/umkms?category=Invalid', {}, [400]);
 const oversizedProductQuery = await request(`/products?q=${'a'.repeat(81)}`, {}, [400]);
 const boundedProductLimit = await request('/products?limit=101', {}, [400]);
 
-if (health.body.status !== 'ok' || ready.body.status !== 'ok' || !umkms.body.data.length || !products.body.data.length || !category.body.data.length) {
-  throw new Error('Local API smoke assertions failed');
+if (health.body.status !== 'ok' || ready.body.status !== 'ok') {
+  throw new Error('Local API health/readiness failed');
+}
+if (!umkms.body.data.length || !products.body.data.length || !category.body.data.length) {
+  throw new Error('Local API smoke assertions failed: no catalog data');
 }
 if (!trimmedProducts.body.data.length || trimmedProducts.body.data.some(item => item.category !== 'Kuliner') || trimmedProducts.body.data.length > 2) throw new Error('Combined trimmed product search failed');
 if (!joinedParentProducts.body.data.length || joinedParentProducts.body.data.some(item => item.umkmName !== 'Warung Nasi Khas Loning')) throw new Error('Product search by public parent name failed');
@@ -110,3 +113,4 @@ const restored = await request(`/manage/products/${fixtureId}`, {
 if (restored.body.data.price !== beforeProduct.price || restored.body.data.description !== beforeProduct.description) throw new Error('Fixture restoration failed');
 
 console.log(`API smoke passed: ${umkms.body.data.length} UMKMs, ${products.body.data.length} products, authenticated PATCH persisted and restored.`);
+

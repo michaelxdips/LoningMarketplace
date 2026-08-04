@@ -63,26 +63,35 @@ Protected and role guards run before sensitive screens render. A forced-password
 
 ```bash
 npm install
-npm --prefix backend install
 npm run dev:all
+npm run lint
 npm run typecheck
-npm run build:all
 npm run test:backend
 npm run test:frontend
-npm run test:integration
-npm run test:integration:local
-npm run test:e2e
-npm run test:e2e:local
-npm --prefix backend run db:migrate
-npm --prefix backend run db:seed
-npm --prefix backend run admin:create
+npm run test:harness-safety
+npm run verify:seed-determinism
+npm run test:integration:isolated
+npm run test:e2e:isolated
+npm run test:e2e:zoom-native:isolated
+npm run build
+npm run test:all
+npm run db:migrate
+npm run db:seed:dev
+npm run db:bootstrap-admin
 npm --prefix backend run sessions:cleanup
 npm --prefix backend run media:cleanup
 ```
 
-The integration commands own their local PostgreSQL/backend lifecycle and preserve the PostgreSQL volume; no separately running backend is required.
+`test:integration` dan `test-integration-local.mjs` mendelegasikan ke harness isolated. Integration, E2E, native zoom, migration scenarios, dan verifier determinism membuat Compose project, database, port, volume, dan media directory disposable milik invocation tersebut; semuanya dibersihkan pada success, failure, atau signal yang dapat ditangani. Tidak ada fallback ke development Compose atau database persisten.
 
-`admin:create` reads temporary `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`, and `BOOTSTRAP_ADMIN_DISPLAY_NAME` environment variables. It is not run automatically during migration, seed, or server startup.
+Seed harus memakai profile explicit:
+
+- `db:seed:dev`: development loopback dengan `NODE_ENV`, `APP_ENV`, dan `DATABASE_ENVIRONMENT` semuanya `development`, plus `ALLOW_SEED=1`.
+- `db:seed:test`: hanya child seed harness disposable; `ALLOW_SEED=1` tidak diwariskan ke migration, server, Vitest, Playwright, fixture setup, atau runner.
+- `db:seed:preview`: disabled dan sengaja gagal.
+- `db:seed`: legacy compatibility alias yang sengaja gagal.
+
+`db:bootstrap-admin` membuat tepat satu `superadmin` tanpa default password. Command membutuhkan temporary `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_USERNAME`, `BOOTSTRAP_ADMIN_PASSWORD`, `BOOTSTRAP_ADMIN_DISPLAY_NAME`, `ALLOW_ADMIN_BOOTSTRAP=1`, dan `BOOTSTRAP_CONFIRM=CREATE_SUPERADMIN`; command menolak target production-like yang tidak dinyatakan secara explicit dan menolak bila Super Admin sudah ada. `admin:create` adalah legacy compatibility alias yang sengaja gagal. Bootstrap tidak dijalankan otomatis oleh migration, seed, atau startup.
 
 ## Local Development Without Aiven
 
@@ -92,7 +101,7 @@ npm run db:local:setup
 npm run dev:all
 ```
 
-Docker Compose runs PostgreSQL 16 locally at `localhost:5432` using database `loning_digital`, user `loning`, and password `loning_local_dev`. The setup waits for the database, applies migrations, and seeds safely. `npm run db:local:reset` removes the named volume and is destructive. Aiven is not required locally; switching later changes only `backend/.env`.
+Docker Compose runs PostgreSQL 16 locally at `localhost:5432` using database `loning_digital`, user `loning`, and password `loning_local_dev`. The setup waits for the database, applies migrations, and runs `db:seed:dev` under the explicit development guard. `npm run db:local:reset` removes the named development volume and is destructive. Aiven is not required locally; switching later changes only `backend/.env`.
 
 `/api/health` is liveness and `/api/ready` is a bounded database readiness check. If `DATABASE_URL` is missing, the backend exits and the frontend keeps its honest retry/error state instead of serving mock data.
 
@@ -100,10 +109,10 @@ The signed-out session contract is `GET /api/auth/session` returning a safe `401
 
 ## Deployment Notes
 
-Use Aiven's complete PostgreSQL URL with `sslmode=require`. Deploy the frontend as a static SPA with `index.html` fallback for `/login` and `/dashboard/*`. Configure the backend with one exact frontend `CORS_ORIGIN`, credentialed CORS, and `COOKIE_SECURE=true` in production. Schedule `sessions:cleanup` through the hosting platform if desired.
+Use Aiven's complete PostgreSQL URL with `sslmode=require`. Deploy the frontend as a static SPA with `index.html` fallback for `/login` and `/dashboard/*`. Configure the backend with one exact frontend `CORS_ORIGIN`, credentialed CORS, and `COOKIE_SECURE=true` in production. Production startup runs migration followed by the server; it never runs seed or bootstrap. Schedule `sessions:cleanup` through the hosting platform if desired.
 
 Managed media supports one primary UMKM/product image. Development uses ignored `backend/storage/`; production requires S3-compatible storage. Uploads are decoded, normalized to WebP card/thumbnail variants, metadata-stripped, bounded, and authorization-checked. Existing external URLs remain a fallback. This phase excludes registration, OAuth, MFA, password recovery, multi-image galleries, cropping, video/document uploads, automatic external downloads, commerce, payments, orders, shipping, inventory quantities, ratings, reviews, verification, commissions, analytics, notifications, and real-time features.
 
 ## Verification Status
 
-Credential-independent typecheck, production builds, migration generation, static checks, and injected backend tests are required before release. Real migration/seed/auth/CRUD smoke testing requires a non-production `DATABASE_URL`; browser desktop/mobile acceptance requires browser tooling.
+Repository safety, seed target refusal, clean seed repeatability, same-target idempotency, source tests, build, isolated integration, isolated E2E, native zoom, and the complete aggregate gate are required before Wave 1 closure. These gates use only local disposable resources and do not require a production or shared `DATABASE_URL`.
