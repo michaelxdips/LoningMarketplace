@@ -388,6 +388,10 @@ export function ProductFormPage() {
     Awaited<ReturnType<typeof uploadMedia>> | undefined
   >();
   const [uploading, setUploading] = useState(false);
+  // UMKM combobox state: allows typing to filter or entering a new UMKM name
+  const [umkmSearch, setUmkmSearch] = useState("");
+  const [umkmMode, setUmkmMode] = useState<"select" | "create">("select");
+  const [creatingUmkm, setCreatingUmkm] = useState(false);
   const save = useManagedMutation<
     ProductCreateInput | ProductUpdateInput,
     ManagedProduct
@@ -431,7 +435,15 @@ export function ProductFormPage() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const local = required(data, ["umkmId", "name", "description", "category"]);
+    const local = required(data, ["name", "description", "category"]);
+    // UMKM validation: either select existing or type new name
+    let umkmId = text(data, "umkmId");
+    const newUmkmName = umkmMode === "create" ? umkmSearch.trim() : "";
+    if (umkmMode === "select" && !umkmId) {
+      local.umkmId = "Pilih UMKM atau ketik nama baru.";
+    } else if (umkmMode === "create" && !newUmkmName) {
+      local.umkmId = "Nama UMKM baru tidak boleh kosong.";
+    }
     const price = text(data, "price");
     if (price && !/^\d+$/.test(price))
       local.price = "Gunakan angka rupiah bulat yang valid.";
@@ -449,9 +461,26 @@ export function ProductFormPage() {
     media.setError(undefined);
     let entitySaved = false;
     try {
+      // Auto-create UMKM draft if user typed a new name
+      if (umkmMode === "create" && newUmkmName) {
+        setCreatingUmkm(true);
+        const placeholderImage = "https://placehold.co/600x400/e8eee8/4a6b4a?text=" + encodeURIComponent(newUmkmName);
+        const newUmkm = await managementApi.umkms.create({
+          name: newUmkmName,
+          owner: newUmkmName,
+          description: `UMKM ${newUmkmName} — dibuat otomatis dari form produk. Lengkapi data UMKM ini.`,
+          phone: "62000000000",
+          category: text(data, "category") as Category,
+          imageUrl: placeholderImage,
+          imageAssetId: null,
+          address: "Belum diisi",
+        }, csrf);
+        umkmId = newUmkm.id;
+        setCreatingUmkm(false);
+      }
       const image = productImageInput(imageMode, uploadedAsset?.id, media.externalUrl);
       const common: ProductUpdateInput = {
-        umkmId: text(data, "umkmId"),
+        umkmId,
         name: text(data, "name"),
         price: price === "" ? null : Number(price),
         description: text(data, "description"),
@@ -484,6 +513,7 @@ export function ProductFormPage() {
         void deleteMedia(uploadedAsset.id, csrf).catch(() => undefined);
         setUploadedAsset(undefined);
       }
+      setCreatingUmkm(false);
     }
   };
   if ((editing && item.isPending) || umkms.isPending) return <LoadingPanel />;
@@ -505,21 +535,49 @@ export function ProductFormPage() {
           <Field label="Nama produk" error={errors.name}>
             <Input name="name" required defaultValue={value?.name} />
           </Field>
-          <Field label="UMKM" error={errors.umkmId}>
-            <Select name="umkmId" required defaultValue={value?.umkmId} disabled={editing && !hasCapability(sessionUser, 'products:transfer-owner')}>
-              <option value="">Pilih UMKM</option>
-              {pageItems(umkms.data)
-                .filter(
-                  (x) =>
-                    x.publicationStatus !== "archived" ||
-                    x.id === value?.umkmId,
-                )
-                .map((x) => (
-                  <option key={x.id} value={x.id}>
-                    {x.name}
-                  </option>
-                ))}
-            </Select>
+          <Field label="UMKM" error={errors.umkmId} hint={umkmMode === "create" ? "UMKM baru akan dibuat sebagai draft otomatis." : undefined}>
+            <div className="flex gap-2">
+              {umkmMode === "select" ? (
+                <Select name="umkmId" required defaultValue={value?.umkmId} disabled={editing && !hasCapability(sessionUser, 'products:transfer-owner')} className="flex-1">
+                  <option value="">Pilih UMKM</option>
+                  {pageItems(umkms.data)
+                    .filter(
+                      (x) =>
+                        x.publicationStatus !== "archived" ||
+                        x.id === value?.umkmId,
+                    )
+                    .map((x) => (
+                      <option key={x.id} value={x.id}>
+                        {x.name}
+                      </option>
+                    ))}
+                </Select>
+              ) : (
+                <input
+                  type="text"
+                  required
+                  value={umkmSearch}
+                  onChange={(e) => setUmkmSearch(e.target.value)}
+                  placeholder="Ketik nama UMKM baru"
+                  className="focus-ring min-h-[46px] flex-1 rounded-xl border border-sage-border bg-white px-4 text-sm text-charcoal shadow-2xs transition-all focus:border-forest focus:ring-2 focus:ring-forest/15"
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => { setUmkmMode(umkmMode === "select" ? "create" : "select"); setUmkmSearch(""); setErrors((c) => ({ ...c, umkmId: "" })); }}
+                className="focus-ring shrink-0 rounded-xl border border-sage-border bg-white px-3 text-xs font-bold text-forest shadow-2xs transition-all hover:bg-cream-tint"
+              >
+                {umkmMode === "select" ? "+ UMKM baru" : "Batal"}
+              </button>
+              {umkmMode === "select" && (
+                <Link
+                  to={`/dashboard/umkms/new`}
+                  className="focus-ring shrink-0 rounded-xl border border-forest/30 bg-forest/5 px-3 text-xs font-bold text-forest shadow-2xs transition-all hover:bg-forest/10"
+                >
+                  Form UMKM
+                </Link>
+              )}
+            </div>
           </Field>
           <Field label="Kategori" error={errors.category}>
             <Select name="category" required defaultValue={value?.category}>
@@ -638,7 +696,7 @@ export function ProductFormPage() {
           </label>
         </div>
         <FormActions
-          pending={save.isPending || uploading}
+          pending={save.isPending || uploading || creatingUmkm}
           editing={editing}
           cancelTo="/dashboard/products"
         />
