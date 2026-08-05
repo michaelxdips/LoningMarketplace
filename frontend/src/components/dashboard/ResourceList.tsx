@@ -224,6 +224,20 @@ export default function ResourceList<
             <option value="false">Tidak tersedia</option>
           </Select>
         )}
+        {(Boolean(search) || Boolean(category) || Boolean(publicationStatus) || Boolean(availability)) && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearch("");
+              setCategory("");
+              setStatus("");
+              setAvailability("");
+            }}
+            className="focus-ring self-start rounded-xl border border-sage-border bg-white px-3.5 py-2.5 text-xs font-bold text-warm-gray hover:text-charcoal"
+          >
+            Reset Filter
+          </button>
+        )}
       </div>
       {action.isError && (
         <div className="mb-4">
