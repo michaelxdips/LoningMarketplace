@@ -24,6 +24,10 @@ function getBaseUrl() {
   return value.replace(/\/+$/, '');
 }
 
+/** Read the persisted session token used as Bearer fallback for environments where cookies are blocked. */
+function getStoredSessionToken(): string | null {
+  try { return localStorage.getItem('loning_session_token'); } catch { return null; }
+}
 
 async function fetchApi(url: string, options?: RequestInit) {
   try { return await fetch(url, options); }
@@ -40,7 +44,14 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   const { skipUnauthorizedHandler, ...requestOptions } = options;
   const headers = new Headers(requestOptions.headers);
   if (requestOptions.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  // Inject stored Bearer token as fallback when browser may have blocked the session cookie (e.g. iOS Safari cross-site ITP).
+  // Backend authenticate guard checks cookie first; Bearer is only used when no cookie is present.
+  if (!headers.has('Authorization')) {
+    const stored = getStoredSessionToken();
+    if (stored) headers.set('Authorization', `Bearer ${stored}`);
+  }
   const response = await fetchApi(`${getBaseUrl()}${path}`, { ...requestOptions, headers, credentials: 'include' });
+
   const body = await response.json().catch(() => ({})) as { data?: T } & ErrorEnvelope;
   if (!response.ok) {
     const error = new ApiError(response.status, body.error?.message ?? 'Permintaan gagal.', body.error?.code);

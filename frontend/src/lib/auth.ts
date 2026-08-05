@@ -30,6 +30,10 @@ export const csrfKey = ['auth', 'csrf'] as const;
 export function rememberSession(queryClient: QueryClient, session: Session | null) {
   if (session === null) {
     try { localStorage.removeItem('loning_session_token'); } catch { /* ignore */ }
+  } else if (session.sessionToken) {
+    // Persist token for cross-site environments where cookies may be blocked (e.g. iOS Safari ITP).
+    // Backend authenticate guard accepts Authorization: Bearer as fallback when cookie is absent.
+    try { localStorage.setItem('loning_session_token', session.sessionToken); } catch { /* ignore */ }
   }
   queryClient.setQueryData(sessionKey, session);
   queryClient.setQueryData(csrfKey, session?.csrfToken ?? null);
