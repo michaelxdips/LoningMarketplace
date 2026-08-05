@@ -2,9 +2,11 @@ import { sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '../../schema.js';
 import { categories, publicationStatuses } from '../../repository.js';
+import { SEED_DATES } from '../shared/dates.js';
+import { buildPublicMediaUrl } from '../../../media/storage.js';
 
-export async function seedProducts(db: PostgresJsDatabase<typeof schema>, umkmId: string) {
-  const now = new Date();
+export async function seedProducts(db: PostgresJsDatabase<typeof schema>, umkmId: string, mediaPublicBaseUrl: string) {
+  const now = SEED_DATES.recent;
   
   const fixtures = [
     { id: 'e3000000-0000-4000-8000-000000000001', name: 'E2E Produk Stabilization Desktop', displayOrder: 9000 },
@@ -20,7 +22,7 @@ export async function seedProducts(db: PostgresJsDatabase<typeof schema>, umkmId
       price: 35000,
       description: 'Produk deterministik untuk pengujian browser lokal.',
       category: 'Kuliner' as typeof categories[number],
-      imageUrl: 'http://localhost:3001/media/fixtures/e2e-product.webp', // Required by check constraint
+      imageUrl: buildPublicMediaUrl(mediaPublicBaseUrl, 'fixtures/e2e-product.webp'), // Required by check constraint
       imageAssetId: null,
       isAvailable: true,
       unit: 'Pcs',
@@ -38,12 +40,14 @@ export async function seedProducts(db: PostgresJsDatabase<typeof schema>, umkmId
         price: sql`excluded.price`,
         description: sql`excluded.description`,
         category: sql`excluded.category`,
+        imageUrl: sql`excluded.image_url`,
+        imageAssetId: null,
         isAvailable: sql`excluded.is_available`,
         unit: sql`excluded.unit`,
         displayOrder: sql`excluded.display_order`,
         publicationStatus: sql`excluded.publication_status`,
         publishedAt: sql`excluded.published_at`,
-        updatedAt: sql`now()`,
+        updatedAt: now,
       }
     });
   }

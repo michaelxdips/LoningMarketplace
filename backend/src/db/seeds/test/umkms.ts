@@ -4,10 +4,10 @@ import * as schema from '../../schema.js';
 import { SEED_DATES } from '../shared/dates.js';
 import { categories, publicationStatuses, type Category } from '../../repository.js';
 import { UMKMS } from '../shared/ids.js';
+import { buildPublicMediaUrl } from '../../../media/storage.js';
 
-export async function seedUmkms(db: PostgresJsDatabase<typeof schema>) {
-  const now = new Date();
-  
+export async function seedUmkms(db: PostgresJsDatabase<typeof schema>, mediaPublicBaseUrl: string) {
+  const imageUrl = buildPublicMediaUrl(mediaPublicBaseUrl, 'fixtures/e2e-product.webp');
   const umkms = [
     { 
       id: UMKMS.kuliner1, 
@@ -17,7 +17,7 @@ export async function seedUmkms(db: PostgresJsDatabase<typeof schema>) {
       description: 'Kuliner tradisional dengan cita rasa otentik',
       phone: '6281234567890',
       category: 'Kuliner' as Category,
-      imageUrl: 'http://localhost:3001/media/fixtures/e2e-product.webp', // Required by check constraint
+      imageUrl, // Required by check constraint
       imageAssetId: null,
       address: 'Jl. Raya Loning No. 123, Desa Loning',
       workingHours: '08:00-20:00',
@@ -35,7 +35,7 @@ export async function seedUmkms(db: PostgresJsDatabase<typeof schema>) {
       description: 'Kerajinan tangan berbahan lokal',
       phone: '6281234567891',
       category: 'Kerajinan' as Category,
-      imageUrl: 'http://localhost:3001/media/fixtures/e2e-product.webp', // Required by check constraint
+      imageUrl, // Required by check constraint
       imageAssetId: null,
       address: 'Jl. Loning Timur No. 45',
       workingHours: '09:00-17:00',
@@ -57,6 +57,8 @@ export async function seedUmkms(db: PostgresJsDatabase<typeof schema>) {
         description: sql`excluded.description`,
         phone: sql`excluded.phone`,
         category: sql`excluded.category`,
+        imageUrl: sql`excluded.image_url`,
+        imageAssetId: null,
         address: sql`excluded.address`,
         workingHours: sql`excluded.working_hours`,
         displayOrder: sql`excluded.display_order`,

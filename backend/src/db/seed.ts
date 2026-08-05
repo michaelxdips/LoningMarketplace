@@ -28,10 +28,11 @@ export async function seed(profile: SeedProfile, env: NodeJS.ProcessEnv = proces
         await seedMedia(tx);
       } else if (profile === 'test') {
         // Test seed creates foundation data for E2E fixtures
+        const mediaPublicBaseUrl = env.MEDIA_PUBLIC_BASE_URL ?? 'http://localhost:3001';
         await testSeedUsers(tx, cryptoHashPassword);
-        await testSeedUmkms(tx);
+        await testSeedUmkms(tx, mediaPublicBaseUrl);
         // Products reference UMKM IDs defined in shared/ids.js
-        await testSeedProducts(tx, 'e2000000-0000-4000-8000-000000000001');
+        await testSeedProducts(tx, 'e2000000-0000-4000-8000-000000000001', mediaPublicBaseUrl);
       }
     });
     console.log(`${profile === 'test' ? 'Test seed with fixture foundation' : profile === 'development' ? 'Development seed' : 'Seed'} completed.`);
