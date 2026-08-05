@@ -68,8 +68,8 @@ export default function Footer() {
                 <Link to="/faq" className="focus-ring rounded text-cream-tint/70 transition-colors hover:text-white">
                   Pertanyaan Umum (FAQ)
                 </Link>
-                <Link to="/login" className="focus-ring rounded text-cream-tint/70 transition-colors hover:text-terracotta font-medium">
-                  Masuk Pengelola
+                <Link to="/version-history" className="focus-ring rounded text-cream-tint/70 transition-colors hover:text-white">
+                  Riwayat Versi (Version History)
                 </Link>
               </nav>
             </div>
