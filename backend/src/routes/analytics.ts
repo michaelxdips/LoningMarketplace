@@ -16,10 +16,12 @@ export async function analyticsRoutes(app: FastifyInstance, repository: Reposito
     const parsed = query.safeParse(request.query);
     if (!parsed.success) return reply.code(400).send(error('Invalid analytics date range', 'INVALID_DATE_RANGE'));
     const from = parseUtcDate(parsed.data.from), to = parseUtcDate(parsed.data.to);
-    if (!from || !to || to <= from) return reply.code(400).send(error('Date range must use real UTC dates with an exclusive end after the start', 'INVALID_DATE_RANGE'));
+    if (!from || !to || to < from) return reply.code(400).send(error('Date range must use real UTC dates with an end on or after the start', 'INVALID_DATE_RANGE'));
     const days = (to.getTime() - from.getTime()) / 86_400_000;
     if (days > 366) return reply.code(400).send(error('Date range cannot exceed 366 days', 'DATE_RANGE_TOO_LARGE'));
-    const [summary, breakdown] = await Promise.all([repository.inquiryAnalytics(from, to), repository.inquiryAnalyticsByTarget(from, to)]);
-    return { data: { from: from.toISOString(), to: to.toISOString(), ...summary, breakdown: Array.from(breakdown) } };
+    const queryTo = new Date(to.getTime() + 86_400_000);
+    const [summary, breakdown] = await Promise.all([repository.inquiryAnalytics(from, queryTo), repository.inquiryAnalyticsByTarget(from, queryTo)]);
+    const breakdownList = Array.isArray(breakdown) ? breakdown : ((breakdown as any)?.rows ?? []);
+    return { data: { from: from.toISOString(), to: to.toISOString(), ...summary, breakdown: breakdownList } };
   });
 }
