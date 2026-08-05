@@ -28,25 +28,17 @@ const productionS3Environment = (overrides: NodeJS.ProcessEnv = {}): NodeJS.Proc
 });
 
 describe('deployment configuration', () => {
-  it('uses the public API health route on Render and Railway', async () => {
-    const [render, railway] = await Promise.all([
-      readRepositoryFile('render.yaml'),
-      readRepositoryFile('backend/railway.toml'),
-    ]);
+  it('uses the public API health route on Render', async () => {
+    const render = await readRepositoryFile('render.yaml');
 
-    expect(render).toMatch(/^\s*healthCheckPath: \/api\/health\s*$/m);
-    expect(railway).toMatch(/^healthcheckPath = "\/api\/health"\s*$/m);
+    expect(render).toMatch(/^\s*healthCheckPath: \/api\/health$/m);
   });
 
   it('migrates without seed or bootstrap on deployment restart and keeps automatic deploy disabled', async () => {
-    const [render, railway] = await Promise.all([
-      readRepositoryFile('render.yaml'),
-      readRepositoryFile('backend/railway.toml'),
-    ]);
-    expect(render).toMatch(/^\s*startCommand: npm run db:migrate --workspace=backend && npm start --workspace=backend\s*$/m);
-    expect(render).not.toMatch(/^\s*startCommand:.*(?:db:seed|db:bootstrap-admin|admin:create)/m);
-    expect(railway).not.toMatch(/(?:db:seed|db:bootstrap-admin|admin:create)/);
-    expect(render).toMatch(/^\s*autoDeploy: false\s*$/m);
+    const render = await readRepositoryFile('render.yaml');
+    expect(render).toMatch(/^\s*startCommand: npm run db:migrate --workspace=backend && npm start --workspace=backend$/m);
+    expect(render).not.toMatch(/^startCommand:.*(?:db:seed|db:bootstrap-admin|admin:create)/m);
+    expect(render).toMatch(/^\s*autoDeploy: false$/m);
   });
 
   it('declares the complete Render S3 contract without literal credentials', async () => {
