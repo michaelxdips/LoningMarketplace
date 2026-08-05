@@ -27,7 +27,9 @@
     "db:audit": "tsx src/scripts/db-audit.ts",
     "db:seed-hash": "tsx src/scripts/seed-hash.ts",
     "storage:check": "tsx src/scripts/storage-check.ts",
-    "media:audit": "tsx src/scripts/media-audit.ts"
+    "media:audit": "tsx src/scripts/media-audit.ts",
+    "media:recover-seed": "tsx src/scripts/seed-media-recovery.ts",
+    "media:recover-seed:apply": "tsx src/scripts/seed-media-recovery.ts --apply"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1090.0",
