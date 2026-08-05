@@ -40,14 +40,6 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   const { skipUnauthorizedHandler, ...requestOptions } = options;
   const headers = new Headers(requestOptions.headers);
   if (requestOptions.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
-  try {
-    const localToken = localStorage.getItem('loning_session_token');
-    if (localToken && !headers.has('Authorization')) {
-      headers.set('Authorization', `Bearer ${localToken}`);
-    }
-  } catch {
-    /* ignore */
-  }
   const response = await fetchApi(`${getBaseUrl()}${path}`, { ...requestOptions, headers, credentials: 'include' });
   const body = await response.json().catch(() => ({})) as { data?: T } & ErrorEnvelope;
   if (!response.ok) {
@@ -84,12 +76,6 @@ export function uploadMedia(file: File, altText: string, csrf: string | undefine
     request.open('POST', `${getBaseUrl()}/manage/media/images`);
     request.withCredentials = true;
     request.setRequestHeader('X-CSRF-Token', csrf ?? '');
-    try {
-      const localToken = localStorage.getItem('loning_session_token');
-      if (localToken) request.setRequestHeader('Authorization', `Bearer ${localToken}`);
-    } catch {
-      /* Cookie authentication remains available when storage access is blocked. */
-    }
     request.upload.onprogress = (event) => { if (event.lengthComputable) onProgress?.(Math.round(event.loaded / event.total * 100)); };
     
     request.onerror = () => reject(new ApiError(0, 'Tidak dapat terhubung ke server. Periksa koneksi backend, lalu coba lagi.', 'NETWORK_ERROR'));
