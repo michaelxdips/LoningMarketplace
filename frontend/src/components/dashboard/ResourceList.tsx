@@ -211,12 +211,13 @@ export default function ResourceList<
           ) : undefined
         }
       />
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <SearchBox value={search} onChange={setSearch} label={`Cari ${noun}`} />
         <Select
           value={category}
           onChange={(e) => setCategory(e.target.value as Category | "")}
           aria-label="Filter kategori"
+          className="sm:w-auto min-w-[11rem]"
         >
           <option value="">Semua kategori</option>
           {CATEGORIES.map((x) => (
@@ -227,6 +228,7 @@ export default function ResourceList<
           value={publicationStatus}
           onChange={(e) => handleStatusChange(e.target.value as PublicationStatus | "")}
           aria-label="Filter publikasi"
+          className="sm:w-auto min-w-[10rem]"
         >
           <option value="">Semua status</option>
           <option value="draft">Draf</option>
@@ -238,6 +240,7 @@ export default function ResourceList<
             value={availability}
             onChange={(e) => setAvailability(e.target.value)}
             aria-label="Filter ketersediaan"
+            className="sm:w-auto min-w-[11rem]"
           >
             <option value="">Semua ketersediaan</option>
             <option value="true">Tersedia</option>
@@ -253,8 +256,9 @@ export default function ResourceList<
               handleStatusChange("");
               setAvailability("");
             }}
-            className="focus-ring self-start rounded-xl border border-sage-border bg-white px-3.5 py-2.5 text-xs font-bold text-warm-gray hover:text-charcoal"
+            className="focus-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-sage-border bg-white px-4 text-xs font-bold text-warm-gray transition-colors hover:border-charcoal/30 hover:bg-cream-tint hover:text-charcoal shadow-xs"
           >
+            <RotateCcw className="h-3.5 w-3.5" />
             Reset Filter
           </button>
         )}
