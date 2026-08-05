@@ -3,7 +3,7 @@ services:
     name: loning-preview
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build:backend
+    buildCommand: npm ci --include=dev && npm run build:backend
     startCommand: npm run db:migrate --workspace=backend && npm start --workspace=backend
     healthCheckPath: /api/health
     autoDeploy: false
