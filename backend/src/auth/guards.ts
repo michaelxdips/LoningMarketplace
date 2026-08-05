@@ -9,7 +9,9 @@ declare module 'fastify' { interface FastifyRequest { auth?: AuthContext } }
 const fail = (reply: FastifyReply, status: number, message: string, code: string) => reply.code(status).send({ error: { message, code } });
 
 export function isOriginAllowed(origin: string | undefined, corsOrigin: string): boolean {
-  if (!origin) return false;
+  // Allow requests without an Origin header (e.g. mobile browsers, native apps, curl).
+  // CSRF protection for state-mutating endpoints is handled separately via the csrf guard.
+  if (!origin) return true;
   const allowed = (corsOrigin || '').split(',').map((s) => s.trim()).filter(Boolean);
   if (allowed.includes(origin) || allowed.includes('*')) return true;
   if (/^https:\/\/[a-zA-Z0-9_-]+\.vercel\.app$/i.test(origin)) return true;
