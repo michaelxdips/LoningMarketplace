@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { ArrowLeft, Eye, EyeOff, LockKeyhole, User, Lock, Sparkles, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, LockKeyhole, User, Lock, ShieldCheck } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useLogin } from '../hooks/useAuth';
 import { ErrorNotice, PendingButton } from '../components/dashboard/Ui';
@@ -44,10 +44,9 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 max-w-lg">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-xs font-bold tracking-widest text-[#E9AD91] backdrop-blur-md">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>PORTAL DASHBOARD V2</span>
-          </div>
+          <p className="mb-4 text-xs font-extrabold uppercase tracking-[0.22em] text-[#E9AD91]">
+            Desa Loning, Pemalang
+          </p>
           <h1 className="editorial-serif text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
             Kelola etalase lokal dengan lebih tertib.
           </h1>
