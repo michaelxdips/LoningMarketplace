@@ -51,16 +51,16 @@ describe('public login navigation', () => {
     expect(screen.getByRole('status', { name: 'Lokasi saat ini' })).toHaveTextContent('/login');
   });
 
-  it('keeps exactly one secondary footer login link', () => {
+  it('keeps exactly one secondary footer version history link', () => {
     render(
       <MemoryRouter>
         <Footer />
       </MemoryRouter>,
     );
     const footer = screen.getByRole('contentinfo');
-    const loginLinks = within(footer).getAllByRole('link', { name: 'Masuk Pengelola' });
+    const versionLinks = within(footer).getAllByRole('link', { name: 'Riwayat Versi (Version History)' });
 
-    expect(loginLinks).toHaveLength(1);
-    expect(loginLinks[0]).toHaveAttribute('href', '/login');
+    expect(versionLinks).toHaveLength(1);
+    expect(versionLinks[0]).toHaveAttribute('href', '/version-history');
   });
 });

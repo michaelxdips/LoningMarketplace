@@ -5,7 +5,7 @@ import {
   type ReactNode,
 } from "react";
 import { Archive, EyeOff, Plus, RotateCcw, Send } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useManagedList, useManagedMutation } from "../../hooks/useManagement";
 import {
   pageItems,
@@ -88,11 +88,31 @@ export default function ResourceList<
   canRestore?: boolean;
   extraAction?: (item: T) => ReactNode;
 }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFromUrl = (searchParams.get("status") as PublicationStatus) || "";
   const [search, setSearch] = useState("");
   const deferred = useDeferredValue(search);
   const [category, setCategory] = useState<Category | "">("");
-  const [publicationStatus, setStatus] = useState<PublicationStatus | "">("");
+  const [publicationStatus, setStatus] = useState<PublicationStatus | "">(statusFromUrl);
   const [availability, setAvailability] = useState("");
+
+  useEffect(() => {
+    const statusParam = (searchParams.get("status") as PublicationStatus) || "";
+    if (statusParam !== publicationStatus) {
+      setStatus(statusParam);
+    }
+  }, [searchParams]);
+
+  const handleStatusChange = (newStatus: PublicationStatus | "") => {
+    setStatus(newStatus);
+    const nextParams = new URLSearchParams(searchParams);
+    if (newStatus) {
+      nextParams.set("status", newStatus);
+    } else {
+      nextParams.delete("status");
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
   const [confirm, setConfirm] = useState<{
     item: T;
     kind: keyof Lifecycle<T>;
@@ -191,12 +211,13 @@ export default function ResourceList<
           ) : undefined
         }
       />
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <SearchBox value={search} onChange={setSearch} label={`Cari ${noun}`} />
         <Select
           value={category}
           onChange={(e) => setCategory(e.target.value as Category | "")}
           aria-label="Filter kategori"
+          className="sm:w-auto min-w-[11rem]"
         >
           <option value="">Semua kategori</option>
           {CATEGORIES.map((x) => (
@@ -205,8 +226,9 @@ export default function ResourceList<
         </Select>
         <Select
           value={publicationStatus}
-          onChange={(e) => setStatus(e.target.value as PublicationStatus | "")}
+          onChange={(e) => handleStatusChange(e.target.value as PublicationStatus | "")}
           aria-label="Filter publikasi"
+          className="sm:w-auto min-w-[10rem]"
         >
           <option value="">Semua status</option>
           <option value="draft">Draf</option>
@@ -218,11 +240,27 @@ export default function ResourceList<
             value={availability}
             onChange={(e) => setAvailability(e.target.value)}
             aria-label="Filter ketersediaan"
+            className="sm:w-auto min-w-[11rem]"
           >
             <option value="">Semua ketersediaan</option>
             <option value="true">Tersedia</option>
             <option value="false">Tidak tersedia</option>
           </Select>
+        )}
+        {(Boolean(search) || Boolean(category) || Boolean(publicationStatus) || Boolean(availability)) && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearch("");
+              setCategory("");
+              handleStatusChange("");
+              setAvailability("");
+            }}
+            className="focus-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-sage-border bg-white px-4 text-xs font-bold text-warm-gray transition-colors hover:border-charcoal/30 hover:bg-cream-tint hover:text-charcoal shadow-xs"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Reset Filter
+          </button>
         )}
       </div>
       {action.isError && (

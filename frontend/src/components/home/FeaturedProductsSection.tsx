@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Grid } from 'lucide-react';
+import { useState } from 'react';
+import { Grid, ChevronDown, ChevronUp } from 'lucide-react';
 import { Product, Category } from '../../types';
 import ProductCard from '../product/ProductCard';
 import EmptyState from '../shared/EmptyState';
@@ -36,6 +37,11 @@ export default function FeaturedProductsSection({
   onViewProduct,
   onViewMerchant, isLoading, isError, onRetry
 }: FeaturedProductsSectionProps) {
+  const [showAll, setShowAll] = useState(false);
+  const displayLimit = 12;
+  const displayedProducts = showAll ? products : products.slice(0, displayLimit);
+  const hasMore = products.length > displayLimit;
+
   return (
     <section
       id="featured-products" 
@@ -58,7 +64,7 @@ export default function FeaturedProductsSection({
               Telusuri aneka produk pilihan hasil karya mandiri masyarakat Desa Loning. Klik tombol tanya produk untuk tersambung ke WhatsApp penjual.
             </p>
             <p role="status" aria-live="polite" className="mt-2.5 text-xs font-semibold text-forest">
-              {isLoading ? 'Memuat produk…' : isError ? 'Produk gagal dimuat.' : `${products.length} produk tersedia`}
+              {isLoading ? 'Memuat produk…' : isError ? 'Produk gagal dimuat.' : hasMore && !showAll ? `Menampilkan 12 teratas dari ${products.length} produk tersedia` : `${products.length} produk tersedia`}
             </p>
           </div>
 
@@ -96,17 +102,41 @@ export default function FeaturedProductsSection({
             onAction={onClearFilters && (Boolean(searchQuery.trim()) || selectedCategory !== 'Semua') ? onClearFilters : undefined}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onInquire={onInquireProduct}
-                onViewProduct={onViewProduct}
-                onViewMerchant={onViewMerchant}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayedProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onInquire={onInquireProduct}
+                  onViewProduct={onViewProduct}
+                  onViewMerchant={onViewMerchant}
+                />
+              ))}
+            </div>
+
+            {hasMore && (
+              <div className="mt-8 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setShowAll((prev) => !prev)}
+                  className="focus-ring inline-flex items-center gap-2 rounded-2xl border border-sage-border bg-white px-6 py-3 text-sm font-extrabold text-forest hover:bg-cream-bg shadow-sm transition-all"
+                >
+                  {showAll ? (
+                    <>
+                      <ChevronUp className="h-4 w-4" />
+                      Persingkat Tampilan (12 Teratas)
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-4 w-4" />
+                      Tampilkan Selengkapnya ({products.length} Produk)
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
       </div>

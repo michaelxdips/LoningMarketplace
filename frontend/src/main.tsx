@@ -18,6 +18,7 @@ const InquiryAnalyticsPage = lazy(() => import('./pages/InquiryAnalyticsPage.tsx
 const FaqPage = lazy(() => import('./pages/FaqPage.tsx'));
 const AboutVillagePage = lazy(() => import('./pages/AboutVillagePage.tsx'));
 const AboutTeamPage = lazy(() => import('./pages/AboutTeamPage.tsx'));
+const VersionHistoryPage = lazy(() => import('./pages/VersionHistoryPage.tsx'));
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage.tsx'));
 const UMKMDetailPage = lazy(() => import('./pages/UMKMDetailPage.tsx'));
 const PetaUMKMPage = lazy(() => import('./pages/PetaUMKMPage.tsx'));
@@ -89,6 +90,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/tentang-desa" element={<AboutVillagePage />} />
           <Route path="/tentang-kami" element={<AboutTeamPage />} />
+          <Route path="/version-history" element={<VersionHistoryPage />} />
           <Route path="/peta-umkm" element={<PetaUMKMPage />} />
           <Route path="/produk/:identifier" element={<ProductDetailPage />} />
           <Route path="/umkm/:identifier" element={<UMKMDetailPage />} />
