@@ -20,6 +20,7 @@ import {
   Wifi,
   WifiOff,
   ExternalLink,
+  ChevronDown,
 } from 'lucide-react';
 import { Link } from 'react-router';
 import PublicPageShell from '../components/layout/PublicPageShell';
@@ -59,10 +60,33 @@ interface GitHubTagResponse {
 
 const STATIC_RELEASES: ReleaseGroup[] = [
   {
+    version: 'v1.6.3',
+    title: 'Mobile Auth Fix & Security Hardening',
+    date: '6 Agustus 2026',
+    badge: 'Versi Terbaru (Active)',
+    commits: [
+      { hash: '5c9862c', date: '2026-08-06', type: 'fix', scope: 'auth', message: 'allow requests without Origin header for mobile browser compatibility' },
+    ],
+  },
+  {
+    version: 'v1.6.2',
+    title: 'Official Brand Identity',
+    date: '6 Agustus 2026',
+    badge: 'Branding',
+    commits: [
+      { hash: 'ba41258', date: '2026-08-06', type: 'feat', scope: 'branding', message: 'replace generic logo with official Loning Maju brand identity' },
+      { hash: '0caca2d', date: '2026-08-06', type: 'style', scope: 'history', message: 'make commit type badge card compact and sleek' },
+      { hash: 'a0d1847', date: '2026-08-06', type: 'style', scope: 'history', message: 'refine commit log rows into perfectly aligned tabular grid' },
+      { hash: '5bc368b', date: '2026-08-06', type: 'style', scope: 'login', message: 'remove PORTAL DASHBOARD V2 badge from left hero panel' },
+      { hash: 'abc4aa0', date: '2026-08-06', type: 'style', scope: 'login', message: 'refine card container, input icon focus states, and typography spacing' },
+      { hash: 'fe8a658', date: '2026-08-06', type: 'feat', scope: 'history', message: 'auto-fetch commits and tags live from GitHub REST API' },
+    ],
+  },
+  {
     version: 'v1.6.1',
     title: 'Dashboard V2 Reconstruction & System Refinements',
     date: '6 Agustus 2026',
-    badge: 'Versi Terbaru (Active)',
+    badge: 'Stable',
     commits: [
       { hash: '0b0e214', date: '2026-08-06', type: 'chore', scope: 'release', message: 'merge feature/v1.6.1-dashboard-v2 into master' },
       { hash: '69b3970', date: '2026-08-06', type: 'style', scope: 'login', message: 'refine login page left panel for clean, elegant, non-cluttered aesthetics' },
@@ -171,6 +195,22 @@ export default function VersionHistoryPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLive, setIsLive] = useState<boolean>(false);
   const [lastFetchedAt, setLastFetchedAt] = useState<string | null>(null);
+  // Only the newest (first) release is open by default
+  const [expandedVersions, setExpandedVersions] = useState<Set<string>>(
+    new Set([STATIC_RELEASES[0]?.version ?? ''])
+  );
+
+  const toggleVersion = useCallback((version: string) => {
+    setExpandedVersions((prev) => {
+      const next = new Set(prev);
+      if (next.has(version)) {
+        next.delete(version);
+      } else {
+        next.add(version);
+      }
+      return next;
+    });
+  }, []);
 
   usePageMetadata({
     title: 'Riwayat Versi & Commit — Loning Maju',
@@ -256,7 +296,10 @@ export default function VersionHistoryPage() {
         });
       }
 
-      setReleases(dynamicGroups.length > 0 ? dynamicGroups : STATIC_RELEASES);
+      const resolved = dynamicGroups.length > 0 ? dynamicGroups : STATIC_RELEASES;
+      setReleases(resolved);
+      // Auto-expand only the newest release when live data loads
+      setExpandedVersions(new Set([resolved[0]?.version ?? '']));
       setIsLive(true);
       setLastFetchedAt(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     } catch (err) {
@@ -447,88 +490,105 @@ export default function VersionHistoryPage() {
       {/* Release Timeline List */}
       <section className="mx-auto max-w-4xl px-5 pb-20">
         {filteredReleases.length > 0 ? (
-          <div className="space-y-10">
-            {filteredReleases.map((release) => (
-              <article
-                key={release.version}
-                className="rounded-3xl border border-sage-border bg-white p-6 shadow-sm sm:p-8"
-              >
-                {/* Release Header */}
-                <div className="flex flex-col gap-3 border-b border-sage-border pb-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <span className="rounded-xl bg-forest px-3 py-1 text-sm font-extrabold text-white">
-                        {release.version}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-forest/20 bg-forest/10 px-3 py-0.5 text-xs font-bold text-forest">
-                        <Sparkles className="h-3 w-3 text-terracotta" />
-                        {release.badge}
-                      </span>
-                    </div>
-                    <h2 className="mt-2 text-xl font-extrabold text-charcoal sm:text-2xl">
+          <div className="space-y-3">
+            {filteredReleases.map((release, idx) => {
+              const isExpanded = expandedVersions.has(release.version);
+              const isNewest = idx === 0;
+              return (
+                <article
+                  key={release.version}
+                  className="overflow-hidden rounded-2xl border border-sage-border bg-white shadow-xs"
+                >
+                  {/* Release Header — single compact row, clickable */}
+                  <button
+                    type="button"
+                    onClick={() => toggleVersion(release.version)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-cream-bg/50"
+                    aria-expanded={isExpanded}
+                  >
+                    {/* Version pill */}
+                    <span className="shrink-0 rounded-lg bg-forest px-2.5 py-0.5 text-xs font-extrabold text-white">
+                      {release.version}
+                    </span>
+
+                    {/* Title — flex-1, truncated */}
+                    <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-charcoal">
                       {release.title}
                     </h2>
-                  </div>
 
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-warm-gray shrink-0">
-                    <Calendar className="h-4 w-4 text-forest" />
-                    <span>{release.date}</span>
-                  </div>
-                </div>
+                    {/* Right side meta */}
+                    <div className="flex shrink-0 items-center gap-2">
+                      {isNewest && (
+                        <span className="hidden rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-emerald-700 sm:inline">
+                          Terbaru
+                        </span>
+                      )}
+                      <span className="hidden items-center gap-1 text-[11px] font-medium text-warm-gray sm:flex">
+                        <Calendar className="h-3 w-3 text-forest" />
+                        {release.date}
+                      </span>
+                      <span className="text-[11px] font-medium text-warm-gray/70">
+                        {release.commits.length}c
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-warm-gray/60 transition-transform duration-200 ${
+                          isExpanded ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </div>
+                  </button>
 
-                {/* Commit Items List - Tabular Aligned Grid */}
-                <div className="mt-6 space-y-2.5">
-                  {release.commits.map((commit) => {
-                    const badgeMeta = commitTypeStyles[commit.type] || commitTypeStyles.feat;
-                    return (
-                      <div
-                        key={commit.hash}
-                        className="group flex flex-col gap-2 rounded-xl border border-sage-border/70 bg-cream-bg/30 p-3.5 transition-all hover:border-forest/40 hover:bg-white hover:shadow-sm sm:flex-row sm:items-center sm:gap-4"
-                      >
-                        {/* Column 1: Commit Hash */}
-                        <div className="w-20 shrink-0">
-                          <a
-                            href={`https://github.com/michaelxdips/LoningMarketplace/commit/${commit.hash}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-sage-border bg-white px-2 py-0.5 font-mono text-[10px] font-bold text-charcoal shadow-2xs transition-colors hover:border-forest/60 hover:text-forest group-hover:border-forest/40"
-                            title="Buka commit ini di GitHub"
-                          >
-                            <GitCommit className="h-3 w-3 text-forest shrink-0" />
-                            <span>{commit.hash}</span>
-                          </a>
-                        </div>
+                  {/* Commit Items List - Collapsible */}
+                  {isExpanded && (
+                    <div className="border-t border-sage-border/60 px-4 pb-3 pt-2">
+                      <div className="space-y-1">
+                        {release.commits.map((commit) => {
+                          const badgeMeta = commitTypeStyles[commit.type] || commitTypeStyles.feat;
+                          return (
+                            <div
+                              key={commit.hash}
+                              className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-cream-bg/60"
+                            >
+                              {/* Commit Hash */}
+                              <a
+                                href={`https://github.com/michaelxdips/LoningMarketplace/commit/${commit.hash}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="shrink-0 font-mono text-[10px] font-bold text-forest/70 hover:text-forest hover:underline"
+                                title="Buka commit di GitHub"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {commit.hash}
+                              </a>
 
-                        {/* Column 2: Commit Type Tag */}
-                        <div className="w-20 shrink-0">
-                          <span className={`inline-flex w-full items-center justify-center rounded-md border px-1.5 py-0.5 text-[9px] uppercase font-extrabold tracking-wider ${badgeMeta.bg} ${badgeMeta.text}`}>
-                            {badgeMeta.label}
-                          </span>
-                        </div>
-
-                        {/* Column 3: Scope & Message (Flexible Flex-1) */}
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-medium text-charcoal sm:text-sm leading-snug">
-                            {commit.scope && (
-                              <span className="mr-1.5 font-bold text-forest">
-                                ({commit.scope}):
+                              {/* Type badge */}
+                              <span className={`shrink-0 rounded px-1.5 py-px text-[9px] uppercase font-extrabold tracking-wider border ${badgeMeta.bg} ${badgeMeta.text}`}>
+                                {badgeMeta.label}
                               </span>
-                            )}
-                            <span>{commit.message}</span>
-                          </p>
-                        </div>
 
-                        {/* Column 4: Date (Aligned Right) */}
-                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-warm-gray shrink-0 sm:w-28 sm:justify-end">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                          <span>{commit.date}</span>
-                        </div>
+                              {/* Scope + Message */}
+                              <p className="min-w-0 flex-1 truncate text-xs text-charcoal/80">
+                                {commit.scope && (
+                                  <span className="font-semibold text-forest">
+                                    ({commit.scope}):{' '}
+                                  </span>
+                                )}
+                                {commit.message}
+                              </p>
+
+                              {/* Date */}
+                              <span className="hidden shrink-0 text-[10px] text-warm-gray/60 sm:block">
+                                {commit.date}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
-              </article>
-            ))}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
           </div>
         ) : (
           <div className="rounded-3xl border border-sage-border bg-white p-12 text-center">
