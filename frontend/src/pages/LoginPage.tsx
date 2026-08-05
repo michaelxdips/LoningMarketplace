@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { ArrowLeft, Eye, EyeOff, LockKeyhole, User, Lock, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, User, Lock, ShieldCheck } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useLogin } from '../hooks/useAuth';
 import { ErrorNotice, PendingButton } from '../components/dashboard/Ui';
@@ -38,8 +38,9 @@ export default function LoginPage() {
         <div className="pointer-events-none absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-[#E9AD91]/15 blur-3xl" />
 
         <div className="relative z-10">
-          <Link to="/" aria-label={`${brand.name} — beranda`} className="inline-flex items-center gap-2 text-2xl font-extrabold tracking-tight">
-            Loning<span className="text-[#E9AD91]">Maju</span>
+          <Link to="/" aria-label={`${brand.name} — beranda`} className="inline-flex items-center gap-3 text-2xl font-black uppercase tracking-wider">
+            <img src={brand.logoSvg} alt="" className="h-11 w-11 object-contain shrink-0" />
+            <span>LONING<span className="text-[#E9AD91]">MAJU</span></span>
           </Link>
         </div>
 
@@ -75,10 +76,6 @@ export default function LoginPage() {
 
           {/* Login Card Form Container */}
           <div className="rounded-3xl border border-sage-border/80 bg-white p-7 shadow-xl shadow-forest/5 sm:p-9">
-            {/* Header Icon */}
-            <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-forest/20 bg-forest/10 text-forest shadow-2xs">
-              <LockKeyhole className="h-6 w-6" />
-            </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-charcoal">Masuk ke dashboard</h1>
             <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-warm-gray">Gunakan email atau username akun dashboard Anda.</p>

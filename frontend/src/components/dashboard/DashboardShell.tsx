@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useId } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import { ChevronUp, ClipboardList, Home, KeyRound, LogOut, Menu, Package, Store, Users, X } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useLogout, useSession } from '../../hooks/useAuth';
@@ -68,8 +68,9 @@ export default function DashboardShell() {
     <div className="min-h-screen bg-cream-bg lg:grid lg:grid-cols-[260px_1fr]">
       {/* Mobile Drawer Trigger Header */}
       <div className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-sage-border bg-white px-4 shadow-2xs lg:hidden">
-        <NavLink to="/" aria-label={`${brand.name} — beranda`} className="text-lg font-extrabold tracking-tight text-forest">
-          Loning<span className="text-[#D97706]">Maju</span>
+        <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-center gap-2.5 text-lg font-black uppercase tracking-wider text-forest">
+          <img src={brand.logoSvg} alt="" className="h-8 w-8 object-contain shrink-0" />
+          <span>LONING<span className="text-[#D97706]">MAJU</span></span>
         </NavLink>
         <button
           ref={menuTriggerRef}
@@ -98,8 +99,9 @@ export default function DashboardShell() {
         aria-label="Navigasi Utama"
       >
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
-          <NavLink to="/" aria-label={`${brand.name} — beranda`} className="text-lg font-extrabold tracking-tight">
-            Loning<span className="text-[#E9AD91]">Maju</span>
+          <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-center gap-3 text-lg font-black uppercase tracking-wider">
+            <img src={brand.logoSvg} alt="" className="h-9 w-9 object-contain shrink-0" />
+            <span>LONING<span className="text-[#E9AD91]">MAJU</span></span>
           </NavLink>
           <button onClick={() => setOpen(false)} className="p-2 lg:hidden" aria-label="Tutup navigasi">
             <X className="h-5 w-5" />

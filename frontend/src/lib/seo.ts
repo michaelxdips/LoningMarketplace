@@ -38,7 +38,18 @@ export function applyPageMetadata(metadata: PageMetadata) {
 export function usePageMetadata(metadata: PageMetadata) {
   useEffect(() => applyPageMetadata(metadata), [metadata.title, metadata.description, metadata.image, metadata.type, JSON.stringify(metadata.jsonLd)]);
 }
-export const defaultMetadata: PageMetadata = { title: brand.title, description: brand.description };
+export const defaultMetadata: PageMetadata = {
+  title: brand.title,
+  description: brand.description,
+  image: brand.logoPng,
+  jsonLd: {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: brand.name,
+    url: buildSiteUrl('/') ?? undefined,
+    logo: buildSiteUrl(brand.logoPng) ?? brand.logoPng,
+  },
+};
 
 export function buildLocalBusinessJsonLd(umkm: UMKM, description = umkm.description): Record<string, unknown> {
   const coordinates = typeof umkm.latitude === 'number' && typeof umkm.longitude === 'number' ? normalizeCoordinates(umkm.latitude, umkm.longitude) : undefined;
