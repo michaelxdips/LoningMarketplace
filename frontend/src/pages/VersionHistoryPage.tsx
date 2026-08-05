@@ -476,35 +476,39 @@ export default function VersionHistoryPage() {
                   </div>
                 </div>
 
-                {/* Commit Items List */}
-                <div className="mt-6 space-y-3">
+                {/* Commit Items List - Tabular Aligned Grid */}
+                <div className="mt-6 space-y-2.5">
                   {release.commits.map((commit) => {
                     const badgeMeta = commitTypeStyles[commit.type] || commitTypeStyles.feat;
                     return (
                       <div
                         key={commit.hash}
-                        className="group flex flex-col gap-2 rounded-2xl border border-sage-border/70 bg-cream-bg/40 p-3.5 transition-colors hover:border-forest/30 hover:bg-cream-bg sm:flex-row sm:items-center sm:justify-between"
+                        className="group flex flex-col gap-2 rounded-xl border border-sage-border/70 bg-cream-bg/30 p-3.5 transition-all hover:border-forest/40 hover:bg-white hover:shadow-sm sm:flex-row sm:items-center sm:gap-4"
                       >
-                        <div className="flex items-start gap-3 min-w-0">
-                          {/* Commit Hash Badge with GitHub link */}
+                        {/* Column 1: Commit Hash */}
+                        <div className="w-24 shrink-0">
                           <a
                             href={`https://github.com/michaelxdips/LoningMarketplace/commit/${commit.hash}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-sage-border bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-charcoal shadow-2xs transition-colors hover:border-forest/60 hover:text-forest group-hover:border-forest/40"
+                            className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-sage-border bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-charcoal shadow-2xs transition-colors hover:border-forest/60 hover:text-forest group-hover:border-forest/40"
                             title="Buka commit ini di GitHub"
                           >
-                            <GitCommit className="h-3 w-3 text-forest" />
-                            {commit.hash}
+                            <GitCommit className="h-3 w-3 text-forest shrink-0" />
+                            <span>{commit.hash}</span>
                           </a>
+                        </div>
 
-                          {/* Commit Type Tag */}
-                          <span className={`inline-flex shrink-0 items-center rounded-lg border px-2 py-0.5 text-[10px] uppercase tracking-wider ${badgeMeta.bg} ${badgeMeta.text}`}>
+                        {/* Column 2: Commit Type Tag */}
+                        <div className="w-24 shrink-0">
+                          <span className={`inline-flex w-full items-center justify-center rounded-lg border px-2 py-1 text-[10px] uppercase font-bold tracking-wider ${badgeMeta.bg} ${badgeMeta.text}`}>
                             {badgeMeta.label}
                           </span>
+                        </div>
 
-                          {/* Scope & Message */}
-                          <p className="min-w-0 text-xs font-medium text-charcoal sm:text-sm leading-snug">
+                        {/* Column 3: Scope & Message (Flexible Flex-1) */}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-medium text-charcoal sm:text-sm leading-snug">
                             {commit.scope && (
                               <span className="mr-1.5 font-bold text-forest">
                                 ({commit.scope}):
@@ -514,8 +518,9 @@ export default function VersionHistoryPage() {
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-2 text-[11px] text-warm-gray/70 shrink-0 self-end sm:self-center">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                        {/* Column 4: Date (Aligned Right) */}
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-warm-gray shrink-0 sm:w-28 sm:justify-end">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                           <span>{commit.date}</span>
                         </div>
                       </div>
