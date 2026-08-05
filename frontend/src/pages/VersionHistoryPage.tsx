@@ -3,8 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useMemo } from 'react';
-import { GitCommit, Tag, Sparkles, Search, Filter, ShieldCheck, ArrowLeft, Terminal, CheckCircle2, GitBranch, Calendar } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import {
+  GitCommit,
+  Tag,
+  Sparkles,
+  Search,
+  Filter,
+  ShieldCheck,
+  ArrowLeft,
+  Terminal,
+  CheckCircle2,
+  GitBranch,
+  Calendar,
+  RotateCw,
+  Wifi,
+  WifiOff,
+  ExternalLink,
+} from 'lucide-react';
 import { Link } from 'react-router';
 import PublicPageShell from '../components/layout/PublicPageShell';
 import { usePageMetadata } from '../lib/seo';
@@ -25,13 +41,32 @@ interface ReleaseGroup {
   commits: CommitItem[];
 }
 
-const RELEASES: ReleaseGroup[] = [
+interface GitHubCommitResponse {
+  sha: string;
+  commit: {
+    message: string;
+    committer?: { date?: string };
+    author?: { date?: string };
+  };
+}
+
+interface GitHubTagResponse {
+  name: string;
+  commit: {
+    sha: string;
+  };
+}
+
+const STATIC_RELEASES: ReleaseGroup[] = [
   {
     version: 'v1.6.1',
     title: 'Dashboard V2 Reconstruction & System Refinements',
     date: '6 Agustus 2026',
     badge: 'Versi Terbaru (Active)',
     commits: [
+      { hash: '0b0e214', date: '2026-08-06', type: 'chore', scope: 'release', message: 'merge feature/v1.6.1-dashboard-v2 into master' },
+      { hash: '69b3970', date: '2026-08-06', type: 'style', scope: 'login', message: 'refine login page left panel for clean, elegant, non-cluttered aesthetics' },
+      { hash: 'c314891', date: '2026-08-06', type: 'feat', scope: 'footer', message: 'replace Masuk Pengelola link with Version History page matching actual git commits' },
       { hash: '60aa4e2', date: '2026-08-06', type: 'style', scope: 'login', message: 'redesign login page with luxury glassmorphic hero panel and input icons' },
       { hash: 'fd827b3', date: '2026-08-06', type: 'style', scope: 'dashboard', message: 'neaten up filter toolbar layout, button height, and reset filter text wrapping' },
       { hash: '4b7d211', date: '2026-08-06', type: 'fix', scope: 'auth', message: 'allow logged in users to access voluntary self-service password change route' },
@@ -39,11 +74,6 @@ const RELEASES: ReleaseGroup[] = [
       { hash: 'e2a1016', date: '2026-08-06', type: 'feat', scope: 'catalog', message: 'limit default catalog grid to 12 top products with interactive expand toggle' },
       { hash: 'cd21532', date: '2026-08-06', type: 'fix', scope: 'analytics', message: 'resolve postgres raw date parameter formatting and upgrade inquiry analytics visual funnel' },
       { hash: 'e7d563f', date: '2026-08-06', type: 'docs', scope: 'dashboard', message: 'document V1.6.1 Dashboard V2 architecture, security, tests, and final verdict' },
-      { hash: '19c634f', date: '2026-08-06', type: 'feat', scope: 'overview', message: 'modernize operational overview with real KPI counts and action shortcuts' },
-      { hash: '3160197', date: '2026-08-06', type: 'feat', scope: 'auth', message: 'enhance self-service password change page with show/hide password toggles' },
-      { hash: '6912e56', date: '2026-08-06', type: 'feat', scope: 'dashboard', message: 'reconstruct DashboardShell with accessible mobile drawer and Profile Menu' },
-      { hash: '6d30fbb', date: '2026-08-06', type: 'feat', scope: 'audit', message: 'add human-readable Indonesian audit event translation and recursive metadata redaction' },
-      { hash: '2751411', date: '2026-08-06', type: 'fix', scope: 'analytics', message: 'repair inquiry analytics date range and raw query driver result handling' },
     ],
   },
   {
@@ -107,38 +137,166 @@ const commitTypeStyles: Record<string, { label: string; bg: string; text: string
   refactor: { label: 'Refactor', bg: 'bg-indigo-500/10 border-indigo-500/30', text: 'text-indigo-700 font-bold' },
 };
 
+function parseCommitMessage(rawMsg: string): { type: CommitItem['type']; scope?: string; message: string } {
+  const firstLine = rawMsg.split('\n')[0].trim();
+  const match = firstLine.match(/^(feat|fix|style|docs|test|chore|refactor|merge)(?:\(([^)]+)\))?:\s*(.+)$/i);
+  if (match) {
+    let typeStr = match[1].toLowerCase();
+    if (typeStr === 'merge') typeStr = 'chore';
+    return {
+      type: (typeStr as CommitItem['type']) || 'feat',
+      scope: match[2]?.trim(),
+      message: match[3]?.trim() || firstLine,
+    };
+  }
+  return {
+    type: 'feat',
+    message: firstLine,
+  };
+}
+
+function formatDateISO(isoStr?: string): string {
+  if (!isoStr) return '2026-08-06';
+  try {
+    return isoStr.split('T')[0];
+  } catch {
+    return isoStr;
+  }
+}
+
 export default function VersionHistoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [releases, setReleases] = useState<ReleaseGroup[]>(STATIC_RELEASES);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLive, setIsLive] = useState<boolean>(false);
+  const [lastFetchedAt, setLastFetchedAt] = useState<string | null>(null);
 
   usePageMetadata({
     title: 'Riwayat Versi & Commit — Loning Maju',
     description: 'Log lengkap riwayat versi, changelog pembaruan, perbaikan bug, dan commit GitHub resmi platform Loning Maju.',
   });
 
-  const totalCommitsCount = useMemo(() => {
-    return RELEASES.reduce((acc, rel) => acc + rel.commits.length, 0);
+  const fetchGitHubData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [commitsRes, tagsRes] = await Promise.all([
+        fetch('https://api.github.com/repos/michaelxdips/LoningMarketplace/commits?per_page=60', {
+          headers: { Accept: 'application/vnd.github.v3+json' },
+        }),
+        fetch('https://api.github.com/repos/michaelxdips/LoningMarketplace/tags', {
+          headers: { Accept: 'application/vnd.github.v3+json' },
+        }),
+      ]);
+
+      if (!commitsRes.ok) throw new Error(`GitHub API HTTP ${commitsRes.status}`);
+
+      const rawCommits: GitHubCommitResponse[] = await commitsRes.json();
+      const rawTags: GitHubTagResponse[] = tagsRes.ok ? await tagsRes.json() : [];
+
+      if (!Array.isArray(rawCommits) || rawCommits.length === 0) {
+        throw new Error('No commit data returned');
+      }
+
+      // Map tags to commit sha set
+      const tagShaMap = new Map<string, string>();
+      for (const t of rawTags) {
+        if (t.commit?.sha && t.name) {
+          tagShaMap.set(t.commit.sha.slice(0, 7), t.name);
+        }
+      }
+
+      const parsedCommits: CommitItem[] = rawCommits.map((item) => {
+        const hash = item.sha.slice(0, 7);
+        const rawMsg = item.commit?.message || '';
+        const { type, scope, message } = parseCommitMessage(rawMsg);
+        const commitDate = formatDateISO(item.commit?.committer?.date || item.commit?.author?.date);
+        return {
+          hash,
+          date: commitDate,
+          type,
+          scope,
+          message,
+        };
+      });
+
+      // Group commits into releases based on tags and version milestones
+      const dynamicGroups: ReleaseGroup[] = [];
+      let currentVersion = tagShaMap.get(parsedCommits[0]?.hash) || 'v1.6.1';
+      let currentTitle = currentVersion === 'v1.6.1' ? 'Dashboard V2 Reconstruction & Live Sync' : `Release ${currentVersion}`;
+      let currentBadge = 'Versi Terbaru (Live GitHub)';
+      let currentCommits: CommitItem[] = [];
+
+      for (const c of parsedCommits) {
+        const taggedVersion = tagShaMap.get(c.hash);
+        if (taggedVersion && taggedVersion !== currentVersion && currentCommits.length > 0) {
+          dynamicGroups.push({
+            version: currentVersion,
+            title: currentTitle,
+            date: currentCommits[0]?.date || '2026-08-06',
+            badge: currentBadge,
+            commits: currentCommits,
+          });
+          currentVersion = taggedVersion;
+          currentTitle = `Release ${taggedVersion}`;
+          currentBadge = taggedVersion === 'v1.6.0' ? 'Baseline Stable' : taggedVersion === 'v1.5.0' ? 'Media Core' : 'GitHub Release';
+          currentCommits = [c];
+        } else {
+          currentCommits.push(c);
+        }
+      }
+
+      if (currentCommits.length > 0) {
+        dynamicGroups.push({
+          version: currentVersion,
+          title: currentTitle,
+          date: currentCommits[0]?.date || '2026-08-06',
+          badge: currentBadge,
+          commits: currentCommits,
+        });
+      }
+
+      setReleases(dynamicGroups.length > 0 ? dynamicGroups : STATIC_RELEASES);
+      setIsLive(true);
+      setLastFetchedAt(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    } catch (err) {
+      console.warn('GitHub API fetch fallback to static release log:', err);
+      setReleases(STATIC_RELEASES);
+      setIsLive(false);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchGitHubData();
+  }, [fetchGitHubData]);
+
+  const totalCommitsCount = useMemo(() => {
+    return releases.reduce((acc, rel) => acc + rel.commits.length, 0);
+  }, [releases]);
 
   const filteredReleases = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
-    return RELEASES.map((group) => {
-      const filteredCommits = group.commits.filter((commit) => {
-        const matchesType = selectedType === 'all' || commit.type === selectedType;
-        const matchesQuery =
-          !query ||
-          commit.hash.toLowerCase().includes(query) ||
-          commit.message.toLowerCase().includes(query) ||
-          (commit.scope && commit.scope.toLowerCase().includes(query));
-        return matchesType && matchesQuery;
-      });
+    return releases
+      .map((group) => {
+        const filteredCommits = group.commits.filter((commit) => {
+          const matchesType = selectedType === 'all' || commit.type === selectedType;
+          const matchesQuery =
+            !query ||
+            commit.hash.toLowerCase().includes(query) ||
+            commit.message.toLowerCase().includes(query) ||
+            (commit.scope && commit.scope.toLowerCase().includes(query));
+          return matchesType && matchesQuery;
+        });
 
-      return {
-        ...group,
-        commits: filteredCommits,
-      };
-    }).filter((group) => group.commits.length > 0);
-  }, [searchQuery, selectedType]);
+        return {
+          ...group,
+          commits: filteredCommits,
+        };
+      })
+      .filter((group) => group.commits.length > 0);
+  }, [releases, searchQuery, selectedType]);
 
   return (
     <PublicPageShell>
@@ -155,14 +313,47 @@ export default function VersionHistoryPage() {
           Catatan pembaruan fitur, optimasi UI/UX, perbaikan bug, serta log commit terverifikasi dari GitHub repository LoningMaju.
         </p>
 
+        {/* Live GitHub Fetch Status Bar */}
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-sage-border bg-white px-3.5 py-1 text-xs font-bold text-charcoal shadow-2xs">
+            {isLive ? (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                </span>
+                <Wifi className="h-3.5 w-3.5 text-emerald-600" />
+                <span className="text-emerald-700">Terhubung ke GitHub REST API (Live)</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-3.5 w-3.5 text-amber-600" />
+                <span className="text-amber-700">Data Lokal (Offline Fallback)</span>
+              </>
+            )}
+            {lastFetchedAt && <span className="text-[11px] font-normal text-warm-gray">({lastFetchedAt})</span>}
+          </div>
+
+          <button
+            type="button"
+            onClick={fetchGitHubData}
+            disabled={isLoading}
+            className="inline-flex items-center gap-1.5 rounded-full border border-forest/30 bg-forest/10 px-3 py-1 text-xs font-bold text-forest transition-colors hover:bg-forest hover:text-white disabled:opacity-50"
+            title="Segarkan data commit langsung dari GitHub"
+          >
+            <RotateCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>{isLoading ? 'Mengambil...' : 'Segarkan'}</span>
+          </button>
+        </div>
+
         {/* Stats Grid Bar */}
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-sage-border bg-white p-4 shadow-xs">
             <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
               <Tag className="h-4 w-4 text-forest" />
               <span>Versi Terbaru</span>
             </div>
-            <p className="mt-2 text-xl font-extrabold text-forest">v1.6.1</p>
+            <p className="mt-2 text-xl font-extrabold text-forest">{releases[0]?.version || 'v1.6.1'}</p>
           </div>
 
           <div className="rounded-2xl border border-sage-border bg-white p-4 shadow-xs">
@@ -176,17 +367,25 @@ export default function VersionHistoryPage() {
           <div className="rounded-2xl border border-sage-border bg-white p-4 shadow-xs">
             <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              <span>Status Rilis</span>
+              <span>Status Sync</span>
             </div>
-            <p className="mt-2 text-sm font-extrabold text-emerald-600">Production Baseline</p>
+            <p className="mt-2 text-sm font-extrabold text-emerald-600">{isLive ? 'Realtime Synced' : 'Static Fallback'}</p>
           </div>
 
           <div className="rounded-2xl border border-sage-border bg-white p-4 shadow-xs">
             <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
               <Terminal className="h-4 w-4 text-purple-600" />
-              <span>Target Branch</span>
+              <span>Repository</span>
             </div>
-            <p className="mt-2 text-xs font-bold font-mono text-purple-700 truncate">feature/v1.6.1-dashboard-v2</p>
+            <a
+              href="https://github.com/michaelxdips/LoningMarketplace"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center gap-1 text-xs font-bold font-mono text-purple-700 hover:underline truncate"
+            >
+              <span>LoningMarketplace</span>
+              <ExternalLink className="h-3 w-3 shrink-0" />
+            </a>
           </div>
         </div>
 
@@ -287,11 +486,17 @@ export default function VersionHistoryPage() {
                         className="group flex flex-col gap-2 rounded-2xl border border-sage-border/70 bg-cream-bg/40 p-3.5 transition-colors hover:border-forest/30 hover:bg-cream-bg sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div className="flex items-start gap-3 min-w-0">
-                          {/* Commit Hash Badge */}
-                          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-sage-border bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-charcoal shadow-2xs group-hover:border-forest/40">
+                          {/* Commit Hash Badge with GitHub link */}
+                          <a
+                            href={`https://github.com/michaelxdips/LoningMarketplace/commit/${commit.hash}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-sage-border bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-charcoal shadow-2xs transition-colors hover:border-forest/60 hover:text-forest group-hover:border-forest/40"
+                            title="Buka commit ini di GitHub"
+                          >
                             <GitCommit className="h-3 w-3 text-forest" />
                             {commit.hash}
-                          </span>
+                          </a>
 
                           {/* Commit Type Tag */}
                           <span className={`inline-flex shrink-0 items-center rounded-lg border px-2 py-0.5 text-[10px] uppercase tracking-wider ${badgeMeta.bg} ${badgeMeta.text}`}>
