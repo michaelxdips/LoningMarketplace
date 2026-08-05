@@ -18,7 +18,7 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().max(100000).default(100),
   TRUST_PROXY: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   COOKIE_SECURE: z.enum(['true', 'false']).transform((value) => value === 'true').optional(),
-  COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).optional(),
+  COOKIE_SAMESITE: z.preprocess((v) => (typeof v === 'string' && v.trim() === '' ? undefined : v), z.enum(['lax', 'strict', 'none']).optional()),
   MEDIA_STORAGE_DRIVER: z.enum(['filesystem', 's3']).default('filesystem'),
   MEDIA_FILESYSTEM_ROOT: z.string().trim().min(1).default('./storage'),
   MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://localhost:3001'),
