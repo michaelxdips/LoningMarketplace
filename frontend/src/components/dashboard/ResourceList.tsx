@@ -5,7 +5,7 @@ import {
   type ReactNode,
 } from "react";
 import { Archive, EyeOff, Plus, RotateCcw, Send } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useManagedList, useManagedMutation } from "../../hooks/useManagement";
 import {
   pageItems,
@@ -88,11 +88,31 @@ export default function ResourceList<
   canRestore?: boolean;
   extraAction?: (item: T) => ReactNode;
 }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFromUrl = (searchParams.get("status") as PublicationStatus) || "";
   const [search, setSearch] = useState("");
   const deferred = useDeferredValue(search);
   const [category, setCategory] = useState<Category | "">("");
-  const [publicationStatus, setStatus] = useState<PublicationStatus | "">("");
+  const [publicationStatus, setStatus] = useState<PublicationStatus | "">(statusFromUrl);
   const [availability, setAvailability] = useState("");
+
+  useEffect(() => {
+    const statusParam = (searchParams.get("status") as PublicationStatus) || "";
+    if (statusParam !== publicationStatus) {
+      setStatus(statusParam);
+    }
+  }, [searchParams]);
+
+  const handleStatusChange = (newStatus: PublicationStatus | "") => {
+    setStatus(newStatus);
+    const nextParams = new URLSearchParams(searchParams);
+    if (newStatus) {
+      nextParams.set("status", newStatus);
+    } else {
+      nextParams.delete("status");
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
   const [confirm, setConfirm] = useState<{
     item: T;
     kind: keyof Lifecycle<T>;
@@ -205,7 +225,7 @@ export default function ResourceList<
         </Select>
         <Select
           value={publicationStatus}
-          onChange={(e) => setStatus(e.target.value as PublicationStatus | "")}
+          onChange={(e) => handleStatusChange(e.target.value as PublicationStatus | "")}
           aria-label="Filter publikasi"
         >
           <option value="">Semua status</option>
@@ -230,7 +250,7 @@ export default function ResourceList<
             onClick={() => {
               setSearch("");
               setCategory("");
-              setStatus("");
+              handleStatusChange("");
               setAvailability("");
             }}
             className="focus-ring self-start rounded-xl border border-sage-border bg-white px-3.5 py-2.5 text-xs font-bold text-warm-gray hover:text-charcoal"

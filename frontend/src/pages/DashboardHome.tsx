@@ -1,4 +1,4 @@
-﻿import { AlertCircle, ArrowRight, ClipboardList, Clock, MapPin, Package, Plus, ShieldAlert, Store, Users } from 'lucide-react';
+import { AlertCircle, ArrowRight, ClipboardList, Clock, MapPin, Package, Plus, ShieldAlert, Store, Users } from 'lucide-react';
 import { Link } from 'react-router';
 import { useSession } from '../hooks/useAuth';
 import { useManagedList } from '../hooks/useManagement';
@@ -38,8 +38,8 @@ export default function DashboardHome() {
   const draftProducts = products.filter(p => p.publicationStatus === 'draft');
 
   const needsAttention = [
-    ...(draftUmkms.length > 0 ? [{ text: `${draftUmkms.length} UMKM masih berstatus Draf`, to: '/dashboard/umkms' }] : []),
-    ...(draftProducts.length > 0 ? [{ text: `${draftProducts.length} Produk belum diterbitkan (Draf)`, to: '/dashboard/products' }] : []),
+    ...(draftUmkms.length > 0 ? [{ text: `${draftUmkms.length} UMKM masih berstatus Draf`, to: '/dashboard/umkms?status=draft' }] : []),
+    ...(draftProducts.length > 0 ? [{ text: `${draftProducts.length} Produk belum diterbitkan (Draf)`, to: '/dashboard/products?status=draft' }] : []),
   ];
 
   return (
