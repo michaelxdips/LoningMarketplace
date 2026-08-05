@@ -24,7 +24,6 @@ export function ProtectedGuard() {
 export function PasswordGuard() {
   const session = useSession(); const location = useLocation();
   if (session.data?.user.mustChangePassword && location.pathname !== '/change-password') return <Navigate to="/change-password" replace />;
-  if (!session.data?.user.mustChangePassword && hasCapability(session.data.user, 'dashboard:view') && location.pathname === '/change-password') return <Navigate to="/dashboard" replace />;
   return <Outlet />;
 }
 export function CapabilityGuard({ capabilities }: { capabilities: readonly Capability[] }) {
