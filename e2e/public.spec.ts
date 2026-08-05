@@ -196,12 +196,16 @@ test('owner is blocked from admin routes and can logout', async ({ page }) => {
   await gotoWithExpectedTransition(events, page, '/login');
   await page.getByLabel('Email atau username').fill(E2E_FIXTURES.credentials.owner.identifier);
   await page.getByLabel('Kata sandi', { exact: true }).fill(E2E_FIXTURES.credentials.owner.password);
-  await runExpectedAction(events, page, 'owner-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/dashboard$/); }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
+  await runExpectedAction(events, page, 'owner-login-redirect', async () => {
+    const products = page.waitForResponse(response => /\/api\/manage\/products\?limit=100$/.test(response.url()) && response.status() === 200);
+    const umkms = page.waitForResponse(response => /\/api\/manage\/umkms\?limit=100$/.test(response.url()) && response.status() === 200);
+    await page.getByRole('button', { name: 'Masuk' }).click();
+    await Promise.all([expect(page).toHaveURL(/\/dashboard$/), products, umkms]);
+  }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
   if (page.viewportSize()?.width === 390) await page.getByRole('button', { name: 'Buka navigasi' }).click();
   await expect(page.getByRole('link', { name: `${BRAND_NAME} — beranda` })).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  await gotoWithExpectedTransition(events, page, '/dashboard/users', /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/manage\/(?:products|umkms)/);
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await runExpectedAction(events, page, 'owner-forbidden-route-redirect', async () => { await page.goto('/dashboard/users'); await expect(page).toHaveURL(/\/dashboard$/); }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/manage\/(?:products|umkms)/);
   if (page.viewportSize()?.width === 390) await page.getByRole('button', { name: 'Buka navigasi' }).click();
   await runExpectedAction(events, page, 'owner-logout-redirect', async () => { await page.getByRole('button', { name: 'Keluar' }).click(); await expect(page).toHaveURL(/\/login$/); }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
   assertUnauthenticatedEvents(events);

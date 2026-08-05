@@ -61,6 +61,7 @@ export function observeBrowserEvents(page: Page): BrowserEvents {
   const pageErrors: PageErrorEvent[] = [];
   const rawConsoleErrors: ApplicationConsoleError[] = [];
   let transition: ExpectedTransition | undefined;
+  const inFlightRequests = new Set<Request>();
   const requestTransitions = new WeakMap<Request, ExpectedTransition>();
   let finalized = false;
   let disposed = false;
@@ -69,9 +70,12 @@ export function observeBrowserEvents(page: Page): BrowserEvents {
     if (response.status() >= 400) httpErrors.push({ method: response.request().method(), url: response.url(), status: response.status(), statusText: response.statusText(), resourceType: response.request().resourceType() });
   };
   const onRequest = (request: Request) => {
+    inFlightRequests.add(request);
     if (transition?.active) requestTransitions.set(request, { ...transition, expectedRequests: [...transition.expectedRequests] });
   };
+  const onRequestDone = (request: Request) => { inFlightRequests.delete(request); };
   const onRequestFailed = (request: Request) => {
+    inFlightRequests.delete(request);
     const failure = { method: request.method(), url: request.url(), resourceType: request.resourceType(), errorText: request.failure()?.errorText };
     requestFailures.push(failure);
     const classification = classifyRequestFailure({ ...failure, transition: requestTransitions.get(request) });
@@ -89,7 +93,7 @@ export function observeBrowserEvents(page: Page): BrowserEvents {
     if (message.type() === 'error') consoleErrors.push(event); else consoleWarnings.push(event);
   };
   const onPageError = (error: Error) => pageErrors.push({ message: error.message });
-  page.on('request', onRequest); page.on('response', onResponse); page.on('requestfailed', onRequestFailed); page.on('console', onConsole); page.on('pageerror', onPageError);
+  page.on('request', onRequest); page.on('response', onResponse); page.on('requestfinished', onRequestDone); page.on('requestfailed', onRequestFailed); page.on('console', onConsole); page.on('pageerror', onPageError);
 
   return {
     httpErrors, requestFailures, expectedRouteTransitionAborts, unexpectedRequestFailures, mutationAborts, orbFailures,
@@ -98,6 +102,10 @@ export function observeBrowserEvents(page: Page): BrowserEvents {
       if (disposed) throw new Error(`Cannot begin transition after dispose: ${reason}`);
       if (transition?.active) throw new Error(`Concurrent browser transitions are unsupported: ${transition.reason}`);
       transition = { reason, expectedRequests, active: true };
+      const snapshot = { ...transition, expectedRequests: [...expectedRequests] };
+      for (const request of inFlightRequests) {
+        if (request.method() === 'GET' && expectedRequests.some((expected) => expected.method === 'GET' && expected.url.test(request.url()))) requestTransitions.set(request, snapshot);
+      }
       return { complete: () => { if (!transition?.active) throw new Error(`Transition already completed: ${reason}`); transition.active = false; transition = undefined; } };
     },
     finalize: () => {
@@ -112,7 +120,8 @@ export function observeBrowserEvents(page: Page): BrowserEvents {
     dispose: () => {
       if (disposed) return;
       if (transition?.active) { transition.active = false; transition = undefined; }
-      page.off('request', onRequest); page.off('response', onResponse); page.off('requestfailed', onRequestFailed); page.off('console', onConsole); page.off('pageerror', onPageError);
+      inFlightRequests.clear();
+      page.off('request', onRequest); page.off('response', onResponse); page.off('requestfinished', onRequestDone); page.off('requestfailed', onRequestFailed); page.off('console', onConsole); page.off('pageerror', onPageError);
       disposed = true;
     },
   };

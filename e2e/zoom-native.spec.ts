@@ -41,18 +41,30 @@ async function assertZoomNative(worker: Worker, tabId: number) {
 
 // 200% zoom of a 390x844 device is an effective CSS viewport of 195x422. Emulate that exact layout
 // so overflow and request assertions test what a user at 200% zoom actually sees.
+// CDP override is used because setViewportSize does not persist across navigation when the
+// persistent context has a fixed viewport option.
 async function openEmulatedPage(context: Ctx) {
   const page = await basePage(context);
-  await page.setViewportSize({ width: 195, height: 422 });
-  return { page };
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Emulation.setDeviceMetricsOverride', { width: 195, height: 422, deviceScaleFactor: 1, mobile: false });
+  return { page, cdp };
 }
 
 async function assertNoOverflow(page: import('@playwright/test').Page) {
-  const value = await page.evaluate(() => ({
-    document: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-    body: document.body.scrollWidth <= document.body.clientWidth,
-  }));
-  expect(value).toEqual({ document: true, body: true });
+  const value = await page.evaluate(() => {
+    const viewportWidth = document.documentElement.clientWidth;
+    return {
+      document: document.documentElement.scrollWidth <= viewportWidth,
+      body: document.body.scrollWidth <= document.body.clientWidth,
+      viewportWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      offenders: Array.from(document.querySelectorAll<HTMLElement>('body *'))
+        .map(element => ({ element: element.tagName.toLowerCase(), id: element.id, className: element.className, ...element.getBoundingClientRect().toJSON() }))
+        .filter(rect => rect.right > viewportWidth + 0.5 || rect.left < -0.5)
+        .slice(0, 10),
+    };
+  });
+  expect(value, JSON.stringify(value, null, 2)).toMatchObject({ document: true, body: true });
 }
 
 // Direct deep-link routes must use canonical slugs that exist in the ACTIVE database state.
