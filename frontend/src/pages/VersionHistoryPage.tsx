@@ -65,6 +65,7 @@ const STATIC_RELEASES: ReleaseGroup[] = [
     date: '6 Agustus 2026',
     badge: 'Versi Terbaru (Active)',
     commits: [
+      { hash: '430ee4d', date: '2026-08-06', type: 'fix', scope: 'auth', message: 'persist session token to localStorage and inject as Bearer fallback for iOS Safari cross-site cookie blocking (ITP)' },
       { hash: '5c9862c', date: '2026-08-06', type: 'fix', scope: 'auth', message: 'allow requests without Origin header for mobile browser compatibility' },
     ],
   },
