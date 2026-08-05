@@ -87,6 +87,8 @@ export function uploadMedia(file: File, altText: string, csrf: string | undefine
     request.open('POST', `${getBaseUrl()}/manage/media/images`);
     request.withCredentials = true;
     request.setRequestHeader('X-CSRF-Token', csrf ?? '');
+    // Inject Bearer token fallback for iOS Safari cross-site cookie blocking (ITP)
+    try { const stored = localStorage.getItem('loning_session_token'); if (stored) request.setRequestHeader('Authorization', `Bearer ${stored}`); } catch { /* ignore */ }
     request.upload.onprogress = (event) => { if (event.lengthComputable) onProgress?.(Math.round(event.loaded / event.total * 100)); };
     
     request.onerror = () => reject(new ApiError(0, 'Tidak dapat terhubung ke server. Periksa koneksi backend, lalu coba lagi.', 'NETWORK_ERROR'));
