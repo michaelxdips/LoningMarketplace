@@ -486,12 +486,12 @@ export default function VersionHistoryPage() {
                         className="group flex flex-col gap-2 rounded-xl border border-sage-border/70 bg-cream-bg/30 p-3.5 transition-all hover:border-forest/40 hover:bg-white hover:shadow-sm sm:flex-row sm:items-center sm:gap-4"
                       >
                         {/* Column 1: Commit Hash */}
-                        <div className="w-24 shrink-0">
+                        <div className="w-20 shrink-0">
                           <a
                             href={`https://github.com/michaelxdips/LoningMarketplace/commit/${commit.hash}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-sage-border bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-charcoal shadow-2xs transition-colors hover:border-forest/60 hover:text-forest group-hover:border-forest/40"
+                            className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-sage-border bg-white px-2 py-0.5 font-mono text-[10px] font-bold text-charcoal shadow-2xs transition-colors hover:border-forest/60 hover:text-forest group-hover:border-forest/40"
                             title="Buka commit ini di GitHub"
                           >
                             <GitCommit className="h-3 w-3 text-forest shrink-0" />
@@ -500,8 +500,8 @@ export default function VersionHistoryPage() {
                         </div>
 
                         {/* Column 2: Commit Type Tag */}
-                        <div className="w-24 shrink-0">
-                          <span className={`inline-flex w-full items-center justify-center rounded-lg border px-2 py-1 text-[10px] uppercase font-bold tracking-wider ${badgeMeta.bg} ${badgeMeta.text}`}>
+                        <div className="w-20 shrink-0">
+                          <span className={`inline-flex w-full items-center justify-center rounded-md border px-1.5 py-0.5 text-[9px] uppercase font-extrabold tracking-wider ${badgeMeta.bg} ${badgeMeta.text}`}>
                             {badgeMeta.label}
                           </span>
                         </div>
