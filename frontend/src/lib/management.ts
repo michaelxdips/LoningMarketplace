@@ -42,6 +42,8 @@ export interface DashboardStats {
   users: { total: number; active: number };
 }
 
+export interface ExportedResource { downloadUrl: string; filename: string; }
+
 export const managementApi = {
   stats: {
     get: (signal?: AbortSignal) => apiRequest<DashboardStats>('/manage/stats', { signal }),

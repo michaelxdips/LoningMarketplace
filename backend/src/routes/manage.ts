@@ -6,6 +6,7 @@ import type { ReturnTypeGuards } from './types.js';
 import { error, hasOneImageSource, productInput, umkmInput, uuid } from './validation.js';
 import { isValidIndonesianWhatsAppNumber } from '../domain/phone.js';
 import { normalizeCoordinates } from '../domain/location.js';
+import { csvDocument, csvFilename } from '../lib/csv.js';
 
 const locationInput = z.strictObject({ latitude: z.number(), longitude: z.number() });
 const query = z.object({ q: z.string().trim().optional(), category: z.enum(['Kuliner', 'Kerajinan', 'Jasa', 'Sembako', 'Pertanian']).optional(), publicationStatus: z.enum(['draft', 'published', 'archived']).optional(), ownerUserId: uuid.optional(), umkmId: uuid.optional(), isAvailable: z.enum(['true', 'false']).transform((value) => value === 'true').optional(), limit: z.coerce.number().int().positive().max(100).default(100) });
@@ -45,6 +46,18 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
 
   app.get('/manage/stats', { preHandler: [guards.authenticate, guards.requireCapability('dashboard:view')] }, async (request) => {
     return { data: await repository.getDashboardStats(request.auth!.user) };
+  });
+
+  app.get('/manage/umkms/export.csv', { preHandler: [guards.authenticate, guards.requireCapability('umkms:view-all')], config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request, reply) => {
+    const items = await repository.listManagedUMKMs(request.auth!.user, { limit: 100 });
+    const csv = csvDocument(['Nama','Slug','Kategori','Status','Kontak','Alamat','Lokasi tersedia','Jam operasional tersedia','Jumlah produk','Produk terbit','Terakhir diperbarui'], items.map((item) => [item.name,item.slug,item.category,item.publicationStatus,item.phone,item.address,item.latitude != null && item.longitude != null ? 'Ya' : 'Tidak',item.workingHours ? 'Ya' : 'Tidak',item.assignedProductCount ?? 0,item.publishedProductCount ?? 0,item.updatedAt?.toISOString?.() ?? item.updatedAt]));
+    return reply.header('Content-Type','text/csv; charset=utf-8').header('Content-Disposition', `attachment; filename="${csvFilename('umkm', now())}"`).send(csv);
+  });
+
+  app.get('/manage/products/export.csv', { preHandler: [guards.authenticate, guards.requireCapability('products:view-all')], config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request, reply) => {
+    const items = await repository.listManagedProducts(request.auth!.user, { limit: 100 });
+    const csv = csvDocument(['Nama produk','UMKM','Kategori','Status','Harga','Slug','Dibuat','Terakhir diperbarui','Dipublikasikan'], items.map((item) => [item.name,item.umkmName,item.category,item.publicationStatus,item.price ?? '',item.slug,item.createdAt?.toISOString?.() ?? item.createdAt,item.updatedAt?.toISOString?.() ?? item.updatedAt,item.publishedAt?.toISOString?.() ?? item.publishedAt]));
+    return reply.header('Content-Type','text/csv; charset=utf-8').header('Content-Disposition', `attachment; filename="${csvFilename('produk', now())}"`).send(csv);
   });
 
   app.get('/manage/umkms', { preHandler: [guards.authenticate, guards.requireAnyCapability(['umkms:view-all', 'umkms:view-own'])] }, async (request, reply) => {

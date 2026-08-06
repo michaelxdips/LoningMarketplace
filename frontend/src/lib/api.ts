@@ -42,6 +42,8 @@ async function fetchApi(url: string, options?: RequestInit) {
 type ErrorEnvelope = { error?: { message?: string; code?: string; fields?: Record<string, string> } };
 type ApiRequestOptions = RequestInit & { skipUnauthorizedHandler?: boolean };
 
+export function apiUrl(path: string) { return `${getBaseUrl()}${path}`; }
+
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   const { skipUnauthorizedHandler, ...requestOptions } = options;
   const headers = new Headers(requestOptions.headers);

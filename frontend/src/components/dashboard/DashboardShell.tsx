@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useId } from 'react';
-import { ChevronUp, ClipboardList, Home, KeyRound, LogOut, Menu, Package, Store, Users, X } from 'lucide-react';
+import { ChevronUp, CircleHelp, ClipboardList, Home, KeyRound, LogOut, Menu, Package, Store, Users, X } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { useLogout, useSession } from '../../hooks/useAuth';
 import { brand } from '../../config/brand';
@@ -12,6 +12,7 @@ const navigation = [
   { to: '/dashboard/users', label: 'Pengguna', icon: Users, capabilities: ['users:view'] },
   { to: '/dashboard/analytics', label: 'Insight inquiry', icon: ClipboardList, capabilities: ['analytics:view-global'] },
   { to: '/dashboard/audit', label: 'Audit log', icon: ClipboardList, capabilities: ['audit:view-global'] },
+  { to: '/dashboard/bantuan', label: 'Bantuan', icon: CircleHelp, capabilities: ['dashboard:view'] },
 ] as const satisfies ReadonlyArray<{ to: string; label: string; icon: typeof Home; capabilities: readonly Capability[] }>;
 
 export default function DashboardShell() {
