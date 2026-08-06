@@ -195,6 +195,12 @@ Brand publik adalah **Loning Maju**. Identifier internal seperti `marketplace-lo
 - 🔒 **Session-based Auth** — HTTP-only cookie + CSRF token
 - 🚦 **Rate Limiting** — Login dan API rate limits
 - ♿ **Aksesibilitas** — Focus trapping, keyboard navigation, screen reader labels
+- 🛡️ **Perlindungan Form** — Konfirmasi perubahan belum disimpan pada form produk, UMKM, pengguna, dan lokasi
+- 🧯 **Pemulihan Halaman** — Error boundary per rute dengan aksi coba lagi
+- 🕐 **Informasi UMKM** — Status buka/tutup (WIB), terakhir diperbarui, dan petunjuk arah
+- ✅ **Kelengkapan Profil** — Persentase dan daftar bagian UMKM yang belum lengkap
+- 📥 **Ekspor CSV** — Ekspor UMKM/produk untuk role dengan akses global; UTF-8 dan aman dari formula injection
+- 📖 **Panduan Admin** — Bantuan singkat di `/dashboard/bantuan`
 - 📱 **Responsive** — Desktop, tablet, mobile, native zoom 200%
 - 🔗 **SEO** — Route metadata, canonical links, JSON-LD (SPA-side)
 - ⚡ **Lazy Loading** — Route-level code splitting
@@ -660,6 +666,8 @@ Remove-Item Env:ALLOW_SEED
 
 ## 🔐 Autentikasi & Keamanan
 
+> Dokumentasi kebijakan rate-limit, reverse proxy, fitur V1.8, dan keputusan bundle tersedia di [`docs/v1.7.3-v1.8-implementation.md`](docs/v1.7.3-v1.8-implementation.md).
+
 ```mermaid
 sequenceDiagram
     participant B as Browser
@@ -697,10 +705,10 @@ sequenceDiagram
 
 | Role | Capabilities |
 |---|---|
-| `admin` | Full access: users, all UMKMs/products, publication, audit, analytics |
-| `pelaku_umkm` | Manage assigned UMKMs and their products (no publish, no admin) |
-| `superadmin` | Reserved (zero capabilities — login rejected) |
-| `perangkat_desa` | Reserved (zero capabilities — login rejected) |
+| `superadmin` | Full access: semua kemampuan, termasuk kelola user, semua UMKM/produk, publikasi, audit, dan analitik |
+| `admin` | Kelola user (perangkat_desa & pelaku_umkm), semua UMKM/produk, publikasi, audit, dan analitik |
+| `perangkat_desa` | Lihat & kelola semua UMKM/produk, publikasi, lihat analitik (tanpa akses user management) |
+| `pelaku_umkm` | Kelola UMKM milik sendiri dan produk di dalamnya (tanpa publikasi, tanpa akses admin) |
 
 ---
 
