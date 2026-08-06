@@ -37,7 +37,7 @@ export default function DiscoverySearchForm({ id, label, placeholder, query, onQ
             event.preventDefault();
             onSubmit();
           }}
-          className="focus-ring min-h-11 w-full rounded-xl border border-forest/20 bg-white py-2.5 pl-9 pr-9 text-xs text-charcoal shadow-sm transition-colors placeholder:text-warm-gray/60 focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest"
+          className="focus-ring min-h-11 w-full rounded-xl border border-forest/20 bg-white py-2.5 pl-9 pr-9 text-xs text-charcoal shadow-sm transition-colors placeholder:text-warm-gray/60 focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest [&::-webkit-search-cancel-button]:hidden"
         />
         {query && (
           <button type="button" onClick={clear} aria-label="Bersihkan pencarian" className="focus-ring absolute inset-y-0 right-0 flex items-center rounded-r-xl px-2.5 text-warm-gray transition-colors hover:text-charcoal">

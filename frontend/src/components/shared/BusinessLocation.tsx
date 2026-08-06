@@ -1,10 +1,10 @@
 import { ExternalLink, MapPin, Navigation } from 'lucide-react';
-import { buildGoogleMapsDirectionsUrl, buildGoogleMapsSearchUrl, buildOsmEmbedUrl, normalizeCoordinates } from '../../lib/location';
+import { buildGoogleMapsDirectionsUrl, buildGoogleMapsSearchUrl, buildGoogleMapsEmbedUrl, normalizeCoordinates } from '../../lib/location';
 
 export default function BusinessLocation({ umkmName, address, latitude, longitude, compact = false }: { umkmName: string; address: string; latitude: number | null | undefined; longitude: number | null | undefined; compact?: boolean }) {
   const coordinates = typeof latitude === 'number' && typeof longitude === 'number' ? normalizeCoordinates(latitude, longitude) : undefined;
   if (!coordinates) return null;
-  const embedUrl = buildOsmEmbedUrl(coordinates);
+  const embedUrl = buildGoogleMapsEmbedUrl(coordinates);
   const searchUrl = buildGoogleMapsSearchUrl(coordinates);
   const directionsUrl = buildGoogleMapsDirectionsUrl(coordinates);
   return (
@@ -21,7 +21,7 @@ export default function BusinessLocation({ umkmName, address, latitude, longitud
         />
       </div>
       <p className="mt-2 text-[10px] text-warm-gray">
-        Peta © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline">kontributor OpenStreetMap</a>
+        Data Peta © Google Maps
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <a href={searchUrl} target="_blank" rel="noopener noreferrer" className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-lg border border-sage-border bg-white px-4 text-xs font-bold text-forest"><ExternalLink size={14} /> Buka di Google Maps</a>

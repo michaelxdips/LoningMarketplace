@@ -35,8 +35,39 @@ export default function ProductDetailPage() {
   if (productQuery.error) { const notFound = productQuery.error instanceof ApiError && [400, 404].includes(productQuery.error.status); return <PublicPageShell><PublicDetailState state={notFound ? 'not-found' : 'error'} onRetry={notFound ? undefined : () => void productQuery.refetch()}/></PublicPageShell>; }
   if (!detail || !product) return <PublicPageShell><PublicDetailState state="not-found"/></PublicPageShell>;
   return <PublicPageShell>
-    <article className="mx-auto max-w-7xl px-5 py-12 sm:py-20"><nav aria-label="Breadcrumb" className="mb-8 text-xs text-warm-gray"><Link to="/" className="focus-ring rounded hover:text-forest">Beranda</Link><span aria-hidden="true"> / </span><span>{detail.category}</span></nav>
-      <div className="grid gap-10 lg:grid-cols-[1.05fr_.95fr] lg:gap-16"><div className="overflow-hidden rounded-2xl border border-sage-border bg-cream-tint"><ProductImage src={detail.imageUrl} alt={detail.altText || detail.name} className="aspect-[4/3] h-full w-full object-cover"/></div><div className="flex flex-col justify-center"><div className="flex flex-wrap items-center justify-between gap-4"><p className="editorial-label">{detail.category}</p><span className={`inline-flex items-center gap-1.5 text-xs font-bold ${detail.isAvailable ? 'text-forest' : 'text-warm-gray'}`}><CheckCircle2 size={14}/>{detail.isAvailable ? 'Tersedia' : 'Belum tersedia'}</span></div><h1 className="text-balance mt-5 text-4xl font-extrabold tracking-[-0.035em] text-charcoal sm:text-5xl">{detail.name}</h1><Link to={`/umkm/${encodeURIComponent(detail.umkm.slug)}`} className="focus-ring mt-4 flex w-fit items-center gap-2 rounded text-sm font-bold text-forest hover:text-terracotta">Oleh {detail.umkm.name}<ArrowRight size={14}/></Link><p className="mt-8 whitespace-pre-line text-sm leading-7 text-warm-gray">{detail.description}</p><div className="mt-8 border-y border-sage-border py-5"><p className="text-[10px] font-bold uppercase tracking-widest text-warm-gray">Informasi harga</p><p className="mt-1 text-2xl font-extrabold text-forest">{formatPrice(detail.price, 'Hubungi pelaku usaha')}{detail.unit && <span className="ml-2 text-sm font-medium text-warm-gray">/ {detail.unit}</span>}</p><p className="mt-2 text-xs leading-5 text-warm-gray">Harga merupakan informasi awal. Konfirmasi harga akhir dan ketersediaan langsung kepada pelaku usaha.</p></div><div className="mt-7 flex flex-wrap gap-3"><button id="product-page-inquiry" disabled={!merchantQuery.data || !detail.isAvailable} onClick={() => setInquiryOpen(true)} className="focus-ring touch-target inline-flex items-center gap-2 rounded-lg bg-forest px-5 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-forest-hover disabled:cursor-not-allowed disabled:opacity-50"><MessageSquare size={15}/> Tanya Produk</button><ShareButton title={detail.name} text={`Lihat ${detail.name} dari ${detail.umkm.name} di Loning Maju.`}/></div>{merchantQuery.isError && <p className="mt-3 text-xs text-terracotta">Kontak usaha belum dapat dimuat. Coba muat ulang halaman.</p>}</div></div>
+    <article className="mx-auto max-w-5xl px-5 py-8 sm:py-12">
+      <nav aria-label="Breadcrumb" className="mb-4 text-xs text-warm-gray">
+        <Link to="/" className="focus-ring rounded hover:text-forest">Beranda</Link>
+        <span aria-hidden="true"> / </span>
+        <span>{detail.category}</span>
+      </nav>
+      <div className="grid gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
+        <div className="overflow-hidden rounded-2xl border border-sage-border bg-cream-tint lg:col-span-6">
+          <ProductImage src={detail.imageUrl} alt={detail.altText || detail.name} className="aspect-[4/3] h-full w-full object-cover"/>
+        </div>
+        <div className="flex flex-col justify-center lg:col-span-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <p className="editorial-label">{detail.category}</p>
+            <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${detail.isAvailable ? 'text-forest' : 'text-warm-gray'}`}>
+              <CheckCircle2 size={14}/>
+              {detail.isAvailable ? 'Tersedia' : 'Belum tersedia'}
+            </span>
+          </div>
+          <h1 className="text-balance mt-3 text-3xl font-extrabold tracking-[-0.035em] text-charcoal sm:text-4xl">{detail.name}</h1>
+          <Link to={`/umkm/${encodeURIComponent(detail.umkm.slug)}`} className="focus-ring mt-2 flex w-fit items-center gap-2 rounded text-sm font-bold text-forest hover:text-terracotta">Oleh {detail.umkm.name}<ArrowRight size={14}/></Link>
+          <p className="mt-4 whitespace-pre-line text-sm leading-6 text-warm-gray">{detail.description}</p>
+          <div className="mt-5 border-y border-sage-border py-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-warm-gray">Informasi harga</p>
+            <p className="mt-1 text-2xl font-extrabold text-forest">{formatPrice(detail.price, 'Hubungi pelaku usaha')}{detail.unit && <span className="ml-2 text-sm font-medium text-warm-gray">/ {detail.unit}</span>}</p>
+            <p className="mt-1.5 text-xs leading-5 text-warm-gray">Harga merupakan informasi awal. Konfirmasi harga akhir dan ketersediaan langsung kepada pelaku usaha.</p>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button id="product-page-inquiry" disabled={!merchantQuery.data || !detail.isAvailable} onClick={() => setInquiryOpen(true)} className="focus-ring touch-target inline-flex items-center gap-2 rounded-lg bg-forest px-5 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-forest-hover disabled:cursor-not-allowed disabled:opacity-50"><MessageSquare size={15}/> Tanya Produk</button>
+            <ShareButton title={detail.name} text={`Lihat ${detail.name} dari ${detail.umkm.name} di Loning Maju.`}/>
+          </div>
+          {merchantQuery.isError && <p className="mt-3 text-xs text-terracotta">Kontak usaha belum dapat dimuat. Coba muat ulang halaman.</p>}
+        </div>
+      </div>
     </article>
     <RelatedProducts products={relatedQuery.data ?? []} isLoading={relatedQuery.isPending} />
     {merchantQuery.data && <WhatsAppInquiryDialog isOpen={inquiryOpen} onClose={() => setInquiryOpen(false)} product={product} umkm={merchantQuery.data} source="product_detail"/>}

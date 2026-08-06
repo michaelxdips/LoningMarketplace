@@ -25,9 +25,8 @@ describe('BusinessLocation', () => {
     const iframe = screen.getByTitle('Peta lokasi Dapur Loning');
     expect(iframe).toHaveAttribute('loading', 'lazy');
     expect(iframe).toHaveAttribute('referrerpolicy', 'no-referrer-when-downgrade');
-    expect(iframe.getAttribute('src')).toContain('https://www.openstreetmap.org/export/embed.html?bbox=');
-    expect(iframe.getAttribute('src')).toContain('marker=-6.891235,109.382145');
-    expect(screen.getByText(/kontributor OpenStreetMap/)).toBeInTheDocument();
+    expect(iframe.getAttribute('src')).toContain('https://maps.google.com/maps?q=-6.891235,109.382145&z=16&output=embed');
+    expect(screen.getByText(/Data Peta © Google Maps/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Buka di Google Maps/ })).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=-6.891235,109.382145');
     expect(screen.getByRole('link', { name: /Petunjuk Arah/ })).toHaveAttribute('href', 'https://www.google.com/maps/dir/?api=1&destination=-6.891235,109.382145');
     for (const link of screen.getAllByRole('link')) expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
@@ -36,6 +35,6 @@ describe('BusinessLocation', () => {
   it('normalizes coordinates before building any URL', () => {
     render(<BusinessLocation {...base} latitude={-6.8912346} longitude={109.3821454} />);
     const iframe = screen.getByTitle('Peta lokasi Dapur Loning');
-    expect(iframe.getAttribute('src')).toContain('marker=-6.891235,109.382145');
+    expect(iframe.getAttribute('src')).toContain('https://maps.google.com/maps?q=-6.891235,109.382145&z=16&output=embed');
   });
 });

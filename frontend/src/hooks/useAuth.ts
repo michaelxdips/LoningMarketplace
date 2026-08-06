@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { authApi, csrfKey, rememberSession, sessionKey } from '../lib/auth';
 import { ApiError } from '../lib/api';
 
@@ -18,6 +18,20 @@ export function useSession() {
 export function useCsrfToken() {
   const client = useQueryClient();
   return useQuery({ queryKey: csrfKey, queryFn: () => client.getQueryData<string | null>(csrfKey) ?? null, staleTime: Infinity }).data ?? undefined;
+}
+
+export async function getFreshCsrfToken(client: QueryClient): Promise<string | undefined> {
+  let csrf = client.getQueryData<string | null>(csrfKey);
+  if (!csrf) {
+    try {
+      const session = await authApi.session();
+      rememberSession(client, session);
+      csrf = session.csrfToken;
+    } catch {
+      /* fallback */
+    }
+  }
+  return csrf ?? undefined;
 }
 
 export function useLogin() {

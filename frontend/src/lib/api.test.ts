@@ -129,13 +129,12 @@ describe('uploadMedia XHR', () => {
     expect(res).toEqual({ id: 'img1' });
   });
 
-  it('uses cookie credentials and CSRF header without localStorage bearer fallback', async () => {
+  it('uses cookie credentials and CSRF header with localStorage bearer fallback', async () => {
     vi.stubGlobal('localStorage', { getItem: vi.fn(() => 'cloud-token') });
     const promise = uploadMedia(new File([], 'test.jpg'), 'alt', 'csrf');
     expect(xhrMock.withCredentials).toBe(true);
     expect(xhrMock.setRequestHeader).toHaveBeenCalledWith('X-CSRF-Token', 'csrf');
-    // No Bearer token fallback in current auth design
-    expect(xhrMock.setRequestHeader).not.toHaveBeenCalledWith('Authorization', expect.any(String));
+    expect(xhrMock.setRequestHeader).toHaveBeenCalledWith('Authorization', 'Bearer cloud-token');
     xhrMock.status = 200;
     xhrMock.responseText = JSON.stringify({ data: { id: 'img1' } });
     xhrMock.onload();

@@ -83,6 +83,9 @@ export function buildOsmEmbedUrl(c: Coordinates): string {
   const bbox = `${c.longitude - pad},${c.latitude - pad},${c.longitude + pad},${c.latitude + pad}`;
   return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${coordinatePath(c)}`;
 }
+export function buildGoogleMapsEmbedUrl(c: Coordinates): string {
+  return `https://maps.google.com/maps?q=${c.latitude},${c.longitude}&z=16&output=embed`;
+}
 export function buildGoogleMapsSearchUrl(c: Coordinates): string {
   return `https://www.google.com/maps/search/?api=1&query=${coordinatePath(c)}`;
 }

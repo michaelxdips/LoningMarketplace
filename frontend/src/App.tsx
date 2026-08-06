@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { UMKM, Product } from './types';
 import { useUMKMs } from './hooks/useUMKMs';
 import { useProducts } from './hooks/useProducts';
@@ -35,8 +35,16 @@ export default function App() {
   // Directory state is URL-owned so refresh, back/forward, and shared links agree.
   const discovery = useDiscoveryUrlState();
   const selectedCategory = discovery.category;
-  const productSearchQuery = discovery.draftQuery;
-  const umkmSearchQuery = discovery.draftQuery;
+  const [productSearchQuery, setProductSearchQuery] = useState(discovery.q);
+  const [umkmSearchQuery, setUmkmSearchQuery] = useState(discovery.q);
+
+  useEffect(() => {
+    if (discovery.q) {
+      setProductSearchQuery(discovery.q);
+      setUmkmSearchQuery(discovery.q);
+    }
+  }, [discovery.q]);
+
   const debouncedProductSearchQuery = useDebouncedValue(productSearchQuery);
   const debouncedUmkmSearchQuery = useDebouncedValue(umkmSearchQuery);
   const apiCategory = selectedCategory === 'Semua' ? undefined : selectedCategory;
@@ -187,9 +195,9 @@ export default function App() {
           products={products}
           selectedCategory={selectedCategory}
           searchQuery={productSearchQuery}
-          onSearchChange={discovery.setDraftQuery}
-          onSearchSubmit={discovery.submitQuery}
-          onClearFilters={discovery.clearFilters}
+          onSearchChange={setProductSearchQuery}
+          onSearchSubmit={() => {}}
+          onClearFilters={() => setProductSearchQuery('')}
           onInquireProduct={(product) => handleInquireProduct(product, 'homepage_featured')}
           onViewProduct={handleViewProduct}
           onViewMerchant={handleViewUMKMById}
@@ -202,9 +210,9 @@ export default function App() {
         <FeaturedBusinessesSection 
           umkms={umkms}
           searchQuery={umkmSearchQuery}
-          onSearchChange={discovery.setDraftQuery}
-          onSearchSubmit={discovery.submitQuery}
-          onClearFilters={discovery.clearFilters}
+          onSearchChange={setUmkmSearchQuery}
+          onSearchSubmit={() => {}}
+          onClearFilters={() => setUmkmSearchQuery('')}
           onViewDetails={handleViewUMKMDetails}
           isLoading={umkmsQuery.isPending}
           isError={umkmsQuery.isError}

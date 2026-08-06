@@ -1,11 +1,11 @@
-import { AlertCircle, ArrowRight, ClipboardList, Clock, MapPin, Package, Plus, ShieldAlert, Store, Users } from 'lucide-react';
+import { AlertCircle, ArrowRight, ClipboardList, ExternalLink, Eye, MessageSquare, Package, Plus, Store, TrendingUp, Users } from 'lucide-react';
 import { Link } from 'react-router';
+import { useQuery } from '@tanstack/react-query';
 import { useSession } from '../hooks/useAuth';
 import { useManagedList } from '../hooks/useManagement';
-import { managementApi, pageItems, type AuditLog } from '../lib/management';
+import { managementApi, pageItems } from '../lib/management';
 import { LoadingPanel, PageHeader } from '../components/dashboard/Ui';
 import { hasCapability } from '../lib/auth';
-import { formatAuditEvent } from '../lib/auditEvents';
 
 export default function DashboardHome() {
   const user = useSession().data!.user;
@@ -17,10 +17,17 @@ export default function DashboardHome() {
   const canViewUsers = hasCapability(user, 'users:view');
   const usersQuery = useManagedList('admin', 'users', params, signal => managementApi.users.list(params, signal), canViewUsers);
 
-  const canViewAudit = hasCapability(user, 'audit:view-global');
-  const auditQuery = useManagedList('admin', 'audit-logs', { limit: 6 }, signal => managementApi.audit.list({ limit: 6 }, signal), canViewAudit);
-
   const canViewAnalytics = hasCapability(user, 'analytics:view-global');
+
+  const analyticsQuery = useQuery({
+    queryKey: ['admin', 'analytics', 'dashboard-home-30d'],
+    queryFn: ({ signal }) => {
+      const toDate = new Date();
+      const fromDate = new Date(toDate.getTime() - 30 * 86_400_000);
+      return managementApi.analytics.get(fromDate.toISOString().slice(0, 10), toDate.toISOString().slice(0, 10), signal);
+    },
+    enabled: canViewAnalytics,
+  });
 
   if (umkmsQuery.isPending || productsQuery.isPending || (canViewUsers && usersQuery.isPending)) {
     return <LoadingPanel />;
@@ -29,7 +36,6 @@ export default function DashboardHome() {
   const umkms = pageItems(umkmsQuery.data);
   const products = pageItems(productsQuery.data);
   const users = pageItems(usersQuery.data);
-  const auditLogs = pageItems(auditQuery.data);
 
   const publishedUmkms = umkms.filter(u => u.publicationStatus === 'published');
   const draftUmkms = umkms.filter(u => u.publicationStatus === 'draft');
@@ -161,40 +167,83 @@ export default function DashboardHome() {
         )}
       </section>
 
-      {/* Recent Activity Audit Feed */}
-      {canViewAudit && auditLogs.length > 0 && (
+      {/* Mini Analytics & Performa (30 Hari Terakhir) */}
+      {canViewAnalytics && (
         <section className="rounded-2xl border border-sage-border bg-white p-6 shadow-xs">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-base font-extrabold text-charcoal">
-              <Clock className="h-5 w-5 text-forest" />
-              Aktivitas Terbaru
-            </h3>
-            <Link to="/dashboard/audit" className="focus-ring flex items-center gap-1 text-xs font-bold text-forest hover:underline">
-              Lihat semua audit log
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="flex items-center gap-2 text-base font-extrabold text-charcoal">
+                <TrendingUp className="h-5 w-5 text-forest" />
+                Performa Katalog & Inquiry (30 Hari Terakhir)
+              </h3>
+              <p className="text-xs text-warm-gray">Ringkasan aktivitas pengunjung dan minat pembeli di katalog desa.</p>
+            </div>
+            <Link to="/dashboard/analytics" className="focus-ring mt-2 inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline sm:mt-0">
+              Lihat detail insight
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
-          <div className="divide-y divide-sage-border">
-            {auditLogs.map((log: AuditLog) => {
-              const human = formatAuditEvent(log.action);
-              return (
-                <div key={log.id} className="flex items-center justify-between py-3 text-xs">
-                  <div>
-                    <p className="font-bold text-charcoal">{human.title}</p>
-                    <p className="text-warm-gray">
-                      {log.actor?.displayName ? `Oleh ${log.actor.displayName}` : 'Oleh Sistem'}
-                    </p>
-                  </div>
-                  <time dateTime={log.createdAt} className="text-warm-gray font-medium">
-                    {new Intl.DateTimeFormat('id-ID', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(log.createdAt))}
-                  </time>
+          {analyticsQuery.isPending ? (
+            <div className="py-6 text-center text-xs text-warm-gray">Memuat data insight...</div>
+          ) : analyticsQuery.isError ? (
+            <div className="py-4 text-xs text-amber-700">Gagal memuat data insight.</div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl border border-sage-border bg-cream-bg/50 p-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
+                  <Eye className="h-4 w-4 text-forest" />
+                  Total Tampilan Katalog
                 </div>
-              );
-            })}
-          </div>
+                <p className="mt-2 text-2xl font-extrabold text-forest">
+                  {(analyticsQuery.data?.totals?.umkm_view ?? 0) + (analyticsQuery.data?.totals?.product_view ?? 0)}
+                </p>
+                <p className="mt-1 text-[11px] text-warm-gray">
+                  {analyticsQuery.data?.totals?.product_view ?? 0} produk & {analyticsQuery.data?.totals?.umkm_view ?? 0} UMKM
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-sage-border bg-cream-bg/50 p-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
+                  <MessageSquare className="h-4 w-4 text-emerald-600" />
+                  Dialog Inquiry Dibuka
+                </div>
+                <p className="mt-2 text-2xl font-extrabold text-charcoal">
+                  {analyticsQuery.data?.totals?.inquiry_started ?? 0}
+                </p>
+                <p className="mt-1 text-[11px] text-warm-gray">Pengunjung membuka dialog tanya</p>
+              </div>
+
+              <div className="rounded-xl border border-sage-border bg-cream-bg/50 p-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
+                  <ExternalLink className="h-4 w-4 text-blue-600" />
+                  Klik Menghubungi WA
+                </div>
+                <p className="mt-2 text-2xl font-extrabold text-charcoal">
+                  {analyticsQuery.data?.totals?.whatsapp_opened ?? 0}
+                </p>
+                <p className="mt-1 text-[11px] text-warm-gray">Upaya pesan ke WhatsApp seller</p>
+              </div>
+
+              <div className="rounded-xl border border-sage-border bg-cream-bg/50 p-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
+                  <TrendingUp className="h-4 w-4 text-amber-600" />
+                  Tingkat Minat (Intent Rate)
+                </div>
+                <p className="mt-2 text-2xl font-extrabold text-forest">
+                  {(() => {
+                    const totalViews = (analyticsQuery.data?.totals?.umkm_view ?? 0) + (analyticsQuery.data?.totals?.product_view ?? 0);
+                    const started = analyticsQuery.data?.totals?.inquiry_started ?? 0;
+                    return totalViews > 0 ? ((started / totalViews) * 100).toFixed(1) + '%' : '0.0%';
+                  })()}
+                </p>
+                <p className="mt-1 text-[11px] text-warm-gray">Rasio pengunjung vs yang berminat</p>
+              </div>
+            </div>
+          )}
         </section>
       )}
     </>
   );
 }
+

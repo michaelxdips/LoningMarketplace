@@ -62,11 +62,14 @@ export default function HeroSection({ onBrowseProducts, onBrowseUMKMs }: HeroSec
               </button>
             </div>
 
-            <dl className="grid max-w-2xl grid-cols-1 gap-3 border-t border-forest/10 pt-5 sm:grid-cols-3">
+            <dl className="grid max-w-2xl grid-cols-1 gap-4 border-t border-forest/15 pt-5 sm:grid-cols-3">
               {trustPoints.map((point) => (
-                <div key={point.value} className="flex items-center gap-3 sm:block">
-                  <dt className="text-sm font-extrabold text-charcoal">{point.value}</dt>
-                  <dd className="text-xs leading-5 text-warm-gray">{point.label}</dd>
+                <div key={point.value} className="flex flex-col justify-start">
+                  <dt className="text-sm font-extrabold text-charcoal flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-terracotta shrink-0" aria-hidden="true" />
+                    <span>{point.value}</span>
+                  </dt>
+                  <dd className="mt-0.5 text-xs leading-5 text-warm-gray pl-3">{point.label}</dd>
                 </div>
               ))}
             </dl>

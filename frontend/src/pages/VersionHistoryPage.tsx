@@ -60,10 +60,21 @@ interface GitHubTagResponse {
 
 const STATIC_RELEASES: ReleaseGroup[] = [
   {
+    version: 'v1.7.0',
+    title: 'Google Maps Integration & UI Optimization',
+    date: '6 Agustus 2026',
+    badge: 'Versi Terbaru (Active)',
+    commits: [
+      { hash: 'HEAD', date: '2026-08-06', type: 'feat', scope: 'maps', message: 'integrate Google Maps Native Embed for location preview and map directory' },
+      { hash: 'HEAD', date: '2026-08-06', type: 'style', scope: 'layout', message: 'optimize container max-widths, search forms, and smart hybrid image framing' },
+      { hash: 'HEAD', date: '2026-08-06', type: 'refactor', scope: 'home', message: 'redesign mission section hierarchy and clean up editorial teasers alignment' },
+    ],
+  },
+  {
     version: 'v1.6.3',
     title: 'Mobile Auth Fix & Security Hardening',
     date: '6 Agustus 2026',
-    badge: 'Versi Terbaru (Active)',
+    badge: 'Patch',
     commits: [
       { hash: '430ee4d', date: '2026-08-06', type: 'fix', scope: 'auth', message: 'persist session token to localStorage and inject as Bearer fallback for iOS Safari cross-site cookie blocking (ITP)' },
       { hash: '5c9862c', date: '2026-08-06', type: 'fix', scope: 'auth', message: 'allow requests without Origin header for mobile browser compatibility' },
@@ -221,8 +232,11 @@ export default function VersionHistoryPage() {
   const fetchGitHubData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [commitsRes, tagsRes] = await Promise.all([
-        fetch('https://api.github.com/repos/michaelxdips/LoningMarketplace/commits?per_page=60', {
+      const [page1Res, page2Res, tagsRes] = await Promise.all([
+        fetch('https://api.github.com/repos/michaelxdips/LoningMarketplace/commits?per_page=100&page=1', {
+          headers: { Accept: 'application/vnd.github.v3+json' },
+        }),
+        fetch('https://api.github.com/repos/michaelxdips/LoningMarketplace/commits?per_page=100&page=2', {
           headers: { Accept: 'application/vnd.github.v3+json' },
         }),
         fetch('https://api.github.com/repos/michaelxdips/LoningMarketplace/tags', {
@@ -230,9 +244,11 @@ export default function VersionHistoryPage() {
         }),
       ]);
 
-      if (!commitsRes.ok) throw new Error(`GitHub API HTTP ${commitsRes.status}`);
+      if (!page1Res.ok) throw new Error(`GitHub API HTTP ${page1Res.status}`);
 
-      const rawCommits: GitHubCommitResponse[] = await commitsRes.json();
+      const page1Commits: GitHubCommitResponse[] = await page1Res.json();
+      const page2Commits: GitHubCommitResponse[] = page2Res.ok ? await page2Res.json() : [];
+      const rawCommits = [...(Array.isArray(page1Commits) ? page1Commits : []), ...(Array.isArray(page2Commits) ? page2Commits : [])];
       const rawTags: GitHubTagResponse[] = tagsRes.ok ? await tagsRes.json() : [];
 
       if (!Array.isArray(rawCommits) || rawCommits.length === 0) {
@@ -263,8 +279,8 @@ export default function VersionHistoryPage() {
 
       // Group commits into releases based on tags and version milestones
       const dynamicGroups: ReleaseGroup[] = [];
-      let currentVersion = tagShaMap.get(parsedCommits[0]?.hash) || 'v1.6.1';
-      let currentTitle = currentVersion === 'v1.6.1' ? 'Dashboard V2 Reconstruction & Live Sync' : `Release ${currentVersion}`;
+      let currentVersion = tagShaMap.get(parsedCommits[0]?.hash) || rawTags[0]?.name || 'v1.6.3';
+      let currentTitle = currentVersion === 'v1.6.3' ? 'Mobile Auth Fix & Live Sync' : `Release ${currentVersion}`;
       let currentBadge = 'Versi Terbaru (Live GitHub)';
       let currentCommits: CommitItem[] = [];
 
@@ -345,12 +361,8 @@ export default function VersionHistoryPage() {
   return (
     <PublicPageShell>
       {/* Header Banner */}
-      <header className="mx-auto max-w-4xl px-5 pb-10 pt-20 text-center sm:pt-28">
-        <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-forest/20 bg-forest/10 px-4 py-1.5 text-xs font-extrabold text-forest">
-          <GitBranch className="h-4 w-4 text-forest" />
-          <span>Riwayat Versi Repository</span>
-        </div>
-        <h1 className="text-balance mt-2 break-words text-4xl font-extrabold tracking-[-0.035em] text-charcoal sm:text-5xl">
+      <header className="mx-auto max-w-4xl px-5 pb-8 pt-10 text-center sm:pt-14">
+        <h1 className="text-balance break-words text-4xl font-extrabold tracking-[-0.035em] text-charcoal sm:text-5xl">
           Changelog & Version History
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-warm-gray sm:text-base">

@@ -19,10 +19,10 @@ import {
   type UserUpdateInput,
 } from "../lib/management";
 import { CATEGORIES, type Category } from "../types";
-import { useSession } from "../hooks/useAuth";
-import { useCsrfToken } from "../hooks/useAuth";
+import { useSession, useCsrfToken, getFreshCsrfToken } from "../hooks/useAuth";
 import { hasCapability } from "../lib/auth";
 import { deleteMedia, updateMediaAltText, uploadMedia } from "../lib/api";
+import { ProductImage } from "../components/product/ProductImage";
 import {
   ConfirmDialog,
   ErrorNotice,
@@ -256,7 +256,33 @@ export function UMKMFormPage() {
         title={editing ? "Kelola UMKM" : "Tambah UMKM"}
         description="Perubahan data disimpan sebagai data kelola; gunakan aksi publikasi secara terpisah."
       />
-      {editing && value && <section className="mb-5 flex flex-col gap-3 rounded-2xl border border-sage-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-extrabold text-charcoal">{contactStatus(value)}</p><p className="mt-1 text-xs text-warm-gray">Verifikasi memastikan nomor WhatsApp usaha masih dapat digunakan.</p></div><PendingButton id="verify-umkm-contact" type="button" pending={verify.isPending} disabled={!value.isContactValid} onClick={() => id && verify.mutate(id)}>{verify.isPending ? 'Memverifikasi...' : 'Verifikasi kontak sekarang'}</PendingButton></section>}
+      {editing && value && (
+        <section className="mb-5 flex flex-col gap-3 rounded-2xl border border-sage-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-extrabold text-charcoal">{contactStatus(value)}</p>
+            <p className="mt-1 text-xs text-warm-gray">
+              {value.contactVerifiedAt
+                ? `Terakhir diverifikasi pada ${new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(new Date(value.contactVerifiedAt))}.`
+                : 'Verifikasi memastikan nomor WhatsApp usaha masih dapat digunakan.'}
+            </p>
+          </div>
+          <PendingButton
+            id="verify-umkm-contact"
+            type="button"
+            pending={verify.isPending}
+            disabled={!value.isContactValid || Boolean(value.isContactVerificationFresh)}
+            onClick={() => id && verify.mutate(id)}
+          >
+            {verify.isPending
+              ? 'Memverifikasi...'
+              : value.isContactVerificationFresh
+                ? 'Terverifikasi'
+                : value.contactVerifiedAt
+                  ? 'Verifikasi ulang'
+                  : 'Verifikasi kontak sekarang'}
+          </PendingButton>
+        </section>
+      )}
       {verify.isError && <div className="mb-5"><ErrorNotice error={verify.error} /></div>}
       <form
         className="space-y-6 rounded-2xl border border-sage-border bg-white p-5 sm:p-7"
@@ -374,6 +400,7 @@ export function ProductFormPage() {
   const { id } = useParams();
   const editing = Boolean(id);
   const navigate = useNavigate();
+  const client = useQueryClient();
   const csrf = useCsrfToken();
   const sessionUser = useSession().data!.user;
   const item = useManagedItem("products", id, managementApi.products.get);
@@ -465,6 +492,7 @@ export function ProductFormPage() {
       if (umkmMode === "create" && newUmkmName) {
         setCreatingUmkm(true);
         const placeholderImage = "https://placehold.co/600x400/e8eee8/4a6b4a?text=" + encodeURIComponent(newUmkmName);
+        const freshCsrf = await getFreshCsrfToken(client);
         const newUmkm = await managementApi.umkms.create({
           name: newUmkmName,
           owner: newUmkmName,
@@ -474,7 +502,7 @@ export function ProductFormPage() {
           imageUrl: placeholderImage,
           imageAssetId: null,
           address: "Belum diisi",
-        }, csrf);
+        }, freshCsrf);
         umkmId = newUmkm.id;
         setCreatingUmkm(false);
       }
@@ -536,7 +564,7 @@ export function ProductFormPage() {
             <Input name="name" required defaultValue={value?.name} />
           </Field>
           <Field label="UMKM" error={errors.umkmId} hint={umkmMode === "create" ? "UMKM baru akan dibuat sebagai draft otomatis." : undefined}>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
               {umkmMode === "select" ? (
                 <Select name="umkmId" required defaultValue={value?.umkmId} disabled={editing && !hasCapability(sessionUser, 'products:transfer-owner')} className="flex-1">
                   <option value="">Pilih UMKM</option>
@@ -559,22 +587,24 @@ export function ProductFormPage() {
                   value={umkmSearch}
                   onChange={(e) => setUmkmSearch(e.target.value)}
                   placeholder="Ketik nama UMKM baru"
-                  className="focus-ring min-h-[46px] flex-1 rounded-xl border border-sage-border bg-white px-4 text-sm text-charcoal shadow-2xs transition-all focus:border-forest focus:ring-2 focus:ring-forest/15"
+                  className="focus-ring min-h-11 flex-1 rounded-xl border border-sage-border bg-white px-3.5 py-2.5 text-sm text-charcoal shadow-2xs transition-all focus:border-forest focus:ring-2 focus:ring-forest/15"
                 />
               )}
               <button
                 type="button"
                 onClick={() => { setUmkmMode(umkmMode === "select" ? "create" : "select"); setUmkmSearch(""); setErrors((c) => ({ ...c, umkmId: "" })); }}
-                className="focus-ring shrink-0 rounded-xl border border-sage-border bg-white px-3 text-xs font-bold text-forest shadow-2xs transition-all hover:bg-cream-tint"
+                className="focus-ring inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-sage-border bg-white px-3.5 py-2.5 text-xs font-bold text-forest shadow-2xs transition-all hover:bg-cream-tint"
               >
                 {umkmMode === "select" ? "+ UMKM baru" : "Batal"}
               </button>
               {umkmMode === "select" && (
                 <Link
-                  to={`/dashboard/umkms/new`}
-                  className="focus-ring shrink-0 rounded-xl border border-forest/30 bg-forest/5 px-3 text-xs font-bold text-forest shadow-2xs transition-all hover:bg-forest/10"
+                  to="/dashboard/umkms/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="focus-ring inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-forest/30 bg-forest/5 px-3.5 py-2.5 text-xs font-bold text-forest shadow-2xs transition-all hover:bg-forest/10"
                 >
-                  Form UMKM
+                  Form UMKM ↗
                 </Link>
               )}
             </div>
@@ -600,72 +630,93 @@ export function ProductFormPage() {
             <Input name="unit" defaultValue={value?.unit} />
           </Field>
           <fieldset className="space-y-2 sm:col-span-2">
-            <legend className="text-sm font-bold">Sumber gambar</legend>
-            {editing && (
-              <label className="flex min-h-11 items-center gap-3">
+            <legend className="text-sm font-bold text-charcoal">Sumber gambar</legend>
+            <div className="flex flex-wrap gap-4 pt-1">
+              {editing && value?.imageUrl && (
+                <label className="flex items-center gap-2 text-sm font-semibold text-charcoal cursor-pointer">
+                  <input
+                    type="radio"
+                    name="imageMode"
+                    className="accent-forest"
+                    checked={imageMode === "keep-current"}
+                    onChange={() => selectMode("keep-current")}
+                  />
+                  Pertahankan gambar saat ini
+                </label>
+              )}
+              <label className="flex items-center gap-2 text-sm font-semibold text-charcoal cursor-pointer">
                 <input
                   type="radio"
                   name="imageMode"
-                  checked={imageMode === "keep-current"}
-                  onChange={() => selectMode("keep-current")}
+                  className="accent-forest"
+                  checked={imageMode === "managed-upload"}
+                  onChange={() => selectMode("managed-upload")}
                 />
-                Pertahankan gambar saat ini
+                Unggah file dari perangkat
               </label>
-            )}
-            <label className="flex min-h-11 items-center gap-3">
-              <input
-                type="radio"
-                name="imageMode"
-                checked={imageMode === "managed-upload"}
-                onChange={() => selectMode("managed-upload")}
-              />
-              Pakai unggahan terkelola
-            </label>
-            <label className="flex min-h-11 items-center gap-3">
-              <input
-                type="radio"
-                name="imageMode"
-                checked={imageMode === "external-url"}
-                onChange={() => selectMode("external-url")}
-              />
-              Pakai URL gambar eksternal
-            </label>
+              <label className="flex items-center gap-2 text-sm font-semibold text-charcoal cursor-pointer">
+                <input
+                  type="radio"
+                  name="imageMode"
+                  className="accent-forest"
+                  checked={imageMode === "external-url"}
+                  onChange={() => selectMode("external-url")}
+                />
+                Pakai URL gambar eksternal
+              </label>
+            </div>
           </fieldset>
-          <div className="sm:col-span-2">
-            <MediaField
-              currentUrl={
-                imageMode === "keep-current"
-                  ? value?.imageUrl
-                  : imageMode === "external-url"
-                    ? media.externalUrl
-                    : undefined
-              }
-              file={imageMode === "managed-upload" ? media.file : undefined}
-              progress={media.progress}
-              error={media.error ?? errors.imageUrl}
-              onFile={selectManagedFile}
-              onClear={() => selectMode("managed-upload")}
-            />
-            {imageMode === "managed-upload" && (
-              <p className="mt-2 text-sm text-warm-gray" aria-live="polite">
-                {uploading
-                  ? "Mengunggah gambar..."
-                  : uploadedAsset
-                    ? "Unggahan selesai."
-                  : "Belum ada file yang dipilih"}
-              </p>
-            )}
-          </div>
-          {imageMode === "external-url" && (
+
+          {imageMode === "keep-current" && value?.imageUrl && (
+            <div className="sm:col-span-2 flex items-center gap-4 rounded-xl border border-sage-border bg-cream-bg p-4">
+              <ProductImage src={value.imageUrl} alt={value.altText || value.name} className="h-20 w-20 rounded-xl object-cover" />
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-forest">Gambar Saat Ini</p>
+                <p className="mt-1 text-xs text-warm-gray">Gambar ini akan tetap digunakan untuk produk ini.</p>
+              </div>
+            </div>
+          )}
+
+          {imageMode === "managed-upload" && (
             <div className="sm:col-span-2">
-              <Field label="URL gambar eksternal" error={errors.imageUrl}>
-              <Input
-                name="imageUrl"
-                type="url"
-                value={media.externalUrl}
-                onChange={(event) => media.useExternal(event.target.value)}
+              <MediaField
+                currentUrl={undefined}
+                file={media.file}
+                progress={media.progress}
+                error={media.error ?? errors.imageUrl}
+                onFile={selectManagedFile}
+                onClear={() => selectMode("managed-upload")}
               />
+              <p className="mt-2 text-xs text-warm-gray" aria-live="polite">
+                {uploading
+                  ? "Mengunggah gambar ke server..."
+                  : uploadedAsset
+                    ? "✓ File berhasil diunggah."
+                    : "Pilih file gambar JPEG, PNG, atau WebP (maks. 5 MiB)."}
+              </p>
+            </div>
+          )}
+
+          {imageMode === "external-url" && (
+            <div className="sm:col-span-2 space-y-3">
+              <Field label="URL gambar eksternal" error={errors.imageUrl} hint="Masukkan URL gambar publik (https://...) yang dapat diakses langsung.">
+                <Input
+                  name="imageUrl"
+                  type="url"
+                  placeholder="https://example.com/gambar-produk.jpg"
+                  value={media.externalUrl}
+                  onChange={(event) => media.useExternal(event.target.value)}
+                />
               </Field>
+              {media.externalUrl && (
+                <div className="flex items-center gap-4 rounded-xl border border-sage-border bg-cream-bg p-4">
+                  <ProductImage src={media.externalUrl} alt="Pratinjau URL Eksternal" className="h-20 w-20 rounded-xl object-cover" />
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-forest">Pratinjau URL Eksternal</p>
+                    <p className="mt-1 text-xs text-warm-gray break-all max-w-md">{media.externalUrl}</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <div className="sm:col-span-2">

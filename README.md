@@ -171,9 +171,10 @@ Brand publik adalah **Loning Maju**. Identifier internal seperti `marketplace-lo
 
 - 🔍 **Pencarian & Filter** — Cari produk/UMKM dengan filter 5 kategori: Kuliner, Kerajinan, Jasa, Sembako, Pertanian
 - 📱 **WhatsApp Inquiry** — Dialog kontak langsung ke penjual via WhatsApp dengan pesan terstruktur
-- 🗺️ **Peta Interaktif UMKM** — Visualisasi lokasi seluruh UMKM di `/peta-umkm`
+- 🗺️ **Peta Interaktif UMKM** — Visualisasi lokasi seluruh UMKM di `/peta-umkm` dengan Google Maps Native Embed
 - 📄 **Detail Produk & UMKM** — Halaman detail dengan slug canonical (`/produk/:slug`, `/umkm/:slug`)
 - 🏷️ **Produk Terkait** — Rekomendasi produk dari UMKM yang sama
+- 📜 **Riwayat Versi** — Halaman riwayat pembaruan repository live dari GitHub API di `/version-history`
 - ❓ **FAQ** — Informasi umum di `/faq`
 - 🏘️ **Tentang Desa** — Profil Desa Loning di `/tentang-desa`
 - 📊 **Inquiry Analytics** — Pelacakan non-blocking untuk view, inquiry, dan WhatsApp open
@@ -190,7 +191,7 @@ Brand publik adalah **Loning Maju**. Identifier internal seperti `marketplace-lo
 
 ### Teknis
 
-- 🖼️ **Media Pipeline** — Upload, resize, WebP conversion (card + thumbnail)
+- 🖼️ **Media Pipeline** — Upload, resize, WebP conversion, serta Smart Hybrid Image Framing (potret & lanskap)
 - 🔒 **Session-based Auth** — HTTP-only cookie + CSRF token
 - 🚦 **Rate Limiting** — Login dan API rate limits
 - ♿ **Aksesibilitas** — Focus trapping, keyboard navigation, screen reader labels
@@ -428,7 +429,7 @@ LoningMarketplace/
 │   │   ├── config/                # Brand configuration
 │   │   ├── hooks/                 # useAuth, useProducts, useUMKMs, discovery
 │   │   ├── lib/                   # API client, analytics, SEO, location, price
-│   │   ├── pages/                 # Route page components (16 files)
+│   │   ├── pages/                 # Route page components (15 files)
 │   │   ├── App.tsx                # Homepage root
 │   │   ├── main.tsx               # Router & providers
 │   │   ├── types.ts               # Shared TypeScript interfaces
@@ -598,6 +599,8 @@ Remove-Item Env:ALLOW_SEED
 | `GET` | `/api/products` | List published products |
 | `GET` | `/api/products/:id` | Detail product (published + published parent) |
 | `POST` | `/api/events` | Public analytics event |
+| `GET` | `/sitemap.xml` | Dynamic XML Sitemap |
+| `GET` | `/robots.txt` | Directives crawling mesin pencari |
 
 </details>
 
@@ -833,8 +836,8 @@ graph LR
 
 - ✅ Runtime route metadata, canonical links, social metadata, dan JSON-LD (SPA-side)
 - ✅ `robots.txt` mengizinkan crawling
+- ✅ Dynamic `sitemap.xml` otomatis untuk seluruh UMKM dan produk terpublikasi
 - ⚠️ Initial HTML metadata belum server-rendered (SPA limitation)
-- ⚠️ Sitemap generation belum diimplementasikan
 - ❌ SSR / prerendering belum tersedia
 
 ---
@@ -912,7 +915,7 @@ npx playwright install chromium
 | Rating & review | ❌ Tidak termasuk |
 | OAuth / MFA / password recovery | ❌ Belum tersedia |
 | SSR / prerendering | ❌ SPA only |
-| Sitemap generation | ❌ Belum diimplementasikan |
+| Sitemap & robots.txt | ✅ Tersedia (/sitemap.xml, /robots.txt) |
 | Real-time (WebSocket) | ❌ Tidak termasuk |
 | Notifikasi push | ❌ Tidak termasuk |
 | Stock management | ❌ Tidak termasuk |

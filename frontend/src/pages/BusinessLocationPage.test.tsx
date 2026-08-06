@@ -7,7 +7,7 @@ import BusinessLocationPage from './BusinessLocationPage';
 
 const umkm = { id: 'u1', slug: 'dapur', name: 'Dapur Loning', owner: 'Sri', description: 'Kuliner', phone: '6281', category: 'Kuliner', imageUrl: '/x', address: 'Dusun Loning', latitude: null, longitude: null, ownerUserId: 'x', publicationStatus: 'published' };
 vi.mock('../lib/management', async original => { const actual = await original<typeof import('../lib/management')>(); return { ...actual, managementApi: { ...actual.managementApi, umkms: { ...actual.managementApi.umkms, get: vi.fn(async () => umkm), setLocation: vi.fn(async (_id, coordinates) => ({ ...umkm, ...coordinates })), clearLocation: vi.fn(async () => ({ ...umkm, latitude: null, longitude: null })) } } }; });
-vi.mock('../hooks/useAuth', () => ({ useCsrfToken: () => 'csrf' }));
+vi.mock('../hooks/useAuth', () => ({ useCsrfToken: () => 'csrf', getFreshCsrfToken: async () => 'csrf' }));
 
 function renderPage() { const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } }); return render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/dashboard/umkms/u1/location']}><Routes><Route path="/dashboard/umkms/:id/location" element={<BusinessLocationPage/>}/></Routes></MemoryRouter></QueryClientProvider>); }
 afterEach(() => { cleanup(); vi.clearAllMocks(); });

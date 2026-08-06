@@ -24,7 +24,7 @@ import { usePageMetadata } from '../lib/seo';
 export default function AboutVillagePage() {
   const gallery = useUMKMs({ limit: 4 });
   const description =
-    'Mengenal Desa Loning, Kecamatan Petarukan, Kabupaten Pemalang. Desa dengan potensi pertanian, kriya anyaman bambu, kuliner lokal, dan semangat kemandirian ekonomi warga.';
+    'Mengenal Desa Loning, Kecamatan Petarukan, Kabupaten Pemalang. Desa dengan potensi pertanian, hasil industri lokal, kuliner lokal, dan semangat kemandirian ekonomi warga.';
 
   usePageMetadata({
     title: 'Tentang Desa Loning — Potensi & Direktori UMKM Loning Maju',
@@ -55,19 +55,14 @@ export default function AboutVillagePage() {
         <header className="relative border-b border-sage-border bg-cream-tint px-5 py-16 md:py-24">
           <div className="mx-auto max-w-7xl">
             <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
-              
-              <div className="lg:col-span-7 space-y-6">
-                <div className="inline-flex items-center gap-2 rounded-full border border-forest/20 bg-forest/5 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-forest">
-                  <Compass size={14} className="text-terracotta" />
-                  <span>Mengenal Desa Loning</span>
-                </div>
 
+              <div className="lg:col-span-7 space-y-6">
                 <h1 className="text-balance text-4xl font-extrabold tracking-tight text-charcoal sm:text-5xl lg:text-6xl leading-tight">
                   Karya & Potensi Lokal dari <span className="editorial-serif font-normal italic text-forest">Jantung Petarukan</span>
                 </h1>
 
                 <p className="max-w-2xl text-base md:text-lg leading-relaxed text-warm-gray">
-                  Desa Loning adalah desa yang kaya akan tradisi, ketahanan pangan, dan kerajinan tangan di Kabupaten Pemalang. Loning Maju hadir sebagai direktori etalase digital untuk membawa karya warga langsung ke genggaman Anda.
+                  Desa Loning adalah desa yang kaya akan tradisi, ketahanan pangan, dan hasil industri lokal di Kabupaten Pemalang. Loning Maju hadir sebagai direktori etalase digital untuk membawa karya warga langsung ke genggaman Anda.
                 </p>
 
                 {/* Key Quick Facts Pill Grid */}
@@ -85,7 +80,7 @@ export default function AboutVillagePage() {
                       <Wheat size={16} className="text-terracotta" />
                       <span>Sektor Utama</span>
                     </div>
-                    <p className="mt-1 text-xs text-warm-gray font-medium">Tani, Kriya & Kuliner</p>
+                    <p className="mt-1 text-xs text-warm-gray font-medium">Tani, Industri & Kuliner</p>
                   </div>
 
                   <div className="rounded-xl border border-sage-border bg-cream-card p-3.5 shadow-xs col-span-2 sm:col-span-1">
@@ -93,7 +88,7 @@ export default function AboutVillagePage() {
                       <ShieldCheck size={16} className="text-terracotta" />
                       <span>Kemitraan</span>
                     </div>
-                    <p className="mt-1 text-xs text-warm-gray font-medium">Direct WhatsApp</p>
+                    <p className="mt-1 text-xs text-warm-gray font-medium">Direct Via WhatsApp</p>
                   </div>
                 </div>
               </div>
@@ -105,10 +100,10 @@ export default function AboutVillagePage() {
                     Prinsip Pemberdayaan
                   </div>
                   <p className="editorial-serif text-xl italic leading-relaxed text-forest pt-2">
-                    “Kemandirian ekonomi warga tumbuh saat karya dari rumah dan kebun lokal mendapat panggung yang layak dan dipercaya masyarakat luas.”
+                    “Kemandirian ekonomi warga tumbuh saat karya dari rumah dan hasil sawah serta industri desa mendapat panggung yang layak dan dipercaya masyarakat luas.”
                   </p>
                   <div className="border-t border-sage-border pt-4 flex items-center justify-between text-xs text-warm-gray">
-                    <span className="font-bold text-charcoal">Inisiatif Loning Maju</span>
+                    <span className="font-bold text-charcoal">Stephen Michael</span>
                     <span>Desa Loning &copy; {new Date().getFullYear()}</span>
                   </div>
                 </div>
@@ -126,7 +121,7 @@ export default function AboutVillagePage() {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-charcoal tracking-tight">Etalase Kehidupan & Karya Warga</h2>
             </div>
             <p className="text-xs text-warm-gray max-w-md">
-              Dokumentasi nyata kegiatan UMKM, pembuatan produk olahan, dan hasil kerajinan tangan dari masyarakat Desa Loning.
+              Dokumentasi nyata kegiatan UMKM, pembuatan produk olahan dari masyarakat Desa Loning.
             </p>
           </div>
 
@@ -169,7 +164,7 @@ export default function AboutVillagePage() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            
+
             <div className="rounded-2xl border border-sage-border bg-cream-card p-6 space-y-3 transition-shadow hover:shadow-md">
               <div className="w-10 h-10 rounded-xl bg-forest/10 flex items-center justify-center text-forest">
                 <Wheat size={22} />
@@ -243,7 +238,7 @@ export default function AboutVillagePage() {
         <section className="mx-auto max-w-7xl px-5 py-12">
           <div className="rounded-3xl border border-sage-border bg-cream-card p-8 md:p-12 shadow-sm">
             <div className="grid md:grid-cols-12 gap-8 items-center">
-              
+
               <div className="md:col-span-7 space-y-4">
                 <div className="inline-flex items-center gap-1.5 text-xs font-bold text-terracotta uppercase tracking-wider">
                   <Map size={16} />

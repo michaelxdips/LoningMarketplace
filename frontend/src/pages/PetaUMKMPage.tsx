@@ -7,7 +7,7 @@ import { ProductImage } from '../components/product/ProductImage';
 import WhatsAppInquiryDialog from '../components/shared/WhatsAppInquiryDialog';
 import { getUMKMs } from '../lib/api';
 import { useUMKMs } from '../hooks/useUMKMs';
-import { normalizeCoordinates, buildOsmEmbedUrl, buildGoogleMapsSearchUrl, buildGoogleMapsDirectionsUrl } from '../lib/location';
+import { normalizeCoordinates, buildGoogleMapsEmbedUrl, buildGoogleMapsSearchUrl, buildGoogleMapsDirectionsUrl } from '../lib/location';
 import { usePageMetadata } from '../lib/seo';
 import type { UMKM } from '../types';
 
@@ -74,8 +74,7 @@ export default function PetaUMKMPage() {
 
         {/* Page Hero Header */}
         <header className="mb-8 max-w-3xl">
-          <p className="editorial-label">Peta Usaha Desa</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-charcoal sm:text-4xl">
+          <h1 className="text-3xl font-extrabold tracking-tight text-charcoal sm:text-4xl">
             Peta Lokasi UMKM Desa Loning
           </h1>
           <p className="mt-3 text-sm leading-6 text-warm-gray sm:text-base">
@@ -135,7 +134,7 @@ export default function PetaUMKMPage() {
                   <div className="relative h-72 sm:h-96 w-full bg-sage-light/30">
                     <iframe
                       key={activeVerified.umkm.id}
-                      src={buildOsmEmbedUrl({ latitude: activeVerified.lat, longitude: activeVerified.lng })}
+                      src={buildGoogleMapsEmbedUrl({ latitude: activeVerified.lat, longitude: activeVerified.lng })}
                       title={`Peta Lokasi ${activeVerified.umkm.name}`}
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
@@ -149,9 +148,9 @@ export default function PetaUMKMPage() {
                   </div>
                 )}
 
-                {/* OpenStreetMap Attribution Footer */}
+                {/* Map Attribution Footer */}
                 <div className="border-t border-sage-border bg-cream-bg px-4 py-2 text-[10px] text-warm-gray flex justify-between items-center">
-                  <span>Data Peta © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline">OpenStreetMap</a></span>
+                  <span>Data Peta © Google Maps</span>
                   {activeVerified && (
                     <div className="flex items-center gap-3">
                       <a
