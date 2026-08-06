@@ -49,7 +49,7 @@ export default function LoginPage() {
             Desa Loning, Pemalang
           </p>
           <h1 className="editorial-serif text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-            Kelola etalase lokal dengan lebih tertib.
+            Kelola etalase lokal dengan lebih mudah dan efisien.
           </h1>
           <p className="mt-5 text-sm leading-relaxed text-white/80 sm:text-base">
             Perbarui profil UMKM dan katalog produk Desa Loning dalam satu ruang kerja digital yang aman dan terintegrasi.
@@ -97,7 +97,7 @@ export default function LoginPage() {
                     required
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="nama@contoh.id atau nama-user"
+                    placeholder="nama@contoh.id atau username"
                     className="focus-ring min-h-[46px] w-full rounded-xl border border-sage-border bg-white pl-10 pr-4 text-xs sm:text-sm text-charcoal placeholder:text-warm-gray/60 shadow-2xs transition-all focus:border-forest focus:ring-2 focus:ring-forest/15"
                   />
                 </div>
