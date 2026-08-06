@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { canArchiveProduct, canManageMedia, canManageUMKMLocation, canRestoreProduct, canUpdateProduct, canUpdateUMKM, canViewProduct, canViewUMKM, hasCapability } from '../auth/policy.js';
+import { canArchiveProduct, canDeleteProduct, canDeleteUMKM, canManageMedia, canManageUMKMLocation, canRestoreProduct, canUpdateProduct, canUpdateUMKM, canViewProduct, canViewUMKM, hasCapability } from '../auth/policy.js';
 import type { PublicationStatus, Repository } from '../db/repository.js';
 import type { ReturnTypeGuards } from './types.js';
 import { error, hasOneImageSource, productInput, umkmInput, uuid } from './validation.js';
@@ -121,14 +121,18 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     });
   }
   app.delete<{ Params: { id: string } }>('/manage/umkms/:id', { preHandler: guards.secured }, async (request, reply) => {
-    if (!hasCapability(request.auth!.user.role, 'umkms:archive')) return reply.code(403).send(error('Capability is not assigned to this role', 'FORBIDDEN'));
     const existing = await loadUMKM(request, reply);
     if (!existing || reply.sent) return;
-    if (!canViewUMKM(request.auth!.user.role, request.auth!.user.id, existing.ownerUserId)) return denyOwnership(reply, 'UMKM');
+    if (!canDeleteUMKM(request.auth!.user.role, request.auth!.user.id, existing.ownerUserId)) return denyOwnership(reply, 'UMKM');
+    if (existing.publicationStatus !== 'archived') return reply.code(409).send(error('UMKM harus diarsipkan terlebih dahulu sebelum dapat dihapus permanen', 'UMKM_NOT_ARCHIVED'));
     return repository.transaction(async (transaction) => {
-      const item = await transaction.setUMKMPublication(request.params.id, 'archived', now());
-      await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'umkm.archived', entityType: 'umkm', entityId: item.id, ...info(request) });
-      return { data: item };
+      const childProducts = await transaction.listManagedProducts(request.auth!.user, { umkmId: existing.id, limit: 100 });
+      const imageAssetIds = [existing.imageAssetId, ...childProducts.map((p) => p.imageAssetId)];
+      const deleted = await transaction.deleteUMKM(request.params.id, now());
+      if (!deleted) return reply.code(409).send(error('UMKM tidak dapat dihapus karena statusnya sudah berubah', 'CONFLICT'));
+      await transaction.refreshMediaOrphans(imageAssetIds, now());
+      await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'umkm.deleted', entityType: 'umkm', entityId: existing.id, metadata: { name: existing.name }, ...info(request) });
+      return reply.code(200).send({ data: { id: existing.id } });
     });
   });
   for (const [method, action] of [['patch', 'umkm.location_updated'], ['delete', 'umkm.location_cleared']] as const) {
@@ -231,11 +235,14 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
   app.delete<{ Params: { id: string } }>('/manage/products/:id', { preHandler: guards.secured }, async (request, reply) => {
     const existing = await loadProduct(request, reply);
     if (!existing || reply.sent) return;
-    if (!canArchiveProduct(request.auth!.user.role, request.auth!.user.id, existing.umkm.ownerUserId)) return denyOwnership(reply, 'Product');
+    if (!canDeleteProduct(request.auth!.user.role, request.auth!.user.id, existing.umkm.ownerUserId)) return denyOwnership(reply, 'Product');
+    if (existing.product.publicationStatus !== 'archived') return reply.code(409).send(error('Produk harus diarsipkan terlebih dahulu sebelum dapat dihapus permanen', 'PRODUCT_NOT_ARCHIVED'));
     return repository.transaction(async (transaction) => {
-      const item = await transaction.setProductPublication(request.params.id, 'archived', now());
-      await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.archived', entityType: 'product', entityId: item.id, ...info(request) });
-      return { data: item };
+      const deleted = await transaction.deleteProduct(request.params.id, now());
+      if (!deleted) return reply.code(409).send(error('Produk tidak dapat dihapus karena statusnya sudah berubah', 'CONFLICT'));
+      await transaction.refreshMediaOrphans([existing.product.imageAssetId], now());
+      await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.deleted', entityType: 'product', entityId: existing.product.id, metadata: { name: existing.product.name }, ...info(request) });
+      return reply.code(200).send({ data: { id: existing.product.id } });
     });
   });
 }

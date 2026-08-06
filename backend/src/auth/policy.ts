@@ -12,8 +12,8 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 export const CAPABILITIES = [
   'dashboard:view', 'dashboard:view-global-summary', 'dashboard:view-own-summary',
   'users:view', 'users:create-superadmin', 'users:create-admin', 'users:create-perangkat-desa', 'users:create-pelaku-umkm', 'users:update', 'users:change-role', 'users:disable', 'users:reset-password', 'users:revoke-sessions',
-  'umkms:view-all', 'umkms:view-own', 'umkms:create', 'umkms:update-all', 'umkms:update-own', 'umkms:assign-owner', 'umkms:publish', 'umkms:archive', 'umkms:restore', 'umkms:manage-location-all', 'umkms:manage-location-own',
-  'products:view-all', 'products:view-own', 'products:create', 'products:update-all', 'products:update-own', 'products:publish', 'products:archive-all', 'products:archive-own', 'products:restore-all', 'products:restore-own', 'products:transfer-owner',
+  'umkms:view-all', 'umkms:view-own', 'umkms:create', 'umkms:update-all', 'umkms:update-own', 'umkms:assign-owner', 'umkms:publish', 'umkms:archive', 'umkms:restore', 'umkms:delete', 'umkms:manage-location-all', 'umkms:manage-location-own',
+  'products:view-all', 'products:view-own', 'products:create', 'products:update-all', 'products:update-own', 'products:publish', 'products:archive-all', 'products:archive-own', 'products:restore-all', 'products:restore-own', 'products:transfer-owner', 'products:delete',
   'media:manage-all', 'media:manage-own', 'analytics:view-global', 'audit:view-global',
 ] as const;
 export type Capability = typeof CAPABILITIES[number];
@@ -24,13 +24,13 @@ const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
   admin: [
     'dashboard:view', 'dashboard:view-global-summary',
     'users:view', 'users:create-perangkat-desa', 'users:create-pelaku-umkm', 'users:update', 'users:change-role', 'users:disable', 'users:reset-password', 'users:revoke-sessions',
-    'umkms:view-all', 'umkms:create', 'umkms:update-all', 'umkms:assign-owner', 'umkms:publish', 'umkms:archive', 'umkms:restore', 'umkms:manage-location-all',
-    'products:view-all', 'products:create', 'products:update-all', 'products:publish', 'products:archive-all', 'products:restore-all', 'products:transfer-owner',
+    'umkms:view-all', 'umkms:create', 'umkms:update-all', 'umkms:assign-owner', 'umkms:publish', 'umkms:archive', 'umkms:restore', 'umkms:delete', 'umkms:manage-location-all',
+    'products:view-all', 'products:create', 'products:update-all', 'products:publish', 'products:archive-all', 'products:restore-all', 'products:transfer-owner', 'products:delete',
     'media:manage-all', 'analytics:view-global', 'audit:view-global',
   ],
   perangkat_desa: [
     'dashboard:view', 'dashboard:view-global-summary',
-    'umkms:view-all', 'umkms:create', 'umkms:update-all', 'umkms:publish', 'umkms:manage-location-all',
+    'umkms:view-all', 'umkms:create', 'umkms:update-all', 'umkms:publish', 'umkms:archive', 'umkms:restore', 'umkms:manage-location-all',
     'products:view-all', 'products:create', 'products:update-all', 'products:publish', 'products:archive-all', 'products:restore-all',
     'media:manage-all', 'analytics:view-global',
   ],
@@ -58,11 +58,13 @@ export function hasScopedCapability(role: UserRole, actorUserId: string, ownerUs
 
 export const canViewUMKM = (role: UserRole, actorUserId: string, ownerUserId: string | null) => hasScopedCapability(role, actorUserId, ownerUserId, 'umkms:view-all', 'umkms:view-own');
 export const canUpdateUMKM = (role: UserRole, actorUserId: string, ownerUserId: string | null) => hasScopedCapability(role, actorUserId, ownerUserId, 'umkms:update-all', 'umkms:update-own');
+export const canDeleteUMKM = (role: UserRole, actorUserId: string, ownerUserId: string | null) => hasScopedCapability(role, actorUserId, ownerUserId, 'umkms:delete', 'umkms:archive');
 export const canManageUMKMLocation = (role: UserRole, actorUserId: string, ownerUserId: string | null) => hasScopedCapability(role, actorUserId, ownerUserId, 'umkms:manage-location-all', 'umkms:manage-location-own');
 export const canViewProduct = (role: UserRole, actorUserId: string, ownerUserId: string | null) => hasScopedCapability(role, actorUserId, ownerUserId, 'products:view-all', 'products:view-own');
 export const canUpdateProduct = (role: UserRole, actorUserId: string, ownerUserId: string | null) => hasScopedCapability(role, actorUserId, ownerUserId, 'products:update-all', 'products:update-own');
 export const canArchiveProduct = (role: UserRole, actorUserId: string, ownerUserId: string | null) => hasScopedCapability(role, actorUserId, ownerUserId, 'products:archive-all', 'products:archive-own');
 export const canRestoreProduct = (role: UserRole, actorUserId: string, ownerUserId: string | null) => hasScopedCapability(role, actorUserId, ownerUserId, 'products:restore-all', 'products:restore-own');
+export const canDeleteProduct = (role: UserRole, actorUserId: string, ownerUserId: string | null) => hasScopedCapability(role, actorUserId, ownerUserId, 'products:delete', 'products:archive-own');
 export const canManageMedia = (role: UserRole, actorUserId: string, createdByUserId: string | null) => hasScopedCapability(role, actorUserId, createdByUserId, 'media:manage-all', 'media:manage-own');
 
 export function canCreateUserRole(actorRole: UserRole, targetRole: UserRole): boolean {

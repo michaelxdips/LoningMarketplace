@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   useManagedItem,
@@ -25,6 +26,7 @@ import { deleteMedia, updateMediaAltText, uploadMedia } from "../lib/api";
 import { ProductImage } from "../components/product/ProductImage";
 import {
   ConfirmDialog,
+  dangerButtonClass,
   ErrorNotice,
   Field,
   formErrors,
@@ -64,7 +66,7 @@ export function productImageInput(mode: ProductImageMode, uploadedAssetId?: stri
   if (mode === "keep-current") return {};
   return mode === "managed-upload" ? { imageUrl: null, imageAssetId: uploadedAssetId! } : { imageUrl: externalUrl, imageAssetId: null };
 }
-function usePendingMedia(currentExternalUrl?: string) {
+function usePendingMedia(currentExternalUrl?: string | null) {
   const [file, setFile] = useState<File>();
   const [error, setError] = useState<string>();
   const [progress, setProgress] = useState<number>();
@@ -73,7 +75,7 @@ function usePendingMedia(currentExternalUrl?: string) {
   const initialized = useRef(false);
   useEffect(() => {
     if (!initialized.current && currentExternalUrl !== undefined) {
-      setExternalUrl(currentExternalUrl);
+      setExternalUrl(currentExternalUrl ?? "");
       initialized.current = true;
     }
   }, [currentExternalUrl]);
@@ -118,19 +120,36 @@ function FormActions({
   pending,
   editing,
   cancelTo,
+  onDelete,
 }: {
   pending: boolean;
   editing: boolean;
   cancelTo: string;
+  onDelete?: () => void;
 }) {
   return (
-    <div className="flex flex-col-reverse gap-3 border-t border-sage-border pt-6 sm:flex-row sm:justify-end">
-      <Link to={cancelTo} className={secondaryButtonClass}>
-        Batal
-      </Link>
-      <PendingButton type="submit" pending={pending}>
-        {pending ? "Menyimpan..." : editing ? "Simpan perubahan" : "Buat data"}
-      </PendingButton>
+    <div className="flex flex-col-reverse gap-3 border-t border-sage-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        {editing && onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={pending}
+            className={dangerButtonClass}
+          >
+            <Trash2 className="h-4 w-4" />
+            Hapus
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <Link to={cancelTo} className={secondaryButtonClass}>
+          Batal
+        </Link>
+        <PendingButton type="submit" pending={pending}>
+          {pending ? "Menyimpan..." : editing ? "Simpan perubahan" : "Buat data"}
+        </PendingButton>
+      </div>
     </div>
   );
 }
@@ -201,12 +220,12 @@ export function UMKMFormPage() {
         );
       const imageAssetId = media.cleared
         ? null
-        : uploaded?.id ?? (media.externalUrl ? null : (item.data?.imageAssetId ?? null));
+        : uploaded?.id ?? ((media.externalUrl ?? "").trim() ? null : (item.data?.imageAssetId ?? null));
       const imageUrl = media.cleared
         ? null
         : imageAssetId
           ? null
-          : (media.externalUrl.trim() || (media.file ? null : (item.data?.imageUrl ?? null))) || null;
+          : ((media.externalUrl ?? "").trim() || (media.file ? null : (item.data?.imageUrl ?? null))) || null;
       const input: UMKMInput = {
         name: text(data, "name"),
         owner: text(data, "owner"),
@@ -242,6 +261,19 @@ export function UMKMFormPage() {
         void deleteMedia(uploaded.id, csrf).catch(() => undefined);
     }
   };
+  const canDelete = hasCapability(sessionUser, "umkms:archive") || hasCapability(sessionUser, "umkms:delete");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteUmkm = useManagedMutation<string, void>(
+    "manage",
+    "umkms",
+    async (umkmId, csrf) => {
+      if (item.data?.publicationStatus !== "archived") {
+        await managementApi.umkms.archive(umkmId, csrf);
+      }
+      await managementApi.umkms.delete(umkmId, csrf);
+    },
+    "umkms",
+  );
   if ((editing && item.isPending) || (canAssignOwner && owners.isPending))
     return <LoadingPanel />;
   const value = item.data;
@@ -283,8 +315,8 @@ export function UMKMFormPage() {
         className="space-y-6 rounded-2xl border border-sage-border bg-white p-5 sm:p-7"
         onSubmit={submit}
       >
-        {(save.isError || item.isError || owners.isError) && (
-          <ErrorNotice error={save.error ?? item.error ?? owners.error} />
+        {(save.isError || item.isError || owners.isError || deleteUmkm.isError) && (
+          <ErrorNotice error={save.error ?? item.error ?? owners.error ?? deleteUmkm.error} />
         )}
         <div className="grid gap-5 sm:grid-cols-2">
           <Field
@@ -382,11 +414,32 @@ export function UMKMFormPage() {
           </div>
         </div>
         <FormActions
-          pending={save.isPending || media.progress !== undefined}
+          pending={save.isPending || media.progress !== undefined || deleteUmkm.isPending}
           editing={editing}
           cancelTo="/dashboard/umkms"
+          onDelete={canDelete ? () => setConfirmDelete(true) : undefined}
         />
       </form>
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Hapus UMKM"
+        description={
+          value?.publicationStatus === "archived"
+            ? `${value.name} akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`
+            : `${value?.name ?? 'UMKM ini'} akan diarsipkan dan dihapus secara permanen. Lanjutkan?`
+        }
+        confirmLabel="Hapus permanen"
+        pending={deleteUmkm.isPending}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          if (id) {
+            deleteUmkm.mutate(id, {
+              onSuccess: () => navigate("/dashboard/umkms"),
+              onSettled: () => setConfirmDelete(false),
+            });
+          }
+        }}
+      />
     </>
   );
 }
@@ -411,6 +464,19 @@ export function ProductFormPage() {
   const [umkmMode, setUmkmMode] = useState<"select" | "standalone" | "create">("select");
   const [umkmSelectValue, setUmkmSelectValue] = useState<string>("");
   const [creatingUmkm, setCreatingUmkm] = useState(false);
+  const canDelete = hasCapability(sessionUser, "products:delete") || hasCapability(sessionUser, "products:archive-all") || hasCapability(sessionUser, "products:archive-own");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteProduct = useManagedMutation<string, void>(
+    "manage",
+    "products",
+    async (productId, csrf) => {
+      if (item.data?.publicationStatus !== "archived") {
+        await managementApi.products.archive(productId, csrf);
+      }
+      await managementApi.products.delete(productId, csrf);
+    },
+    "products",
+  );
 
   useEffect(() => {
     if (editing && item.data) {
@@ -472,12 +538,12 @@ export function ProductFormPage() {
         );
       const imageAssetId = media.cleared
         ? null
-        : uploaded?.id ?? (media.externalUrl ? null : (item.data?.imageAssetId ?? null));
+        : uploaded?.id ?? ((media.externalUrl ?? "").trim() ? null : (item.data?.imageAssetId ?? null));
       const imageUrl = media.cleared
         ? null
         : imageAssetId
           ? null
-          : (media.externalUrl.trim() || (media.file ? null : (item.data?.imageUrl ?? null))) || null;
+          : ((media.externalUrl ?? "").trim() || (media.file ? null : (item.data?.imageUrl ?? null))) || null;
 
       // Auto-create UMKM draft if user typed a new name
       if (umkmMode === "create" && newUmkmName) {
@@ -543,8 +609,8 @@ export function ProductFormPage() {
         className="space-y-6 rounded-2xl border border-sage-border bg-white p-5 sm:p-7"
         onSubmit={submit}
       >
-        {(save.isError || item.isError || umkms.isError) && (
-          <ErrorNotice error={save.error ?? item.error ?? umkms.error} />
+        {(save.isError || item.isError || umkms.isError || deleteProduct.isError) && (
+          <ErrorNotice error={save.error ?? item.error ?? umkms.error ?? deleteProduct.error} />
         )}
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Nama produk" error={errors.name}>
@@ -682,11 +748,32 @@ export function ProductFormPage() {
           </label>
         </div>
         <FormActions
-          pending={save.isPending || media.progress !== undefined || creatingUmkm}
+          pending={save.isPending || media.progress !== undefined || creatingUmkm || deleteProduct.isPending}
           editing={editing}
           cancelTo="/dashboard/products"
+          onDelete={canDelete ? () => setConfirmDelete(true) : undefined}
         />
       </form>
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Hapus Produk"
+        description={
+          item.data?.publicationStatus === "archived"
+            ? `${item.data.name} akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`
+            : `${item.data?.name ?? 'Produk ini'} akan diarsipkan dan dihapus secara permanen. Lanjutkan?`
+        }
+        confirmLabel="Hapus permanen"
+        pending={deleteProduct.isPending}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          if (id) {
+            deleteProduct.mutate(id, {
+              onSuccess: () => navigate("/dashboard/products"),
+              onSettled: () => setConfirmDelete(false),
+            });
+          }
+        }}
+      />
     </>
   );
 }

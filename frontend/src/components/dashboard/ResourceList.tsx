@@ -4,7 +4,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Archive, EyeOff, Plus, RotateCcw, Send } from "lucide-react";
+import { Archive, EyeOff, Plus, RotateCcw, Send, Trash2 } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { useManagedList, useManagedMutation } from "../../hooks/useManagement";
 import {
@@ -30,10 +30,11 @@ interface Column<T> {
   render: (item: T) => ReactNode;
 }
 interface Lifecycle<T> {
-  archive: (id: string, csrf?: string) => Promise<void>;
+  archive: (id: string, csrf?: string) => Promise<T | void>;
   restore: (id: string, csrf?: string) => Promise<T>;
   publish: (id: string, csrf?: string) => Promise<T>;
   unpublish: (id: string, csrf?: string) => Promise<T>;
+  delete: (id: string, csrf?: string) => Promise<{ id: string } | void>;
 }
 
 function useMediaQuery(query: string) {
@@ -67,6 +68,7 @@ export default function ResourceList<
   canPublish = true,
   canArchive = false,
   canRestore = false,
+  canDelete = false,
   extraAction,
 }: {
   resource: "umkms" | "products";
@@ -86,6 +88,7 @@ export default function ResourceList<
   canPublish?: boolean;
   canArchive?: boolean;
   canRestore?: boolean;
+  canDelete?: boolean;
   extraAction?: (item: T) => ReactNode;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -130,7 +133,7 @@ export default function ResourceList<
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const action = useManagedMutation<
     { id: string; kind: keyof Lifecycle<T> },
-    T | void
+    T | { id: string } | void
   >(
     "manage",
     resource,
@@ -140,11 +143,12 @@ export default function ResourceList<
   const items = pageItems(query.data);
   const request = (item: T, kind: keyof Lifecycle<T>) =>
     setConfirm({ item, kind });
-  const label = {
+  const label: Record<keyof Lifecycle<T>, string> = {
     archive: "Arsipkan",
     restore: "Pulihkan",
     publish: "Terbitkan",
     unpublish: "Batalkan publikasi",
+    delete: "Hapus permanen",
   };
   const actions = (item: T) => (
     <div className="flex flex-wrap justify-end gap-2">
@@ -193,6 +197,16 @@ export default function ResourceList<
         >
           <RotateCcw className="h-4 w-4" />
           Pulihkan
+        </button>
+      )}
+      {canDelete && item.publicationStatus === "archived" && (
+        <button
+          className={dangerButtonClass}
+          onClick={() => request(item, "delete")}
+          disabled={action.isPending}
+        >
+          <Trash2 className="h-4 w-4" />
+          Hapus
         </button>
       )}
     </div>
@@ -334,8 +348,13 @@ export default function ResourceList<
         open={Boolean(confirm)}
         title={confirm ? label[confirm.kind] : ""}
         description={
-          confirm ? `${itemName(confirm.item)} akan diperbarui.` : ""
+          confirm
+            ? confirm.kind === "delete"
+              ? `${itemName(confirm.item)} akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`
+              : `${itemName(confirm.item)} akan diperbarui.`
+            : ""
         }
+        confirmLabel={confirm?.kind === "delete" ? "Hapus permanen" : undefined}
         pending={action.isPending}
         onCancel={() => setConfirm(null)}
         onConfirm={() => {

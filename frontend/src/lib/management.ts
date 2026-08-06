@@ -29,10 +29,11 @@ const managedResource = <T, C, U>(path: string) => ({
   get: (id: string, signal?: AbortSignal) => apiRequest<T>(`${path}/${id}`, { signal }),
   create: (input: C, csrf?: string) => mutation<T>(path, csrf, 'POST', input),
   update: (id: string, input: U, csrf?: string) => mutation<T>(`${path}/${id}`, csrf, 'PATCH', input),
-  archive: (id: string, csrf?: string) => mutation<void>(`${path}/${id}`, csrf, 'DELETE'),
+  archive: (id: string, csrf?: string) => mutation<T>(`${path}/${id}/archive`, csrf),
   restore: (id: string, csrf?: string) => mutation<T>(`${path}/${id}/restore`, csrf),
   publish: (id: string, csrf?: string) => mutation<T>(`${path}/${id}/publish`, csrf),
   unpublish: (id: string, csrf?: string) => mutation<T>(`${path}/${id}/unpublish`, csrf),
+  delete: (id: string, csrf?: string) => mutation<{ id: string }>(`${path}/${id}`, csrf, 'DELETE'),
 });
 
 export const managementApi = {

@@ -60,10 +60,20 @@ interface GitHubTagResponse {
 
 const STATIC_RELEASES: ReleaseGroup[] = [
   {
+    version: 'v1.7.2',
+    title: 'Fitur Hapus UMKM & Produk di Kelola, serta Perbaikan Media Upload',
+    date: '6 Agustus 2026',
+    badge: 'Versi Terbaru (Active)',
+    commits: [
+      { hash: 'HEAD', date: '2026-08-06', type: 'feat', scope: 'manage', message: 'tambahkan fitur hapus permanen untuk produk dan UMKM di menu kelola' },
+      { hash: 'HEAD', date: '2026-08-06', type: 'fix', scope: 'media', message: 'perbaiki null safety pada penanganan URL gambar tanpa media saat disimpan' },
+    ],
+  },
+  {
     version: 'v1.7.0',
     title: 'Google Maps Integration & UI Optimization',
     date: '6 Agustus 2026',
-    badge: 'Versi Terbaru (Active)',
+    badge: 'Minor',
     commits: [
       { hash: 'HEAD', date: '2026-08-06', type: 'feat', scope: 'maps', message: 'integrate Google Maps Native Embed for location preview and map directory' },
       { hash: 'HEAD', date: '2026-08-06', type: 'style', scope: 'layout', message: 'optimize container max-widths, search forms, and smart hybrid image framing' },
