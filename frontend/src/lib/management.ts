@@ -36,7 +36,16 @@ const managedResource = <T, C, U>(path: string) => ({
   delete: (id: string, csrf?: string) => mutation<{ id: string }>(`${path}/${id}`, csrf, 'DELETE'),
 });
 
+export interface DashboardStats {
+  umkms: { total: number; published: number; draft: number; archived: number };
+  products: { total: number; published: number; draft: number; archived: number };
+  users: { total: number; active: number };
+}
+
 export const managementApi = {
+  stats: {
+    get: (signal?: AbortSignal) => apiRequest<DashboardStats>('/manage/stats', { signal }),
+  },
   umkms: {
     ...managedResource<ManagedUMKM, UMKMInput, Partial<UMKMInput>>('/manage/umkms'),
     verifyContact: (id: string, csrf?: string) => mutation<ManagedUMKM>(`/manage/umkms/${id}/verify-contact`, csrf),

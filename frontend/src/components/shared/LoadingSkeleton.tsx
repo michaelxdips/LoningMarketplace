@@ -6,45 +6,53 @@
 import React from 'react';
 
 interface LoadingSkeletonProps {
-  type?: 'card' | 'list';
+  type?: 'card' | 'list' | 'umkm';
   count?: number;
 }
 
-export default function LoadingSkeleton({ type = 'card', count = 3 }: LoadingSkeletonProps) {
+export function ProductCardSkeleton({ count = 3 }: { count?: number }) {
   const skeletons = Array.from({ length: count });
-
-  if (type === 'list') {
-    return (
-      <div className="space-y-4">
-        {skeletons.map((_, idx) => (
-          <div key={idx} className="flex gap-4 p-4 bg-cream-card border border-sage-border rounded-xl animate-pulse">
-            <div className="w-16 h-16 bg-sage-light rounded-lg shrink-0" />
-            <div className="flex-1 space-y-2 py-1">
-              <div className="h-4 bg-sage-light rounded w-1/3" />
-              <div className="h-3 bg-sage-light rounded w-1/2" />
-              <div className="h-3 bg-sage-light rounded w-3/4" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div aria-hidden="true" className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {skeletons.map((_, idx) => (
-        <div key={idx} className="bg-cream-card border border-sage-border rounded-xl overflow-hidden animate-pulse flex flex-col h-[340px]">
-          <div className="h-48 bg-sage-light w-full" />
-          <div className="p-4 space-y-3 flex-grow flex flex-col justify-between">
+        <div key={idx} className="flex flex-col overflow-hidden rounded-xl border border-sage-border bg-cream-card motion-reduce:animate-none animate-pulse">
+          <div className="aspect-[4/3] w-full bg-sage-light" />
+          <div className="flex flex-1 flex-col justify-between p-5 space-y-4">
             <div className="space-y-2">
-              <div className="h-3 bg-sage-light rounded w-1/4" />
-              <div className="h-4 bg-sage-light rounded w-3/4" />
-              <div className="h-3 bg-sage-light rounded w-5/6" />
+              <div className="h-3 w-1/4 rounded bg-sage-light" />
+              <div className="h-5 w-3/4 rounded bg-sage-light" />
+              <div className="h-3 w-1/2 rounded bg-sage-light" />
             </div>
-            <div className="h-8 bg-sage-light rounded w-full" />
+            <div className="h-9 w-full rounded-lg bg-sage-light" />
           </div>
         </div>
       ))}
     </div>
   );
+}
+
+export function UMKMCardSkeleton({ count = 3 }: { count?: number }) {
+  const skeletons = Array.from({ length: count });
+  return (
+    <div aria-hidden="true" className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {skeletons.map((_, idx) => (
+        <div key={idx} className="flex flex-col overflow-hidden rounded-xl border border-sage-border bg-cream-card motion-reduce:animate-none animate-pulse">
+          <div className="aspect-[4/3] w-full bg-sage-light" />
+          <div className="flex flex-1 flex-col justify-between p-5 space-y-3">
+            <div className="space-y-2">
+              <div className="h-3 w-1/3 rounded bg-sage-light" />
+              <div className="h-5 w-2/3 rounded bg-sage-light" />
+              <div className="h-3 w-4/5 rounded bg-sage-light" />
+            </div>
+            <div className="h-8 w-full rounded-lg bg-sage-light" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function LoadingSkeleton({ type = 'card', count = 3 }: LoadingSkeletonProps) {
+  if (type === 'umkm') return <UMKMCardSkeleton count={count} />;
+  return <ProductCardSkeleton count={count} />;
 }

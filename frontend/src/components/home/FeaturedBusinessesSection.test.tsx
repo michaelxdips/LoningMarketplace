@@ -44,7 +44,7 @@ describe('FeaturedBusinessesSection discovery states', () => {
     expect(onRetry).toHaveBeenCalledOnce();
 
     rerender(<FeaturedBusinessesSection {...baseProps} isError={false} onClearFilters={onClearFilters} />);
-    expect(screen.getByRole('status')).toHaveTextContent('0 UMKM ditemukan');
+    expect(screen.getByRole('status')).toHaveTextContent('Tidak ada UMKM yang sesuai.');
     expect(screen.getByText('Usaha Tidak Ditemukan')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Hapus Filter' }));
     expect(onClearFilters).toHaveBeenCalledOnce();

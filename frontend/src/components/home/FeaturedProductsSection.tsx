@@ -63,8 +63,16 @@ export default function FeaturedProductsSection({
             <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-warm-gray sm:text-sm">
               Telusuri aneka produk pilihan hasil karya mandiri masyarakat Desa Loning. Klik tombol tanya produk untuk tersambung ke WhatsApp penjual.
             </p>
-            <p role="status" aria-live="polite" className="mt-2.5 text-xs font-semibold text-forest">
-              {isLoading ? 'Memuat produk…' : isError ? 'Produk gagal dimuat.' : hasMore && !showAll ? `Menampilkan 12 teratas dari ${products.length} produk tersedia` : `${products.length} produk tersedia`}
+            <p role="status" aria-live="polite" aria-atomic="true" className="mt-2.5 text-xs font-semibold text-forest">
+              {isLoading
+                ? 'Memuat produk…'
+                : isError
+                ? 'Gagal memuat produk.'
+                : products.length === 0
+                ? 'Tidak ada produk yang sesuai.'
+                : hasMore && !showAll
+                ? `Ditemukan ${products.length} produk (menampilkan 12 teratas).`
+                : `Ditemukan ${products.length} produk.`}
             </p>
           </div>
 

@@ -44,8 +44,14 @@ export default function FeaturedBusinessesSection({ umkms, searchQuery, onSearch
             <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-warm-gray sm:text-sm">
               Kenali lebih dekat warga pegiat niaga mandiri yang menggerakkan roda ekonomi Desa Loning. Kunjungi profil untuk membaca informasi jam operasional dan melihat produk mereka.
             </p>
-            <p role="status" aria-live="polite" className="mt-2.5 text-xs font-semibold text-forest">
-              {isLoading ? 'Memuat UMKM…' : isError ? 'UMKM gagal dimuat.' : `${umkms.length} UMKM ditemukan`}
+            <p role="status" aria-live="polite" aria-atomic="true" className="mt-2.5 text-xs font-semibold text-forest">
+              {isLoading
+                ? 'Memuat UMKM…'
+                : isError
+                ? 'Gagal memuat UMKM.'
+                : umkms.length === 0
+                ? 'Tidak ada UMKM yang sesuai.'
+                : `Ditemukan ${umkms.length} UMKM.`}
             </p>
           </div>
 
@@ -63,7 +69,7 @@ export default function FeaturedBusinessesSection({ umkms, searchQuery, onSearch
           </div>
         </div>
         {/* Directory Grid */}
-        {isLoading ? <div data-testid="umkms-loading"><LoadingSkeleton count={3} /></div> : isError ? (
+        {isLoading ? <div data-testid="umkms-loading"><LoadingSkeleton type="umkm" count={3} /></div> : isError ? (
           <EmptyState title="Direktori Tidak Dapat Dimuat" description="Terjadi kendala saat mengambil data UMKM. Silakan coba lagi." actionLabel="Coba Lagi" onAction={onRetry} />
         ) : umkms.length === 0 ? (
           <EmptyState

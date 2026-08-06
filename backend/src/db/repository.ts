@@ -49,6 +49,25 @@ function createRepositoryCore(db: PostgresJsDatabase<typeof schema>, publicUrl: 
       return rows.map((x) => mapProduct({ ...x.product, umkmName: x.umkmName ?? x.product.sellerName ?? 'Penjual Mandiri' }, x.asset, publicUrl));
     },
     async getProduct(identifier: string) { if (identifier.length > 128) return; const x = await db.select({ product: products, asset: mediaAssets, umkm: { id: umkms.id, slug: umkms.slug, name: umkms.name, phone: umkms.phone } }).from(products).leftJoin(umkms, eq(products.umkmId, umkms.id)).leftJoin(mediaAssets, eq(products.imageAssetId, mediaAssets.id)).where(and(publicIdentifierPredicate(products, identifier), eq(products.publicationStatus, 'published'), or(isNull(products.umkmId), eq(umkms.publicationStatus, 'published')))).limit(1); if (!x[0]) return; const parentUmkm = x[0].umkm && x[0].umkm.id ? x[0].umkm : { id: '', slug: '', name: x[0].product.sellerName ?? 'Penjual Mandiri', phone: x[0].product.phone ?? '' }; return { product: { ...x[0].product, ...image(x[0].product.imageUrl, x[0].asset, publicUrl) }, umkm: parentUmkm }; },
+    async getSitemapUMKMs() {
+      return await db.select({
+        slug: umkms.slug,
+        updatedAt: umkms.updatedAt,
+        publishedAt: umkms.publishedAt,
+        createdAt: umkms.createdAt,
+      }).from(umkms).where(eq(umkms.publicationStatus, 'published')).orderBy(asc(umkms.slug));
+    },
+    async getSitemapProducts() {
+      return await db.select({
+        slug: products.slug,
+        updatedAt: products.updatedAt,
+        publishedAt: products.publishedAt,
+        createdAt: products.createdAt,
+      }).from(products).leftJoin(umkms, eq(products.umkmId, umkms.id)).where(and(
+        eq(products.publicationStatus, 'published'),
+        or(isNull(products.umkmId), eq(umkms.publicationStatus, 'published'))
+      )).orderBy(asc(products.slug));
+    },
     async findUserByEmail(email: string) { return (await db.select().from(users).where(eq(users.email, email.trim().toLowerCase())).limit(1))[0]; },
     async findUserByUsername(username: string) { return (await db.select().from(users).where(eq(users.username, username.trim().toLowerCase())).limit(1))[0]; },
     async findUserById(id: string) { return (await db.select().from(users).where(eq(users.id, id)).limit(1))[0]; },
@@ -61,6 +80,36 @@ function createRepositoryCore(db: PostgresJsDatabase<typeof schema>, publicUrl: 
     async recordLoginFailure(id: string, count: number, lockedUntil: Date | null, now: Date) { await db.update(users).set({ failedLoginCount: count, lockedUntil, updatedAt: now }).where(eq(users.id, id)); },
     async recordLoginSuccess(id: string, now: Date) { await db.update(users).set({ failedLoginCount: 0, lockedUntil: null, lastLoginAt: now, updatedAt: now }).where(eq(users.id, id)); },
     async changePassword(id: string, hash: string, now: Date) { await db.update(users).set({ passwordHash: hash, mustChangePassword: false, failedLoginCount: 0, lockedUntil: null, updatedAt: now }).where(eq(users.id, id)); },
+    async getDashboardStats(u: SessionUser) {
+      const globalUmkms = hasCapability(u.role, 'umkms:view-all');
+      const globalProducts = hasCapability(u.role, 'products:view-all');
+      const canUsers = hasCapability(u.role, 'users:view');
+      const umkmStats = (await db.select({
+        total: sql<number>`count(*)`,
+        published: sql<number>`count(case when ${umkms.publicationStatus} = 'published' then 1 end)`,
+        draft: sql<number>`count(case when ${umkms.publicationStatus} = 'draft' then 1 end)`,
+        archived: sql<number>`count(case when ${umkms.publicationStatus} = 'archived' then 1 end)`,
+      }).from(umkms).where(globalUmkms ? undefined : eq(umkms.ownerUserId, u.id)))[0];
+      const productStats = (await db.select({
+        total: sql<number>`count(${products.id})`,
+        published: sql<number>`count(case when ${products.publicationStatus} = 'published' then 1 end)`,
+        draft: sql<number>`count(case when ${products.publicationStatus} = 'draft' then 1 end)`,
+        archived: sql<number>`count(case when ${products.publicationStatus} = 'archived' then 1 end)`,
+      }).from(products).leftJoin(umkms, eq(products.umkmId, umkms.id)).where(globalProducts ? undefined : (products.umkmId ? eq(umkms.ownerUserId, u.id) : undefined)))[0];
+      let userStats = { total: 0, active: 0 };
+      if (canUsers) {
+        const uRow = (await db.select({
+          total: sql<number>`count(*)`,
+          active: sql<number>`count(case when ${users.isActive} = true then 1 end)`,
+        }).from(users))[0];
+        if (uRow) userStats = { total: Number(uRow.total ?? 0), active: Number(uRow.active ?? 0) };
+      }
+      return {
+        umkms: { total: Number(umkmStats?.total ?? 0), published: Number(umkmStats?.published ?? 0), draft: Number(umkmStats?.draft ?? 0), archived: Number(umkmStats?.archived ?? 0) },
+        products: { total: Number(productStats?.total ?? 0), published: Number(productStats?.published ?? 0), draft: Number(productStats?.draft ?? 0), archived: Number(productStats?.archived ?? 0) },
+        users: userStats,
+      };
+    },
     async listManagedUMKMs(u: SessionUser, f: { q?: string; category?: Category; publicationStatus?: PublicationStatus; ownerUserId?: string; limit?: number } = {}) { const p = f.q && pattern(f.q); const global = hasCapability(u.role, 'umkms:view-all'); const rows = await db.select({ row: umkms, asset: mediaAssets, assignedCount: sql<number>`count(${products.id})` }).from(umkms).leftJoin(products, eq(products.umkmId, umkms.id)).leftJoin(mediaAssets, and(eq(umkms.imageAssetId, mediaAssets.id), isNull(mediaAssets.deletedAt))).where(and(global ? undefined : eq(umkms.ownerUserId, u.id), f.publicationStatus ? eq(umkms.publicationStatus, f.publicationStatus) : undefined, f.ownerUserId && global ? eq(umkms.ownerUserId, f.ownerUserId) : undefined, f.category ? eq(umkms.category, f.category) : undefined, p ? or(ilike(umkms.name, p), ilike(umkms.owner, p), ilike(umkms.description, p), ilike(umkms.address, p)) : undefined)).groupBy(umkms.id, mediaAssets.id).orderBy(asc(umkms.displayOrder), asc(umkms.id)).limit(Math.min(100, f.limit ?? 100)); return rows.map((r) => ({ ...mapManagedUMKM(r.row), ...image(r.row.imageUrl, r.asset, publicUrl), assignedProductCount: Number(r.assignedCount) })); },
     async getManagedUMKM(id: string) { const row = (await db.select({ row: umkms, asset: mediaAssets }).from(umkms).leftJoin(mediaAssets, and(eq(umkms.imageAssetId, mediaAssets.id), isNull(mediaAssets.deletedAt))).where(eq(umkms.id, id)).limit(1))[0]; return row && { ...mapManagedUMKM(row.row), ...image(row.row.imageUrl, row.asset, publicUrl) }; },
     async createUMKM(id: string, v: UMKMInput, ownerUserId: string | null) { const base = slugify(v.name, 'umkm'); return allocateSlugWithRetry(base, 'umkms_slug_unique', (slug) => db.transaction(async (tx) => { const order = Number((await tx.select({ value: sql<number>`coalesce(max(${umkms.displayOrder}), -1) + 1` }).from(umkms))[0].value); const now = new Date(); const row = (await tx.insert(umkms).values({ id, ...v, slug, ownerUserId, displayOrder: order, catalogUpdatedAt: now }).returning())[0]; if (v.imageAssetId) await tx.update(mediaAssets).set({ orphanedAt: null, updatedAt: now }).where(eq(mediaAssets.id, v.imageAssetId)); return row; })); },

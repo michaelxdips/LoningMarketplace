@@ -9,6 +9,7 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
+import compress from '@fastify/compress';
 import { randomUUID } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import type { AppEnv } from './config/env.js';
@@ -53,6 +54,7 @@ export async function buildApp(env: AppEnv, repository: Repository, dependencies
   const crypto = dependencies.security ?? security; const now = dependencies.now ?? (() => new Date()); const id = dependencies.id ?? randomUUID;
   const guards = createGuards(repository, crypto, env, now); const media = dependencies.storage ?? createMediaStorage(mediaConfig(env));
   await app.register(helmet, { crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: { directives: { imgSrc: ["'self'", 'data:', 'https:'], frameSrc: ["'self'", 'https://www.openstreetmap.org'] } } });
+  await app.register(compress, { threshold: 1024 });
   await app.register(cookie);
   await app.register(rateLimit, { max: env.RATE_LIMIT_MAX, timeWindow: '1 minute' });
   const allowedOrigins = (env.CORS_ORIGIN || '').split(',').map((s) => s.trim()).filter(Boolean);

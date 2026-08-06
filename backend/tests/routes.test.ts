@@ -37,4 +37,48 @@ describe('public API routes', () => {
   it('rejects oversized identifiers and safely handles encoded slash, traversal, null byte, and malformed encoding', async () => { const app = await buildApp(env, repository); expect((await app.inject(`/api/umkms/${'a'.repeat(129)}`)).statusCode).toBeGreaterThanOrEqual(400); expect((await app.inject('/api/products/a%2Fb')).statusCode).toBeGreaterThanOrEqual(400); expect((await app.inject('/api/umkms/%2E%2E%2Fadmin')).statusCode).toBeGreaterThanOrEqual(400); expect((await app.inject('/api/products/bad%00slug')).statusCode).toBeGreaterThanOrEqual(400); expect((await app.inject('/api/umkms/%E0%A4%A')).statusCode).toBeGreaterThanOrEqual(400); await app.close(); });
   it('keeps nullable prices explicit and omits other optional fields', async () => { const app = await buildApp(env, repository); const business = (await app.inject('/api/umkms?limit=1')).json().data[0]; const product = (await app.inject('/api/products?limit=1')).json().data[0]; expect(business).not.toHaveProperty('workingHours'); expect(product).toHaveProperty('price', null); expect(product).not.toHaveProperty('unit'); await app.close(); });
   it('uses the error envelope for unknown routes', async () => { const app = await buildApp(env, repository); expect((await app.inject('/api/nope')).json()).toEqual({ error: { message: 'Route not found', code: 'NOT_FOUND' } }); await app.close(); });
+  it('compresses response larger than threshold with gzip when Accept-Encoding gzip header is present', async () => {
+    const app = await buildApp(env, {
+      ...repository,
+      listProducts: async () => Array.from({ length: 20 }, (_, i) => ({
+        id: `10000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}`,
+        slug: `product-${i}`,
+        umkmId: umkms[0].id,
+        umkmName: umkms[0].name,
+        name: `Product ${i} with long description text for compression test`,
+        price: 10000,
+        description: 'Detailed description text meant to exceed compression threshold of 1024 bytes easily.',
+        category: 'Kuliner',
+        imageUrl: 'https://example.com/image.jpg',
+        isAvailable: true,
+      })),
+    } as unknown as Repository);
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/products?limit=100',
+      headers: { 'accept-encoding': 'gzip' },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-encoding']).toBe('gzip');
+    expect(response.headers['vary']?.toLowerCase()).toContain('accept-encoding');
+
+    // Small response under threshold (health check) does not get gzip compressed
+    const smallRes = await app.inject({
+      method: 'GET',
+      url: '/api/health',
+      headers: { 'accept-encoding': 'gzip' },
+    });
+    expect(smallRes.statusCode).toBe(200);
+    expect(smallRes.headers['content-encoding']).toBeUndefined();
+
+    // Request without accept-encoding header does not get gzip compressed
+    const noHeaderRes = await app.inject({
+      method: 'GET',
+      url: '/api/products?limit=100',
+    });
+    expect(noHeaderRes.statusCode).toBe(200);
+    expect(noHeaderRes.headers['content-encoding']).toBeUndefined();
+
+    await app.close();
+  });
 });

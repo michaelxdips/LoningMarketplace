@@ -21,6 +21,7 @@ function state() {
     findUserByEmail: async (email: string) => email === 'owner@example.com' ? { ...owner, passwordHash: 'hash-password:old-password-12', failedLoginCount: failures, lockedUntil: null, createdAt: at, updatedAt: at, lastLoginAt: null } : undefined, findUserByUsername: async (username: string) => username === owner.username ? { ...owner, passwordHash: 'hash-password:old-password-12', failedLoginCount: failures, lockedUntil: null, createdAt: at, updatedAt: at, lastLoginAt: null } : undefined, findUserById: async (id: string) => id === aid ? { ...admin, passwordHash: 'x' } : id === tid ? { ...protectedSuperadmin, passwordHash: 'x' } : { ...owner, passwordHash: 'hash-password:old-password-12' },
     findSession: async (h: string) => sessions.get(h), createSession: async (v: { tokenHash: string; csrfTokenHash: string }) => { sessions.set(v.tokenHash, { sessionId: pid, csrfTokenHash: v.csrfTokenHash, user: owner }); return { id: pid }; }, rotateSessionCsrf: async (id: string, hash: string) => { for (const s of sessions.values()) if (s.sessionId === id) s.csrfTokenHash = hash; }, revokeSession: async () => { revoked++; }, revokeUserSessions: async () => { revoked++; }, cleanupSessions: async () => 0,
     recordLoginFailure: async (_id: string, count: number) => { failures = count; }, recordLoginSuccess: async () => { failures = 0; }, changePassword: async () => {},
+    getDashboardStats: async () => ({ umkms: { total: 10, published: 8, draft: 2, archived: 0 }, products: { total: 25, published: 20, draft: 5, archived: 0 }, users: { total: 3, active: 3 } }),
     listManagedUMKMs: async () => [business], getManagedUMKM: async (id: string) => id === bid ? { ...business, publicationStatus: archivedParent ? 'archived' : business.publicationStatus } : undefined, createUMKM: async () => { if (createError) throw createError; return business; }, updateUMKM: async () => business, assignUMKMOwner: async () => {}, setUMKMPublication: async (_id: string, publicationStatus: string) => ({ ...business, publicationStatus }), deleteUMKM: async () => business,
     listManagedProducts: async () => [{ ...product, umkmName: 'UMKM' }], getManagedProduct: async (id: string) => id === pid ? { product, umkm: business } : undefined, createProduct: async () => { if (createError) throw createError; return product; }, updateProduct: async (_id: string, values: Record<string, unknown>) => { updates.push(values); return { ...product, ...values }; }, moveProduct: async () => {}, setProductPublication: async (_id: string, publicationStatus: string) => ({ ...product, publicationStatus }), deleteProduct: async () => product,
     getMediaAsset: async (id: string) => id === mediaId ? { id: mediaId, createdByUserId: uid } : undefined, refreshMediaOrphans: async () => {},
@@ -41,6 +42,50 @@ describe('Phase 2 contract', () => {
   it('gives Perangkat Desa global catalogue work but never user or audit access', async () => { const s = state(), app = await buildApp(env, s.repository, { security: security(), now: () => at }); expect((await app.inject({ url: '/api/manage/products', headers: headers('perangkat_desa', false) })).statusCode).toBe(200); expect((await app.inject({ method: 'POST', url: `/api/manage/products/${pid}/publish`, headers: headers('perangkat_desa') })).statusCode).toBe(200); expect((await app.inject({ url: '/api/admin/users', headers: headers('perangkat_desa', false) })).statusCode).toBe(403); expect((await app.inject({ url: '/api/admin/audit-logs', headers: headers('perangkat_desa', false) })).statusCode).toBe(403); await app.close(); });
   it('protects the last active Super Admin and keeps it outside Admin control', async () => { const s = state(), app = await buildApp(env, s.repository, { security: security(), now: () => at }); const lastSuperadmin = await app.inject({ method: 'PATCH', url: `/api/admin/users/${tid}`, headers: headers('superadmin'), payload: { role: 'admin' } }); expect(lastSuperadmin.json().error.code).toBe('LAST_SUPERADMIN'); const adminAttempt = await app.inject({ method: 'PATCH', url: `/api/admin/users/${tid}`, headers: headers('admin'), payload: { isActive: false } }); expect(adminAttempt.json().error.code).toBe('FORBIDDEN'); await app.close(); });
   it('provides role-filtered deterministic management detail/list routes', async () => { const s = state(), app = await buildApp(env, s.repository, { security: security(), now: () => at }); expect((await app.inject({ url: `/api/manage/umkms/${bid}`, headers: headers('pelaku_umkm', false) })).json().data.id).toBe(bid); expect((await app.inject({ url: '/api/manage/products?publicationStatus=draft', headers: headers('pelaku_umkm', false) })).json().data[0].id).toBe(pid); expect((await app.inject({ url: `/api/manage/products/${pid}`, headers: headers('pelaku_umkm', false) })).json().data).toMatchObject({ id: pid, umkmName: 'UMKM' }); await app.close(); });
+  it('serves dashboard stats for authenticated user and supports >100 records with numeric types', async () => {
+    const customRepo = {
+      ...state().repository,
+      getDashboardStats: async (u: SessionUser) => {
+        if (u.role === 'pelaku_umkm') {
+          return {
+            umkms: { total: 2, published: 2, draft: 0, archived: 0 },
+            products: { total: 105, published: 95, draft: 10, archived: 0 },
+            users: { total: 0, active: 0 },
+          };
+        }
+        return {
+          umkms: { total: 120, published: 100, draft: 15, archived: 5 },
+          products: { total: 500, published: 450, draft: 40, archived: 10 },
+          users: { total: 50, active: 48 },
+        };
+      },
+    } as unknown as Repository;
+    const app = await buildApp(env, customRepo, { security: security(), now: () => at });
+
+    // Unauthenticated request
+    const unauth = await app.inject({ url: '/api/manage/stats' });
+    expect(unauth.statusCode).toBe(401);
+
+    // Owner request with >100 products
+    const ownerRes = await app.inject({ url: '/api/manage/stats', headers: headers('pelaku_umkm', false) });
+    expect(ownerRes.statusCode).toBe(200);
+    const ownerData = ownerRes.json().data;
+    expect(ownerData.products.total).toBe(105);
+    expect(ownerData.products.published).toBe(95);
+    expect(ownerData.products.draft).toBe(10);
+    expect(typeof ownerData.products.total).toBe('number');
+    expect(ownerData.users).toEqual({ total: 0, active: 0 });
+
+    // Admin global request with >100 UMKMs and >100 products
+    const adminRes = await app.inject({ url: '/api/manage/stats', headers: headers('admin', false) });
+    expect(adminRes.statusCode).toBe(200);
+    const adminData = adminRes.json().data;
+    expect(adminData.umkms.total).toBe(120);
+    expect(adminData.products.total).toBe(500);
+    expect(adminData.users).toEqual({ total: 50, active: 48 });
+
+    await app.close();
+  });
   it('patches unrelated fields and nullable prices without changing omitted media', async () => { const s = state(), app = await buildApp(env, s.repository, { security: security(), now: () => at }); const description = await app.inject({ method: 'PATCH', url: `/api/manage/products/${pid}`, headers: headers('pelaku_umkm'), payload: { description: 'Changed' } }); expect(description.statusCode).toBe(200); expect(description.json().data).toMatchObject({ description: 'Changed', imageUrl: 'https://example.com/original.webp', imageAssetId: null }); expect(s.updates[0]).toEqual({ description: 'Changed' }); const zero = await app.inject({ method: 'PATCH', url: `/api/manage/products/${pid}`, headers: headers('pelaku_umkm'), payload: { price: 0 } }); const nullable = await app.inject({ method: 'PATCH', url: `/api/manage/products/${pid}`, headers: headers('pelaku_umkm'), payload: { price: null } }); expect(zero.json().data.price).toBe(0); expect(nullable.json().data.price).toBeNull(); expect(s.updates.slice(1)).toEqual([{ price: 0 }, { price: null }]); await app.close(); });
   it('returns safe validation, authentication, authorization, and media errors', async () => { const s = state(), app = await buildApp(env, s.repository, { security: security(), now: () => at }); expect((await app.inject({ method: 'PATCH', url: '/api/manage/products/not-a-uuid', headers: headers('pelaku_umkm'), payload: { description: 'X' } })).json().error.code).toBe('VALIDATION_ERROR'); expect((await app.inject({ method: 'PATCH', url: `/api/manage/products/${pid}`, headers: { origin: env.CORS_ORIGIN, 'x-csrf-token': 'owner-csrf' }, payload: { description: 'X' } })).json().error.code).toBe('UNAUTHENTICATED'); expect((await app.inject({ method: 'PATCH', url: `/api/manage/products/${pid}`, headers: headers('pelaku_umkm'), payload: { price: '35000' } })).json().error.code).toBe('VALIDATION_ERROR'); expect((await app.inject({ method: 'PATCH', url: `/api/manage/products/${pid}`, headers: headers('pelaku_umkm'), payload: { imageUrl: null, imageAssetId: aid } })).json().error.code).toBe('MEDIA_SOURCE_INVALID'); s.setBusinessOwner(aid); expect((await app.inject({ method: 'PATCH', url: `/api/manage/products/${pid}`, headers: headers('pelaku_umkm'), payload: { description: 'Forbidden' } })).json().error.code).toBe('FORBIDDEN'); await app.close(); });
   it('assigns an authorized managed asset and clears the external source intentionally', async () => { const s = state(), app = await buildApp(env, s.repository, { security: security(), now: () => at }); const response = await app.inject({ method: 'PATCH', url: `/api/manage/products/${pid}`, headers: headers('pelaku_umkm'), payload: { imageUrl: null, imageAssetId: mediaId } }); expect(response.statusCode).toBe(200); expect(s.updates[0]).toEqual({ imageUrl: null, imageAssetId: mediaId }); expect(response.json().data).toMatchObject({ imageUrl: null, imageAssetId: mediaId }); await app.close(); });

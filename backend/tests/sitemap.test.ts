@@ -38,6 +38,7 @@ describe('sitemap and robots.txt routes & public-origin routing proof', () => {
     expect(res.payload).toContain('<loc>https://loningmaju.desa.id/peta-umkm</loc>');
     expect(res.payload).toContain('<loc>https://loningmaju.desa.id/umkm/dapur-sri</loc>');
     expect(res.payload).toContain('<loc>https://loningmaju.desa.id/produk/keripik-pisang</loc>');
+    expect(res.payload).toContain('<lastmod>2026-01-01T00:00:00.000Z</lastmod>');
 
     // Must NOT contain media CDN domain
     expect(res.payload).not.toContain('media.loningmaju.desa.id');
@@ -45,6 +46,59 @@ describe('sitemap and robots.txt routes & public-origin routing proof', () => {
     // Excludes non-published items
     expect(res.payload).not.toContain('draft-umkm');
     expect(res.payload).not.toContain('archived-product');
+  });
+
+  it('handles >100 items without truncation and includes record past index 100', async () => {
+    const umkms120 = Array.from({ length: 120 }, (_, i) => ({
+      slug: `umkm-ke-${i + 1}`,
+      publicationStatus: 'published',
+      updatedAt: new Date('2026-01-01'),
+    }));
+    const products105 = Array.from({ length: 105 }, (_, i) => ({
+      slug: `produk-ke-${i + 1}`,
+      publicationStatus: 'published',
+      updatedAt: new Date('2026-01-01'),
+    }));
+
+    const repo = {
+      getSitemapUMKMs: async () => umkms120,
+      getSitemapProducts: async () => products105,
+    } as unknown as Repository;
+
+    const app = await buildApp(env, repo);
+    const res = await app.inject({ method: 'GET', url: '/sitemap.xml' });
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toContain('/umkm/umkm-ke-101');
+    expect(res.payload).toContain('/umkm/umkm-ke-120');
+    expect(res.payload).toContain('/produk/produk-ke-101');
+    expect(res.payload).toContain('/produk/produk-ke-105');
+  });
+
+  it('handles timestamp fallback priority, invalid dates, and XML escaping', async () => {
+    const repo = {
+      getSitemapUMKMs: async () => [
+        { slug: 'umkm-updated', publicationStatus: 'published', updatedAt: new Date('2026-03-01'), publishedAt: new Date('2026-02-01'), createdAt: new Date('2026-01-01') },
+        { slug: 'umkm-published', publicationStatus: 'published', updatedAt: null, publishedAt: new Date('2026-02-01'), createdAt: new Date('2026-01-01') },
+        { slug: 'umkm-created', publicationStatus: 'published', updatedAt: null, publishedAt: null, createdAt: new Date('2026-01-01') },
+        { slug: 'umkm-no-date', publicationStatus: 'published', updatedAt: null, publishedAt: null, createdAt: null },
+        { slug: 'umkm-invalid-date', publicationStatus: 'published', updatedAt: 'invalid-date-string' },
+        { slug: 'umkm&special<tag>', publicationStatus: 'published', updatedAt: new Date('2026-01-01') },
+      ],
+      getSitemapProducts: async () => [],
+    } as unknown as Repository;
+
+    const app = await buildApp(env, repo);
+    const res = await app.inject({ method: 'GET', url: '/sitemap.xml' });
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toContain('<loc>https://loningmaju.desa.id/umkm/umkm-updated</loc>');
+    expect(res.payload).toContain('<lastmod>2026-03-01T00:00:00.000Z</lastmod>');
+    expect(res.payload).toContain('<loc>https://loningmaju.desa.id/umkm/umkm-published</loc>');
+    expect(res.payload).toContain('<lastmod>2026-02-01T00:00:00.000Z</lastmod>');
+    expect(res.payload).toContain('<loc>https://loningmaju.desa.id/umkm/umkm-created</loc>');
+    expect(res.payload).toContain('<lastmod>2026-01-01T00:00:00.000Z</lastmod>');
+    expect(res.payload).toContain('<loc>https://loningmaju.desa.id/umkm/umkm-no-date</loc>');
+    expect(res.payload).toContain('<loc>https://loningmaju.desa.id/umkm/umkm-invalid-date</loc>');
+    expect(res.payload).toContain('umkm%26special%3Ctag%3E');
   });
 
   it('serves valid robots.txt pointing to absolute sitemap URL and disallowing internal routes', async () => {

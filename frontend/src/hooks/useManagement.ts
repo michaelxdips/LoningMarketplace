@@ -4,14 +4,26 @@ import { getFreshCsrfToken } from './useAuth';
 import { ApiError } from '../lib/api';
 import { authApi, rememberSession } from '../lib/auth';
 
+import { useToast } from '../components/shared/Toast';
+
 export function useManagedList<T>(scope: 'manage' | 'admin', key: string, params: ListParams, loader: (signal?: AbortSignal) => Promise<T>, enabled = true) {
   return useQuery({ queryKey: [scope, key, params], queryFn: ({ signal }) => loader(signal), placeholderData: (previous) => previous, enabled });
 }
 export function useManagedItem<T>(key: string, id: string | undefined, loader: (id: string, signal?: AbortSignal) => Promise<T>) {
   return useQuery({ queryKey: ['manage', key, id], queryFn: ({ signal }) => loader(id!, signal), enabled: Boolean(id) });
 }
-export function useManagedMutation<TInput, TResult>(scope: 'manage' | 'admin', key: string, action: (input: TInput, csrf?: string) => Promise<TResult>, publicKey?: string) {
+export function useManagedMutation<TInput, TResult>(
+  scope: 'manage' | 'admin',
+  key: string,
+  action: (input: TInput, csrf?: string) => Promise<TResult>,
+  publicKey?: string,
+  toastOptions?: {
+    successMessage?: string | ((data: TResult) => string);
+    errorMessage?: string | ((err: unknown) => string);
+  }
+) {
   const client = useQueryClient();
+  const { showToast } = useToast();
   return useMutation({
     mutationFn: async (input: TInput) => {
       const csrf = await getFreshCsrfToken(client);
@@ -26,9 +38,19 @@ export function useManagedMutation<TInput, TResult>(scope: 'manage' | 'admin', k
         throw error;
       }
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       await client.invalidateQueries({ queryKey: [scope, key] });
       if (publicKey) await client.invalidateQueries({ queryKey: [publicKey] });
+      if (toastOptions?.successMessage) {
+        const msg = typeof toastOptions.successMessage === 'function' ? toastOptions.successMessage(data) : toastOptions.successMessage;
+        showToast(msg, 'success');
+      }
+    },
+    onError: (error) => {
+      if (toastOptions?.errorMessage) {
+        const msg = typeof toastOptions.errorMessage === 'function' ? toastOptions.errorMessage(error) : toastOptions.errorMessage;
+        showToast(msg, 'error');
+      }
     },
   });
 }

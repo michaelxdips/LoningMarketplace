@@ -7,7 +7,7 @@ import PublicDetailState from '../components/shared/PublicDetailState';
 import ShareButton from '../components/shared/ShareButton';
 import WhatsAppInquiryDialog from '../components/shared/WhatsAppInquiryDialog';
 import { ProductImage } from '../components/product/ProductImage';
-import { ApiError, getProduct, getRelatedProducts, getUMKM } from '../lib/api';
+import { ApiError, getProduct, getRelatedProducts, getUMKM, PUBLIC_DETAIL_STALE_TIME } from '../lib/api';
 import { formatPrice } from '../lib/price';
 import { usePageMetadata } from '../lib/seo';
 import { buildSiteUrl } from '../lib/siteUrl';
@@ -22,10 +22,10 @@ export default function ProductDetailPage() {
   const [inquiryOpen, setInquiryOpen] = useState(false);
   // ponytail: no AbortSignal — a StrictMode/Suspense remount would otherwise cancel the
   // in-flight fetch (net::ERR_ABORTED). Upgrade path: pass signal when real cancellation is needed.
-  const productQuery = useQuery({ queryKey: ['product', identifier], queryFn: () => getProduct(identifier), enabled: Boolean(identifier) });
-  const merchantQuery = useQuery({ queryKey: ['umkm', productQuery.data?.umkmId], queryFn: () => getUMKM(productQuery.data!.umkmId!), enabled: Boolean(productQuery.data?.umkmId) });
+  const productQuery = useQuery({ queryKey: ['product', identifier], queryFn: () => getProduct(identifier), enabled: Boolean(identifier), staleTime: PUBLIC_DETAIL_STALE_TIME });
+  const merchantQuery = useQuery({ queryKey: ['umkm', productQuery.data?.umkmId], queryFn: () => getUMKM(productQuery.data!.umkmId!), enabled: Boolean(productQuery.data?.umkmId), staleTime: PUBLIC_DETAIL_STALE_TIME });
   const detail = productQuery.data;
-  const relatedQuery = useQuery({ queryKey: ['products', 'related', detail?.slug, 4], queryFn: () => getRelatedProducts(detail!.slug, { limit: 4 }), enabled: Boolean(detail?.slug), staleTime: 3 * 60 * 1000 });
+  const relatedQuery = useQuery({ queryKey: ['products', 'related', detail?.slug, 4], queryFn: () => getRelatedProducts(detail!.slug, { limit: 4 }), enabled: Boolean(detail?.slug), staleTime: PUBLIC_DETAIL_STALE_TIME });
   const product: Product | undefined = detail && { ...detail, umkmName: detail.umkm.name };
   const merchantData = detail?.umkmId
     ? merchantQuery.data
@@ -43,9 +43,21 @@ export default function ProductDetailPage() {
   return <PublicPageShell>
     <article className="mx-auto max-w-5xl px-5 py-8 sm:py-12">
       <nav aria-label="Breadcrumb" className="mb-4 text-xs text-warm-gray">
-        <Link to="/" className="focus-ring rounded hover:text-forest">Beranda</Link>
-        <span aria-hidden="true"> / </span>
-        <span>{detail.category}</span>
+        <ol className="flex flex-wrap items-center gap-1.5">
+          <li>
+            <Link to="/" className="focus-ring rounded hover:text-forest">Beranda</Link>
+          </li>
+          <li aria-hidden="true" className="text-sage-border">/</li>
+          <li>
+            <Link to={`/?category=${encodeURIComponent(detail.category)}#featured-products`} className="focus-ring rounded hover:text-forest">
+              {detail.category}
+            </Link>
+          </li>
+          <li aria-hidden="true" className="text-sage-border">/</li>
+          <li>
+            <span aria-current="page" className="font-semibold text-charcoal">{detail.name}</span>
+          </li>
+        </ol>
       </nav>
       <div className="grid gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
         <div className="overflow-hidden rounded-2xl border border-sage-border bg-cream-tint lg:col-span-6">

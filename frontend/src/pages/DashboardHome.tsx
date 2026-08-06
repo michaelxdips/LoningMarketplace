@@ -9,14 +9,13 @@ import { hasCapability } from '../lib/auth';
 
 export default function DashboardHome() {
   const user = useSession().data!.user;
-  const params = { limit: 100 };
 
-  const umkmsQuery = useManagedList('manage', 'umkms', params, signal => managementApi.umkms.list(params, signal));
-  const productsQuery = useManagedList('manage', 'products', params, signal => managementApi.products.list(params, signal));
+  const statsQuery = useQuery({
+    queryKey: ['manage', 'stats'],
+    queryFn: ({ signal }) => managementApi.stats.get(signal),
+  });
 
   const canViewUsers = hasCapability(user, 'users:view');
-  const usersQuery = useManagedList('admin', 'users', params, signal => managementApi.users.list(params, signal), canViewUsers);
-
   const canViewAnalytics = hasCapability(user, 'analytics:view-global');
 
   const analyticsQuery = useQuery({
@@ -29,23 +28,25 @@ export default function DashboardHome() {
     enabled: canViewAnalytics,
   });
 
-  if (umkmsQuery.isPending || productsQuery.isPending || (canViewUsers && usersQuery.isPending)) {
+  if (statsQuery.isPending) {
     return <LoadingPanel />;
   }
 
-  const umkms = pageItems(umkmsQuery.data);
-  const products = pageItems(productsQuery.data);
-  const users = pageItems(usersQuery.data);
+  if (statsQuery.isError) {
+    return (
+      <div className="p-6 text-sm text-red-700 bg-red-50 rounded-2xl border border-red-200">
+        Gagal memuat statistik dashboard. Silakan muat ulang halaman.
+      </div>
+    );
+  }
 
-  const publishedUmkms = umkms.filter(u => u.publicationStatus === 'published');
-  const draftUmkms = umkms.filter(u => u.publicationStatus === 'draft');
-
-  const publishedProducts = products.filter(p => p.publicationStatus === 'published');
-  const draftProducts = products.filter(p => p.publicationStatus === 'draft');
+  const stats = statsQuery.data;
+  const draftUmkmsCount = stats?.umkms.draft ?? 0;
+  const draftProductsCount = stats?.products.draft ?? 0;
 
   const needsAttention = [
-    ...(draftUmkms.length > 0 ? [{ text: `${draftUmkms.length} UMKM masih berstatus Draf`, to: '/dashboard/umkms?status=draft' }] : []),
-    ...(draftProducts.length > 0 ? [{ text: `${draftProducts.length} Produk belum diterbitkan (Draf)`, to: '/dashboard/products?status=draft' }] : []),
+    ...(draftUmkmsCount > 0 ? [{ text: `${draftUmkmsCount} UMKM masih berstatus Draf`, to: '/dashboard/umkms?status=draft' }] : []),
+    ...(draftProductsCount > 0 ? [{ text: `${draftProductsCount} Produk belum diterbitkan (Draf)`, to: '/dashboard/products?status=draft' }] : []),
   ];
 
   return (
@@ -122,10 +123,10 @@ export default function DashboardHome() {
               <Store className="h-5 w-5" />
             </span>
             <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-              {publishedUmkms.length} Terbit
+              {stats?.umkms.published ?? 0} Terbit
             </span>
           </div>
-          <p className="mt-4 text-3xl font-extrabold text-forest">{umkms.length}</p>
+          <p className="mt-4 text-3xl font-extrabold text-forest">{stats?.umkms.total ?? 0}</p>
           <h2 className="mt-1 font-extrabold text-charcoal">Profil UMKM</h2>
           <p className="mt-1.5 text-xs leading-5 text-warm-gray">Total usaha terdaftar di katalog desa.</p>
         </Link>
@@ -139,10 +140,10 @@ export default function DashboardHome() {
               <Package className="h-5 w-5" />
             </span>
             <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-              {publishedProducts.length} Terbit
+              {stats?.products.published ?? 0} Terbit
             </span>
           </div>
-          <p className="mt-4 text-3xl font-extrabold text-forest">{products.length}</p>
+          <p className="mt-4 text-3xl font-extrabold text-forest">{stats?.products.total ?? 0}</p>
           <h2 className="mt-1 font-extrabold text-charcoal">Katalog Produk</h2>
           <p className="mt-1.5 text-xs leading-5 text-warm-gray">Total produk terdaftar di katalog desa.</p>
         </Link>
@@ -157,10 +158,10 @@ export default function DashboardHome() {
                 <Users className="h-5 w-5" />
               </span>
               <span className="text-xs font-bold text-forest bg-cream-bg px-2.5 py-1 rounded-full border border-sage-border">
-                {users.filter(u => u.isActive).length} Aktif
+                {stats?.users.active ?? 0} Aktif
               </span>
             </div>
-            <p className="mt-4 text-3xl font-extrabold text-forest">{users.length}</p>
+            <p className="mt-4 text-3xl font-extrabold text-forest">{stats?.users.total ?? 0}</p>
             <h2 className="mt-1 font-extrabold text-charcoal">Pengguna Dashboard</h2>
             <p className="mt-1.5 text-xs leading-5 text-warm-gray">Akun pengelola dan pemilik usaha.</p>
           </Link>

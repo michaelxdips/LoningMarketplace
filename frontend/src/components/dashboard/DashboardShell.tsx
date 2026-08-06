@@ -66,6 +66,12 @@ export default function DashboardShell() {
 
   return (
     <div className="min-h-dvh bg-cream-bg lg:grid lg:grid-cols-[260px_1fr]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-xl focus:bg-forest focus:px-4 focus:py-2.5 focus:text-xs focus:font-bold focus:text-white focus:shadow-lg focus:outline-none"
+      >
+        Lewati ke konten utama
+      </a>
       {/* Mobile Drawer Trigger Header */}
       <div className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-sage-border bg-white px-4 shadow-2xs lg:hidden">
         <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-center gap-2.5 text-lg font-black uppercase tracking-wider text-forest">
@@ -198,7 +204,7 @@ export default function DashboardShell() {
       </aside>
 
       {/* Main Content Viewport */}
-      <main className="min-w-0 px-4 pb-12 pt-20 sm:px-7 lg:px-10 lg:pt-10">
+      <main id="main-content" tabIndex={-1} className="min-w-0 px-4 pb-12 pt-20 sm:px-7 lg:px-10 lg:pt-10">
         <div className="mx-auto max-w-7xl">
           <Outlet />
         </div>

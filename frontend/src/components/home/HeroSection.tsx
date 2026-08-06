@@ -78,7 +78,7 @@ export default function HeroSection({ onBrowseProducts, onBrowseUMKMs }: HeroSec
           <div className="relative lg:col-span-5">
             <div className="grid grid-cols-2 gap-4" aria-label="Pilihan produk dan usaha Desa Loning">
               <div className="space-y-4">
-                <HeroPhoto src="/images/hero/produk-loning-1.jpg" alt="Produk lokal Desa Loning" label="Produk lokal" className="h-56 md:h-64" />
+                <HeroPhoto src="/images/hero/produk-loning-1.jpg" alt="Produk lokal Desa Loning" label="Produk lokal" className="h-56 md:h-64" priority />
                 <HeroPhoto src="/images/hero/produk-loning-2.jpg" alt="Produk kuliner Desa Loning" label="Kuliner" className="h-36 md:h-40" />
               </div>
               <div className="space-y-4 pt-8">
@@ -93,10 +93,10 @@ export default function HeroSection({ onBrowseProducts, onBrowseUMKMs }: HeroSec
   );
 }
 
-function HeroPhoto({ src, alt, label, className }: { src: string; alt: string; label: string; className: string }) {
+function HeroPhoto({ src, alt, label, className, priority }: { src: string; alt: string; label: string; className: string; priority?: boolean }) {
   return (
     <figure className={`group relative overflow-hidden rounded-2xl border border-sage-border/80 bg-sage-light shadow-sm ${className}`}>
-      <ProductImage src={src} alt={alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+      <ProductImage src={src} alt={alt} priority={priority} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/55 via-transparent to-transparent" />
       <figcaption className="absolute bottom-3 left-3 rounded-full border border-white/20 bg-charcoal/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
         {label}

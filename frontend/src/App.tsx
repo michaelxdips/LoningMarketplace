@@ -163,7 +163,12 @@ export default function App() {
 
   return (
     <div className="min-h-dvh bg-cream-bg flex flex-col antialiased">
-      
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-xl focus:bg-forest focus:px-4 focus:py-2.5 focus:text-xs focus:font-bold focus:text-white focus:shadow-lg focus:outline-none"
+      >
+        Lewati ke konten utama
+      </a>
       {/* 1. Header Navigation */}
       <Navbar 
         onScrollToSection={handleScrollToSection} 
@@ -171,7 +176,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-grow">
+      <main id="main-content" tabIndex={-1} className="flex-grow">
         
         {/* 2. Hero Section */}
         <HeroSection 

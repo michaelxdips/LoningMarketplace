@@ -43,6 +43,10 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     return undefined;
   };
 
+  app.get('/manage/stats', { preHandler: [guards.authenticate, guards.requireCapability('dashboard:view')] }, async (request) => {
+    return { data: await repository.getDashboardStats(request.auth!.user) };
+  });
+
   app.get('/manage/umkms', { preHandler: [guards.authenticate, guards.requireAnyCapability(['umkms:view-all', 'umkms:view-own'])] }, async (request, reply) => {
     const parsed = query.pick({ q: true, category: true, publicationStatus: true, ownerUserId: true, limit: true }).safeParse(request.query);
     if (!parsed.success || (parsed.data.ownerUserId && !hasCapability(request.auth!.user.role, 'umkms:view-all'))) return reply.code(400).send(error('Invalid query parameters', 'VALIDATION_ERROR'));

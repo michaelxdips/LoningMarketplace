@@ -6,6 +6,8 @@ import { authApi, rememberSession } from '../lib/auth';
 import { useCsrfToken } from '../hooks/useAuth';
 import { ErrorNotice, Field, Input, PageHeader, PendingButton, secondaryButtonClass } from '../components/dashboard/Ui';
 
+import { useToast } from '../components/shared/Toast';
+
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrent] = useState('');
   const [newPassword, setNext] = useState('');
@@ -18,13 +20,19 @@ export default function ChangePasswordPage() {
   const client = useQueryClient();
   const csrf = useCsrfToken();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [localError, setLocalError] = useState('');
 
   const mutation = useMutation({
     mutationFn: () => authApi.changePassword({ currentPassword, newPassword }, csrf),
     onSuccess: () => {
+      showToast('Kata sandi berhasil diperbarui. Silakan masuk kembali.', 'success');
       rememberSession(client, null);
       navigate('/login', { replace: true });
+    },
+    onError: (err) => {
+      const msg = err instanceof Error ? err.message : 'Gagal memperbarui kata sandi.';
+      showToast(msg, 'error');
     },
   });
 

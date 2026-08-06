@@ -8,11 +8,13 @@ export function ProductImage({
   alt,
   className = '',
   fitMode = 'auto',
+  priority = false,
 }: {
   src?: string | null;
   alt: string;
   className?: string;
   fitMode?: 'auto' | 'cover' | 'contain';
+  priority?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   const [isPortrait, setIsPortrait] = useState(false);
@@ -50,7 +52,9 @@ export function ProductImage({
       }}
       src={src}
       alt={alt}
-      loading="lazy"
+      loading={priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : undefined}
+      decoding="async"
       referrerPolicy="no-referrer"
       onLoad={(e) => handleCheckRatio(e.currentTarget)}
       className={`${className} ${

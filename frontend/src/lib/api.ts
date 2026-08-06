@@ -4,6 +4,8 @@ export interface GetUMKMsParams { category?: Category; q?: string; limit?: numbe
 export interface GetProductsParams { category?: Category; q?: string; umkmId?: string; limit?: number }
 export interface GetRelatedProductsParams { limit?: number }
 
+export const PUBLIC_DETAIL_STALE_TIME = 5 * 60 * 1000;
+
 export class ApiError extends Error {
   constructor(public status: number, message: string, public code?: string) { super(message); this.name = 'ApiError'; }
 }
