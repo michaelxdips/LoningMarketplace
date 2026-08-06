@@ -26,9 +26,20 @@ test('public interactive map route loads directory map, selector, and detail nav
     transition.complete();
   }
 
-  // Re-navigate to peta
-  await page.goto('/peta-umkm');
-  await expect(page.getByRole('heading', { name: 'Peta Lokasi UMKM Desa Loning' })).toBeVisible();
+  // Re-navigate to peta with a bounded transition
+  const backTransition = events.beginExpectedTransition({
+    reason: 'reload-peta',
+    expectedRequests: [
+      { method: 'GET', url: /\/api\/umkms(?:\?.*)?$/ },
+      { method: 'GET', url: /\/images\/hero\// },
+    ]
+  });
+  try {
+    await page.goto('/peta-umkm');
+    await expect(page.getByRole('heading', { name: 'Peta Lokasi UMKM Desa Loning' })).toBeVisible();
+  } finally {
+    backTransition.complete();
+  }
 
   assertBrowserEvents(events);
   events.dispose();

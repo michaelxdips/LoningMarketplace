@@ -148,8 +148,8 @@ test('native zoom 200% isolated strict acceptance windows', async ({ request }) 
     for (const [route, phase, settle] of [
       [`/produk/${productSlug}`, 'direct-product', async (page: import('@playwright/test').Page) => { await expect(page.getByRole('heading', { level: 1 })).toBeVisible(); await expect(page.locator('main')).toBeFocused(); await assertNoOverflow(page); }],
       [`/umkm/${umkmSlug}`, 'direct-umkm', async (page: import('@playwright/test').Page) => { await expect(page.getByRole('button', { name: 'Hubungi via WhatsApp' })).toBeVisible(); await expect(page.locator('main')).toBeFocused(); await assertNoOverflow(page); }],
-      ['/faq', 'direct-faq', async (page: import('@playwright/test').Page) => { await expect(page.getByRole('heading', { name: /Menemukan usaha lokal/ })).toBeVisible(); await expect(page.locator('main')).toBeFocused(); await assertNoOverflow(page); }],
-      ['/tentang-desa', 'direct-about', async (page: import('@playwright/test').Page) => { await expect(page.getByRole('heading', { name: /Usaha tumbuh dari rumah/ })).toBeVisible(); await expect(page.locator('main')).toBeFocused(); await assertNoOverflow(page); }],
+      ['/faq', 'direct-faq', async (page: import('@playwright/test').Page) => { await expect(page.getByRole('heading', { name: /Pertanyaan Umum & Cara Penggunaan/ })).toBeVisible(); await expect(page.locator('main')).toBeFocused(); await assertNoOverflow(page); }],
+      ['/tentang-desa', 'direct-about', async (page: import('@playwright/test').Page) => { await expect(page.getByRole('heading', { name: /Karya & Potensi Lokal/ })).toBeVisible(); await expect(page.locator('main')).toBeFocused(); await assertNoOverflow(page); }],
     ] as const) {
       const target = await openEmulatedPage(context);
       await assertPageClean(target.page, phase, async () => { await target.page.goto(route); }, async () => { await expect(target.page).toHaveURL(new RegExp(`${route.replaceAll('/', '\\/')}$`)); await settle(target.page); });

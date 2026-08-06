@@ -88,12 +88,18 @@ function PublicNavigationManager() {
       return;
     }
 
+    if (navigationType !== 'POP') {
+      window.scrollTo(0, 0);
+    }
+
     if (shouldFocusMain(prevPathnameRef.current, location.pathname, location.hash)) {
       const mainHeading = document.querySelector<HTMLElement>('main h1, main h2, [data-autofocus-target="true"]');
       if (mainHeading) {
         mainHeading.focus();
-        prevPathnameRef.current = location.pathname;
-        return;
+        if (document.activeElement === mainHeading) {
+          prevPathnameRef.current = location.pathname;
+          return;
+        }
       }
 
       const mainContent = document.getElementById('main-content');
@@ -105,10 +111,6 @@ function PublicNavigationManager() {
     }
 
     prevPathnameRef.current = location.pathname;
-
-    if (navigationType !== 'POP') {
-      window.scrollTo(0, 0);
-    }
   }, [location, navigationType]);
 
   return null;

@@ -12,11 +12,30 @@ test.describe('browser event classifier', () => {
     expect(classifyRequestFailure({ ...failure(), transition: transition(false) })).toBe('unexpected');
   });
 
-  test('keeps all mutation aborts and special failures visible', () => {
+  test('keeps all mutation aborts and special failures visible while classifying image aborts', () => {
     for (const method of ['POST', 'PATCH', 'DELETE']) expect(classifyRequestFailure({ ...failure({ method }), transition: transition() })).toBe('mutation-abort');
     expect(classifyRequestFailure(failure({ errorText: 'net::ERR_BLOCKED_BY_ORB' }))).toBe('orb-failure');
     expect(classifyRequestFailure(failure({ errorText: 'net::ERR_CONNECTION_RESET' }))).toBe('unexpected');
     expect(classifyRequestFailure({ ...failure({ errorText: undefined }), transition: transition() })).toBe('unexpected');
+
+    expect(classifyRequestFailure({ method: 'GET', url: 'http://localhost:3000/media/asset/card.webp', resourceType: 'image', errorText: 'net::ERR_ABORTED' })).toBe('expected-viewport-image-abort');
+    expect(classifyRequestFailure({ method: 'GET', url: 'http://localhost:3000/images/hero/produk-1.jpg', resourceType: 'image', errorText: 'net::ERR_ABORTED' })).toBe('unexpected');
+    expect(classifyRequestFailure({ method: 'GET', url: 'http://localhost:3000/images/hero/produk-1.jpg', resourceType: 'image', errorText: 'net::ERR_ABORTED', transition: transition() })).toBe('expected-viewport-image-abort');
+    expect(classifyRequestFailure({ method: 'GET', url: 'https://maps.google.com/maps?q=-6.891236,109.382146&z=16&output=embed', resourceType: 'document', errorText: 'net::ERR_ABORTED' })).toBe('expected-google-map-embed-abort');
+    expect(classifyRequestFailure({ method: 'GET', url: 'https://maps.googleapis.com/maps/api/js/StaticMapService.GetMapImage?token=test', resourceType: 'image', errorText: 'net::ERR_ABORTED' })).toBe('expected-google-map-embed-abort');
+    expect(classifyRequestFailure({ method: 'GET', url: 'https://maps.googleapis.com/maps/api/mapsjs/gen_204?csp_test=true', resourceType: 'xhr', errorText: 'net::ERR_ABORTED' })).toBe('expected-google-map-embed-abort');
+    expect(classifyRequestFailure({ method: 'GET', url: 'https://maps.googleapis.com/maps/api/mapsjs/gen_204?other=true', resourceType: 'xhr', errorText: 'net::ERR_ABORTED' })).toBe('unexpected');
+    expect(classifyRequestFailure({ method: 'GET', url: 'https://maps.googleapis.com/unrelated.png', resourceType: 'image', errorText: 'net::ERR_ABORTED' })).toBe('unexpected');
+
+    // FAIL — document / fetch / xhr / script net::ERR_ABORTED
+    expect(classifyRequestFailure({ method: 'GET', url: 'http://localhost:3000/faq', resourceType: 'document', errorText: 'net::ERR_ABORTED' })).toBe('unexpected');
+    expect(classifyRequestFailure({ method: 'GET', url: 'http://localhost:3000/api/data', resourceType: 'fetch', errorText: 'net::ERR_ABORTED' })).toBe('unexpected');
+    expect(classifyRequestFailure({ method: 'GET', url: 'http://localhost:3000/api/data', resourceType: 'xhr', errorText: 'net::ERR_ABORTED' })).toBe('unexpected');
+    expect(classifyRequestFailure({ method: 'GET', url: 'http://localhost:3000/app.js', resourceType: 'script', errorText: 'net::ERR_ABORTED' })).toBe('unexpected');
+
+    // FAIL — image ERR_NAME_NOT_RESOLVED / connection reset
+    expect(classifyRequestFailure({ method: 'GET', url: 'http://localhost:3000/images/hero/produk-1.jpg', resourceType: 'image', errorText: 'net::ERR_NAME_NOT_RESOLVED' })).toBe('unexpected');
+    expect(classifyRequestFailure({ method: 'GET', url: 'http://localhost:3000/images/hero/produk-1.jpg', resourceType: 'image', errorText: 'net::ERR_CONNECTION_RESET' })).toBe('unexpected');
   });
 
   test('production collector retains request-start ownership for a late abort and disposes listeners', () => {

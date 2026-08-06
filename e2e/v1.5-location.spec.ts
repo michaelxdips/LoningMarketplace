@@ -21,7 +21,7 @@ test('owner parses, saves, publishes, and clears business location', async ({ pa
   await page.getByRole('button', { name: 'Baca URL' }).click();
   await expect(page.getByLabel('Latitude')).toHaveValue('-6.891236');
   await expect(page.getByLabel('Longitude')).toHaveValue('109.382146');
-  await expect(page.getByTitle(/Peta lokasi/)).toHaveAttribute('src', /marker=-6\.891236,109\.382146/);
+  await expect(page.getByTitle(/Peta lokasi/)).toHaveAttribute('src', /maps\.google\.com\/maps\?q=-6\.891236,109\.382146/);
   await page.getByRole('button', { name: 'Simpan Lokasi' }).click();
   await expect(page.getByRole('status')).toContainText('berhasil disimpan');
 
@@ -29,7 +29,7 @@ test('owner parses, saves, publishes, and clears business location', async ({ pa
   const slug = (await publicResponse.json()).data.slug as string;
   await page.goto(`/umkm/${slug}`);
   await expect(page.getByRole('heading', { name: 'Lokasi Usaha' })).toHaveCount(1);
-  await expect(page.getByTitle(`Peta lokasi ${E2E_FIXTURES.umkm.primaryName}`)).toHaveAttribute('src', /openstreetmap\.org\/export\/embed\.html/);
+  await expect(page.getByTitle(`Peta lokasi ${E2E_FIXTURES.umkm.primaryName}`)).toHaveAttribute('src', /maps\.google\.com\/maps\?q=-6\.891236,109\.382146/);
   await expect(page.getByRole('link', { name: 'Buka di Google Maps' })).toHaveAttribute('href', /google\.com\/maps\/search/);
   await expect(page.getByRole('link', { name: 'Petunjuk Arah' })).toHaveAttribute('href', /google\.com\/maps\/dir/);
   await page.waitForLoadState('networkidle');

@@ -7,7 +7,7 @@ export type BrowserDiagnosticEvent = ApplicationConsoleError & HttpErrorEvent;
 export type PageErrorEvent = { message: string };
 export type ExpectedRequest = { method: 'GET'; url: RegExp };
 export type ExpectedTransition = { reason: string; expectedRequests: ExpectedRequest[]; active: boolean };
-export type RequestFailureClassification = 'expected-route-transition-abort' | 'expected-viewport-image-abort' | 'expected-map-frame-abort' | 'mutation-abort' | 'orb-failure' | 'unexpected';
+export type RequestFailureClassification = 'expected-route-transition-abort' | 'expected-viewport-image-abort' | 'expected-map-frame-abort' | 'expected-google-map-embed-abort' | 'mutation-abort' | 'orb-failure' | 'unexpected';
 
 export type BrowserEvents = {
   httpErrors: HttpErrorEvent[];
@@ -32,7 +32,8 @@ export function classifyRequestFailure(input: RequestFailureEvent & { transition
   if (input.errorText?.includes('BLOCKED_BY_ORB')) return 'orb-failure';
   if ((input.errorText === 'net::ERR_ABORTED' || input.errorText === 'net::ERR_FAILED') && input.method === 'GET' && input.resourceType === 'document' && /^https:\/\/www\.openstreetmap\.org\/export\/embed\.html\?/.test(input.url)) return 'expected-map-frame-abort';
   if (input.errorText === 'net::ERR_ABORTED' && input.method === 'GET' && input.resourceType === 'fetch' && /\/api\/manage\/umkms\/[0-9a-f-]+$/.test(input.url)) return 'expected-route-transition-abort';
-  if (input.errorText === 'net::ERR_ABORTED' && input.method === 'GET' && input.resourceType === 'image' && input.url.includes('/media/')) return 'expected-viewport-image-abort';
+  if (input.errorText === 'net::ERR_ABORTED' && input.method === 'GET' && ((input.resourceType === 'document' || input.resourceType === 'script') && (/^https:\/\/maps\.google\.com\/maps\?/.test(input.url) || /^https:\/\/maps\.googleapis\.com\/(?:maps\/api\/js\?|maps-api-v3\/api\/js\/)/.test(input.url) || /^https:\/\/maps\.gstatic\.com\/maps-api-v3\/embed\/js\//.test(input.url)) || input.resourceType === 'image' && /^https:\/\/maps\.googleapis\.com\/maps\/api\/js\/StaticMapService\.GetMapImage\?/.test(input.url) || input.resourceType === 'xhr' && input.url === 'https://maps.googleapis.com/maps/api/mapsjs/gen_204?csp_test=true')) return 'expected-google-map-embed-abort';
+  if (input.errorText === 'net::ERR_ABORTED' && input.method === 'GET' && input.resourceType === 'image' && (input.url.includes('/media/') || input.transition?.active)) return 'expected-viewport-image-abort';
   if (input.errorText === 'net::ERR_ABORTED' && input.method === 'GET' && input.transition?.active && input.transition.expectedRequests.some((expected) => expected.method === input.method && expected.url.test(input.url))) {
     return 'expected-route-transition-abort';
   }
@@ -80,7 +81,7 @@ export function observeBrowserEvents(page: Page): BrowserEvents {
     requestFailures.push(failure);
     const classification = classifyRequestFailure({ ...failure, transition: requestTransitions.get(request) });
     requestTransitions.delete(request);
-    if (classification === 'expected-route-transition-abort' || classification === 'expected-viewport-image-abort' || classification === 'expected-map-frame-abort') expectedRouteTransitionAborts.push(failure);
+    if (classification === 'expected-route-transition-abort' || classification === 'expected-viewport-image-abort' || classification === 'expected-map-frame-abort' || classification === 'expected-google-map-embed-abort') expectedRouteTransitionAborts.push(failure);
     else if (classification === 'mutation-abort') mutationAborts.push(failure);
     else if (classification === 'orb-failure') orbFailures.push(failure);
     else unexpectedRequestFailures.push(failure);

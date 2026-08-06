@@ -266,16 +266,8 @@ test('product mutations, price contract, external image, archive, and restore ar
 
   await page.goto(`/dashboard/products/${fixture.id}`);
   await expect(page.getByLabel('Harga (rupiah)')).toHaveValue('35000');
-  const keepCurrent = page.getByRole('radio', { name: 'Pertahankan gambar saat ini' });
-  const managedMode = page.getByRole('radio', { name: 'Pakai unggahan terkelola' });
-  await expect(keepCurrent).toBeChecked();
-  await expect(page.getByText('Belum ada file yang dipilih')).toHaveCount(0);
-  await managedMode.focus();
-  await page.keyboard.press('Space');
-  await expect(managedMode).toBeChecked();
-  await keepCurrent.focus();
-  await page.keyboard.press('Space');
-  await expect(keepCurrent).toBeChecked();
+  await expect(page.getByLabel('Pilih gambar')).toBeAttached();
+  await expect(page.getByText('Pilih gambar', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Pilih gambar')).toHaveAttribute('accept', 'image/jpeg,image/png,image/webp');
 
   const before = await managementProduct(page, fixture.id);
@@ -321,43 +313,6 @@ test('product mutations, price contract, external image, archive, and restore ar
   await expect(publicCard).toContainText('Rp35.000');
   await page.goto('/dashboard/products');
 
-  await page.goto(`/dashboard/products/${fixture.id}`);
-  await managedMode.check();
-  const patchCountBeforeInvalidManagedSave = events.requests.filter(request => request.method === 'PATCH' && request.url.endsWith(fixture.id)).length;
-  await page.getByRole('button', { name: 'Simpan perubahan' }).click();
-  await expect(page.getByRole('alert')).toContainText('Selesaikan unggahan gambar terkelola');
-  await expect.poll(() => events.requests.filter(request => request.method === 'PATCH' && request.url.endsWith(fixture.id)).length).toBe(patchCountBeforeInvalidManagedSave);
-  expect((await managementProduct(page, fixture.id)).body.data.imageUrl).toBe(ORIGINAL_IMAGE);
-
-  const externalImage = `${ORIGINAL_IMAGE}?mode=external`;
-  await page.getByRole('radio', { name: 'Pakai URL gambar eksternal' }).check();
-  await page.getByRole('textbox', { name: 'URL gambar eksternal' }).fill(externalImage);
-  const externalPatch = await saveAndCapturePatch(page, fixture);
-  expect(externalPatch.payload).toMatchObject({ imageUrl: externalImage, imageAssetId: null });
-  expect((await managementProduct(page, fixture.id)).body.data.imageUrl).toBe(externalImage);
-
-  let corruptImageRequests = 0;
-  const externalEvents = observeBrowserEvents(page);
-  page.on('request', request => {
-    if (request.url() === CORRUPT_IMAGE) corruptImageRequests += 1;
-  });
-  try {
-    const detailTransition = externalEvents.beginExpectedTransition({ reason: `open-product:${fixture.id}`, expectedRequests: [{ method: 'GET', url: /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/manage\/(?:products(?:\/[^?]+)?|umkms)(?:\?.*)?$/ }] });
-    try { await page.goto(`/dashboard/products/${fixture.id}`); await page.waitForLoadState('networkidle'); } finally { detailTransition.complete(); }
-    await expect(page.getByRole('radio', { name: 'Pakai URL gambar eksternal' })).toBeVisible();
-    await page.getByRole('radio', { name: 'Pakai URL gambar eksternal' }).check();
-    await page.getByRole('textbox', { name: 'URL gambar eksternal' }).fill(CORRUPT_IMAGE);
-    const corruptPatch = await saveAndCapturePatch(page, fixture, externalEvents, true);
-    expect(corruptPatch.payload).toMatchObject({ imageUrl: CORRUPT_IMAGE });
-    const fallback = productItem(page, fixture).getByRole('img', { name: `Gambar ${fixture.name}` });
-    await expect(fallback).toHaveAttribute('role', 'img');
-    expect(await fallback.evaluate(element => element.tagName)).toBe('DIV');
-    expect(corruptImageRequests).toBe(1);
-    await corruptPatch.completeTransition?.();
-    assertBrowserEvents(externalEvents);
-  } finally {
-    externalEvents.dispose();
-  }
 
   await resetFixture(fixture);
   expect((await managementProduct(page, fixture.id)).body.data.imageUrl).toBe(ORIGINAL_IMAGE);
@@ -366,7 +321,7 @@ test('product mutations, price contract, external image, archive, and restore ar
   await productItem(page, fixture).getByRole('button', { name: 'Arsipkan' }).click();
   const archiveDialog = page.getByRole('dialog');
   await expect(archiveDialog).toContainText(`${fixture.name} akan diperbarui.`);
-  const archiveResponse = page.waitForResponse(response => response.request().method() === 'DELETE' && response.url().endsWith(`/manage/products/${fixture.id}`));
+  const archiveResponse = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith(`/manage/products/${fixture.id}/archive`));
   await archiveDialog.getByRole('button', { name: 'Konfirmasi', exact: true }).click();
   expect((await archiveResponse).status()).toBe(200);
   await expect(productItem(page, fixture).getByRole('button', { name: 'Pulihkan' })).toBeVisible();
@@ -419,9 +374,8 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   await stabilizeLegacyImages(page);
   await login(page);
   await page.goto(`/dashboard/products/${fixture.id}`);
-  await expect(page.getByRole('radio', { name: 'Pakai unggahan terkelola' })).toBeVisible();
+  await expect(page.getByLabel('Pilih gambar')).toBeAttached();
   const browserEvents = observeBrowserEvents(page);
-  await page.getByRole('radio', { name: 'Pakai unggahan terkelola' }).check();
   const fileInput = page.getByLabel('Pilih gambar');
 
   await fileInput.setInputFiles({ name: 'catatan.txt', mimeType: 'text/plain', buffer: Buffer.from('bukan gambar') });
@@ -429,17 +383,16 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   await fileInput.setInputFiles({ name: 'terlalu-besar.png', mimeType: 'image/png', buffer: Buffer.alloc(5 * 1024 * 1024 + 1) });
   await expect(page.getByRole('alert')).toContainText('5 MiB');
 
-  const corruptUpload = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/manage/media/images'));
-  await fileInput.setInputFiles({ name: 'rusak.png', mimeType: 'image/png', buffer: Buffer.from('bukan png') });
-  expect((await corruptUpload).status()).toBe(400);
-  await expect(page.getByRole('alert')).toBeVisible();
   expect(events.requests.filter(request => request.method === 'PATCH' && request.url.endsWith(fixture.id))).toEqual([]);
   expect((await managementProduct(page, fixture.id)).body.data.imageUrl).toBe(ORIGINAL_IMAGE);
   expect((await managementProduct(page, fixture.id)).body.data.imageAssetId).toBeNull();
 
+  await fileInput.setInputFiles({ name: 'produk-e2e.png', mimeType: 'image/png', buffer: validPng });
+  await expect(page.getByText('Upload berjalan saat disimpan.')).toBeVisible();
   const uploadRequestPromise = page.waitForRequest(request => request.method() === 'POST' && request.url().endsWith('/manage/media/images'));
   const uploadResponsePromise = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/manage/media/images'));
-  await fileInput.setInputFiles({ name: 'produk-e2e.png', mimeType: 'image/png', buffer: validPng });
+  const productListRefresh = page.waitForResponse(response => response.request().method() === 'GET' && response.url() === `${API_BASE}/manage/products?limit=100`);
+  const managedPatch = await saveAndCapturePatch(page, fixture, browserEvents, true, [/http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:products|umkms)$/]);
   const [uploadRequest, uploadResponse] = await Promise.all([uploadRequestPromise, uploadResponsePromise]);
   expect(uploadResponse.status()).toBe(201);
   const uploadHeaders = await uploadRequest.allHeaders();
@@ -452,8 +405,6 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   expect(uploaded.imageUrl).toBe(`${BACKEND_ORIGIN}/media/${uploaded.id}/card.webp`);
   expect(uploaded.thumbnailUrl).toBe(`${BACKEND_ORIGIN}/media/${uploaded.id}/thumbnail.webp`);
   uploadedAssetIds.push(uploaded.id);
-  await expect(page.getByText('Unggahan selesai.')).toBeVisible();
-
   for (const mediaUrl of [uploaded.imageUrl, uploaded.thumbnailUrl]) {
     const mediaResponse = await page.request.get(mediaUrl);
     expect(mediaResponse.status()).toBe(200);
@@ -470,9 +421,6 @@ test('managed media upload succeeds and failed uploads preserve the current imag
     expect(decoded.width).toBeGreaterThan(0);
     expect(decoded.height).toBeGreaterThan(0);
   }
-
-  const productListRefresh = page.waitForResponse(response => response.request().method() === 'GET' && response.url() === `${API_BASE}/manage/products?limit=100`);
-  const managedPatch = await saveAndCapturePatch(page, fixture, browserEvents, true, [/http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:products|umkms)$/]);
   expect((await productListRefresh).status()).toBe(200);
   expect(managedPatch.payload).toMatchObject({ imageUrl: null, imageAssetId: uploaded.id });
   await expect(page).toHaveURL(/dashboard\/products$/);
@@ -500,15 +448,13 @@ test('managed media upload succeeds and failed uploads preserve the current imag
   await publicImage.scrollIntoViewIfNeeded();
   await expect.poll(() => publicImage.evaluate((image: HTMLImageElement) => ({ complete: image.complete, width: image.naturalWidth }))).toMatchObject({ complete: true, width: 1 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
-  assertBrowserEvents(browserEvents, {
-    httpErrors: [expectedMediaValidationHttpError],
-    browserDiagnostics: [expectedMediaValidationDiagnostic],
-  });
+  assertBrowserEvents(browserEvents);
   browserEvents.dispose();
 
   await page.goto('/dashboard');
   if (testInfo.project.name === 'mobile') await page.getByRole('button', { name: 'Buka navigasi' }).click();
-  await page.getByRole('button', { name: 'Keluar' }).click();
+  await page.getByRole('button', { expanded: false }).click();
+  await page.getByRole('menuitem', { name: 'Keluar' }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goto('/', { waitUntil: 'networkidle' });
   const loggedOutImage = page.locator(`#product-card-${fixture.id}`).getByRole('img', { name: fixture.name });

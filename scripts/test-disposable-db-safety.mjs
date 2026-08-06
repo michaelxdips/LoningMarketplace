@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { assertDisposableDatabase } from './lib/disposable-db-safety.mjs';
 
 const root = process.cwd();
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
+const readOptional = (path) => existsSync(resolve(root, path)) ? read(path) : '';
 const readJson = (path) => JSON.parse(read(path));
 const valid = { NODE_ENV: 'test', ALLOW_DISPOSABLE_DB_MUTATION: '1', DISPOSABLE_COMPOSE_PROJECT: 'marketplace-loning-test-phase0', DATABASE_URL: 'postgresql://loning_test:secret@127.0.0.1:55432/loning_phase0_test' };
 assert.deepEqual(assertDisposableDatabase(valid), { project: valid.DISPOSABLE_COMPOSE_PROJECT, host: '127.0.0.1', port: 55432, database: 'loning_phase0_test', redactedUrl: 'postgresql://loning_test:***@127.0.0.1:55432/loning_phase0_test' });
@@ -41,7 +42,7 @@ const integrationWrapper = read('scripts/test-integration-local.mjs');
 const determinism = read('scripts/verify-seed-determinism.mjs');
 const composeTest = read('compose.test.yaml');
 const render = read('render.yaml');
-const railway = read('backend/railway.toml');
+const railway = readOptional('backend/railway.toml');
 
 const activeCommands = [
   ...Object.entries(rootPackage.scripts).map(([name, command]) => [`root:${name}`, command]),

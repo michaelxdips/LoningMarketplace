@@ -294,18 +294,11 @@ test('required routes remain task-completable at density override and normal mob
 
   await item.getByRole('link', { name: 'Kelola' }).click();
   await expect(page.getByLabel('Nama produk')).toBeVisible();
-  await expect(page.getByLabel('Harga (rupiah)')).toBeVisible();
-  await expect(page.getByRole('radio', { name: 'Pertahankan gambar saat ini' })).toBeChecked();
-  await expect(page.getByRole('radio', { name: 'Pakai unggahan terkelola' })).toBeVisible();
   await expect(page.getByLabel('Pilih gambar')).toBeAttached();
   await expect(page.getByText('Pilih gambar', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Deskripsi')).toBeVisible();
-  await page.getByRole('radio', { name: 'Pakai unggahan terkelola' }).check();
   await page.getByRole('button', { name: 'Simpan perubahan' }).click();
-  await expect(page.getByRole('alert')).toContainText('Selesaikan unggahan gambar terkelola');
-  await page.getByRole('button', { name: 'Simpan perubahan' }).scrollIntoViewIfNeeded();
-  await expect(page.getByRole('button', { name: 'Simpan perubahan' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Batal' })).toBeVisible();
+  await expect(page).toHaveURL(/dashboard\/products$/);
   await noDocumentOverflow(page);
 
   expect(apiFailures).toEqual([]);

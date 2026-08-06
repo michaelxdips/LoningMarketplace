@@ -55,9 +55,9 @@ export default function AboutVillagePage() {
         {/* Header Hero Section */}
         <header className="relative border-b border-sage-border bg-cream-tint px-5 py-16 md:py-24">
           <div className="mx-auto max-w-7xl">
-            <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+            <div className="grid min-w-0 gap-10 lg:grid-cols-12 lg:items-center">
 
-              <div className="lg:col-span-7 space-y-6">
+              <div className="min-w-0 space-y-6 lg:col-span-7">
                 <h1 className="text-balance text-4xl font-extrabold tracking-tight text-charcoal sm:text-5xl lg:text-6xl leading-tight">
                   Karya & Potensi Lokal dari <span className="editorial-serif font-normal italic text-forest">Jantung Petarukan</span>
                 </h1>
@@ -67,25 +67,25 @@ export default function AboutVillagePage() {
                 </p>
 
                 {/* Key Quick Facts Pill Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                  <div className="rounded-xl border border-sage-border bg-cream-card p-3.5 shadow-xs">
-                    <div className="flex items-center gap-2 text-forest font-bold text-xs">
+                <div className="grid min-w-0 grid-cols-1 gap-3 pt-2 min-[480px]:grid-cols-2 sm:grid-cols-3">
+                  <div className="min-w-0 rounded-xl border border-sage-border bg-cream-card p-3.5 shadow-xs">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 text-forest font-bold text-xs">
                       <MapPin size={16} className="text-terracotta" />
                       <span>Lokasi</span>
                     </div>
                     <p className="mt-1 text-xs text-warm-gray font-medium">Petarukan, Pemalang</p>
                   </div>
 
-                  <div className="rounded-xl border border-sage-border bg-cream-card p-3.5 shadow-xs">
-                    <div className="flex items-center gap-2 text-forest font-bold text-xs">
+                  <div className="min-w-0 rounded-xl border border-sage-border bg-cream-card p-3.5 shadow-xs">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 text-forest font-bold text-xs">
                       <Wheat size={16} className="text-terracotta" />
                       <span>Sektor Utama</span>
                     </div>
                     <p className="mt-1 text-xs text-warm-gray font-medium">Tani, Industri & Kuliner</p>
                   </div>
 
-                  <div className="rounded-xl border border-sage-border bg-cream-card p-3.5 shadow-xs col-span-2 sm:col-span-1">
-                    <div className="flex items-center gap-2 text-forest font-bold text-xs">
+                  <div className="min-w-0 rounded-xl border border-sage-border bg-cream-card p-3.5 shadow-xs min-[480px]:col-span-2 sm:col-span-1">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 text-forest font-bold text-xs">
                       <ShieldCheck size={16} className="text-terracotta" />
                       <span>Kemitraan</span>
                     </div>
@@ -95,7 +95,7 @@ export default function AboutVillagePage() {
               </div>
 
               {/* Quote & Value Statement Column */}
-              <div className="lg:col-span-5 lg:col-start-8">
+              <div className="min-w-0 lg:col-span-5 lg:col-start-8">
                 <div className="relative rounded-2xl border border-sage-border bg-cream-card p-8 shadow-sm space-y-4">
                   <div className="absolute -top-3 left-6 bg-terracotta text-white px-3 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest">
                     Prinsip Pemberdayaan

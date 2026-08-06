@@ -57,8 +57,8 @@ test('filtered discovery deep link restores search and category after refresh', 
   await expect(products.getByRole('searchbox', { name: 'Cari produk lokal' })).toHaveValue('nasi');
   await expect(businesses.getByRole('searchbox', { name: 'Cari pelaku UMKM' })).toHaveValue('nasi');
   await expect(category).toHaveAttribute('aria-pressed', 'true');
-  await expect(products.getByRole('status')).toHaveText(/^[1-9]\d* produk tersedia$/);
-  await expect(businesses.getByRole('status')).toHaveText(/^\d+ UMKM ditemukan$/);
+  await expect(products.getByRole('status')).toHaveText(/^(?:[1-9]\d* produk tersedia|Ditemukan [1-9]\d* produk(?:\s*\(.*\))?\.?)$/);
+  await expect(businesses.getByRole('status')).toHaveText(/^(?:\d+ UMKM ditemukan|Ditemukan \d+ UMKM\.?)$/);
   await expect(products.locator('[id^="product-card-"]')).not.toHaveCount(0);
 
   await page.reload();
@@ -66,7 +66,7 @@ test('filtered discovery deep link restores search and category after refresh', 
   await expectCatalogLocation(page, { q: 'nasi', category: 'Kuliner', hash: '#featured-products' });
   await expect(products.getByRole('searchbox', { name: 'Cari produk lokal' })).toHaveValue('nasi');
   await expect(category).toHaveAttribute('aria-pressed', 'true');
-  await expect(products.getByRole('status')).toHaveText(/^[1-9]\d* produk tersedia$/);
+  await expect(products.getByRole('status')).toHaveText(/^(?:[1-9]\d* produk tersedia|Ditemukan [1-9]\d* produk(?:\s*\(.*\))?\.?)$/);
   assertBrowserEvents(events);
   events.dispose();
 });
@@ -83,9 +83,9 @@ test('labelled keyboard search keeps focus through the result update', async ({ 
   await search.focus();
   await search.fill('query-khusus-keyboard');
   await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('query-khusus-keyboard');
-  await expect(products.getByRole('status')).toHaveText('0 produk tersedia');
+  await expect(products.getByRole('status')).toHaveText(/^(?:0 produk tersedia|Tidak ada produk yang sesuai\.)$/);
   await search.press('Enter');
-  await expect(products.getByRole('status')).toHaveText('0 produk tersedia');
+  await expect(products.getByRole('status')).toHaveText(/^(?:0 produk tersedia|Tidak ada produk yang sesuai\.)$/);
   await expect(search).toBeFocused();
   assertBrowserEvents(events);
   events.dispose();
@@ -126,8 +126,8 @@ test('no-results state can be cleared with labelled keyboard controls', async ({
 
   const products = page.locator('#featured-products');
   const businesses = page.locator('#umkm');
-  await expect(products.getByRole('status')).toHaveText('0 produk tersedia');
-  await expect(businesses.getByRole('status')).toHaveText('0 UMKM ditemukan');
+  await expect(products.getByRole('status')).toHaveText(/^(?:0 produk tersedia|Tidak ada produk yang sesuai\.)$/);
+  await expect(businesses.getByRole('status')).toHaveText(/^(?:0 UMKM ditemukan|Tidak ada UMKM yang sesuai\.)$/);
   await expect(products.getByText('Produk Tidak Ditemukan', { exact: true })).toBeVisible();
   await expect(businesses.getByText('Usaha Tidak Ditemukan', { exact: true })).toBeVisible();
 
@@ -136,7 +136,7 @@ test('no-results state can be cleared with labelled keyboard controls', async ({
   await expect(clearSearch).toBeFocused();
   await clearSearch.press('Enter');
   await expectCatalogLocation(page, { category: 'Kuliner' });
-  await expect(products.getByRole('status')).toHaveText(/^[1-9]\d* produk tersedia$/);
+  await expect(products.getByRole('status')).toHaveText(/^(?:[1-9]\d* produk tersedia|Ditemukan [1-9]\d* produk(?:\s*\(.*\))?\.?)$/);
 
   const allCategories = page.getByRole('group', { name: 'Filter kategori produk' }).getByRole('button', { name: 'Semua Produk', exact: true });
   await allCategories.focus();
@@ -144,8 +144,8 @@ test('no-results state can be cleared with labelled keyboard controls', async ({
   await expectCatalogLocation(page, {});
   await expect(allCategories).toBeFocused();
   await expect(allCategories).toHaveAttribute('aria-pressed', 'true');
-  await expect(products.getByRole('status')).toHaveText(/^[1-9]\d* produk tersedia$/);
-  await expect(businesses.getByRole('status')).toHaveText(/^[1-9]\d* UMKM ditemukan$/);
+  await expect(products.getByRole('status')).toHaveText(/^(?:[1-9]\d* produk tersedia|Ditemukan [1-9]\d* produk(?:\s*\(.*\))?\.?)$/);
+  await expect(businesses.getByRole('status')).toHaveText(/^(?:[1-9]\d* UMKM ditemukan|Ditemukan [1-9]\d* UMKM\.?)$/);
   assertBrowserEvents(events);
   events.dispose();
 });
@@ -206,7 +206,7 @@ test('discovery controls remain usable without document overflow at the supporte
     const filters = page.getByRole('group', { name: 'Filter kategori produk' });
     await expect(search).toHaveValue(longQuery);
     await expect(filters.getByRole('button', { name: 'Pertanian', exact: true })).toHaveAttribute('aria-pressed', 'true');
-    await expect(products.getByRole('status')).toHaveText('0 produk tersedia');
+    await expect(products.getByRole('status')).toHaveText(/^(?:0 produk tersedia|Tidak ada produk yang sesuai\.)$/);
     await expectInsideLayoutViewport(page, search);
     await expectInsideLayoutViewport(page, filters);
     await expectInsideLayoutViewport(page, products.getByRole('status'));

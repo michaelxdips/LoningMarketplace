@@ -39,10 +39,8 @@ export default function App() {
   const [umkmSearchQuery, setUmkmSearchQuery] = useState(discovery.q);
 
   useEffect(() => {
-    if (discovery.q) {
-      setProductSearchQuery(discovery.q);
-      setUmkmSearchQuery(discovery.q);
-    }
+    setProductSearchQuery(discovery.q);
+    setUmkmSearchQuery(discovery.q);
   }, [discovery.q]);
 
   const debouncedProductSearchQuery = useDebouncedValue(productSearchQuery);
@@ -200,9 +198,12 @@ export default function App() {
           products={products}
           selectedCategory={selectedCategory}
           searchQuery={productSearchQuery}
-          onSearchChange={setProductSearchQuery}
-          onSearchSubmit={() => {}}
-          onClearFilters={() => setProductSearchQuery('')}
+          onSearchChange={(value) => {
+            setProductSearchQuery(value);
+            discovery.setDraftQuery(value);
+          }}
+          onSearchSubmit={discovery.submitQuery}
+          onClearFilters={discovery.clearQuery}
           onInquireProduct={(product) => handleInquireProduct(product, 'homepage_featured')}
           onViewProduct={handleViewProduct}
           onViewMerchant={handleViewUMKMById}
@@ -215,9 +216,12 @@ export default function App() {
         <FeaturedBusinessesSection 
           umkms={umkms}
           searchQuery={umkmSearchQuery}
-          onSearchChange={setUmkmSearchQuery}
-          onSearchSubmit={() => {}}
-          onClearFilters={() => setUmkmSearchQuery('')}
+          onSearchChange={(value) => {
+            setUmkmSearchQuery(value);
+            discovery.setDraftQuery(value);
+          }}
+          onSearchSubmit={discovery.submitQuery}
+          onClearFilters={discovery.clearQuery}
           onViewDetails={handleViewUMKMDetails}
           isLoading={umkmsQuery.isPending}
           isError={umkmsQuery.isError}

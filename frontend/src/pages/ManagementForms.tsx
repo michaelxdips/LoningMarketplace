@@ -563,6 +563,9 @@ export function ProductFormPage() {
         umkmId = newUmkm.id;
         setCreatingUmkm(false);
       }
+      const initialExternal = item.data && !item.data.imageAssetId ? (item.data.imageUrl ?? "") : "";
+      const imageChanged = Boolean(media.file) || media.cleared || media.externalUrl.trim() !== initialExternal;
+      const imageFields = editing && !imageChanged ? {} : { imageUrl, imageAssetId };
       const common: ProductUpdateInput = {
         umkmId,
         phone: umkmMode === "standalone" ? standalonePhone || null : null,
@@ -571,10 +574,9 @@ export function ProductFormPage() {
         price: price === "" ? null : Number(price),
         description: text(data, "description"),
         category: text(data, "category") as Category,
-        imageUrl,
-        imageAssetId,
         isAvailable: data.get("isAvailable") === "on",
         unit: text(data, "unit") || undefined,
+        ...imageFields,
       };
       await save.mutateAsync(editing ? common : (common as ProductCreateInput));
       entitySaved = true;

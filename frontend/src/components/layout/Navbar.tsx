@@ -48,10 +48,10 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
           to="/"
           onClick={handleLogoClick}
           aria-label={`${brand.name} — kembali ke beranda`}
-          className="focus-ring flex items-center gap-3 rounded-lg px-1.5 py-1 text-forest transition-opacity hover:opacity-90"
+          className="focus-ring flex min-w-0 items-center gap-3 rounded-lg px-1.5 py-1 text-forest transition-opacity hover:opacity-90"
         >
           <img src={brand.logoSvg} alt="" className="h-9 w-9 object-contain shrink-0" />
-          <span className="text-base font-black uppercase tracking-wider md:text-lg">
+          <span className="truncate text-base font-black uppercase tracking-wider md:text-lg">
             LONING<span className="text-terracotta">MAJU</span>
           </span>
         </Link>

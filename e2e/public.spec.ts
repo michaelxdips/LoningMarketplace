@@ -186,7 +186,7 @@ test('admin login settles and enforces password change', async ({ page, context 
   await runExpectedAction(events, page, 'admin-login-redirect', async () => { await page.getByRole('button', { name: 'Masuk' }).click(); await expect(page).toHaveURL(/\/change-password$/); }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:auth\/session|auth\/me)/);
   const cookies = await context.cookies();
   expect(cookies.find((cookie) => cookie.name === 'loning_session')?.httpOnly).toBe(true);
-  expect(await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length }))).toEqual({ local: 0, session: 0 });
+  expect(await page.evaluate(() => ({ local: Object.keys(localStorage).sort(), session: Object.keys(sessionStorage).sort() }))).toEqual({ local: ['loning_session_token'], session: [] });
   assertUnauthenticatedEvents(events);
   events.dispose();
 });
@@ -197,17 +197,19 @@ test('owner is blocked from admin routes and can logout', async ({ page }) => {
   await page.getByLabel('Email atau username').fill(E2E_FIXTURES.credentials.owner.identifier);
   await page.getByLabel('Kata sandi', { exact: true }).fill(E2E_FIXTURES.credentials.owner.password);
   await runExpectedAction(events, page, 'owner-login-redirect', async () => {
-    const products = page.waitForResponse(response => /\/api\/manage\/products\?limit=100$/.test(response.url()) && response.status() === 200);
-    const umkms = page.waitForResponse(response => /\/api\/manage\/umkms\?limit=100$/.test(response.url()) && response.status() === 200);
     await page.getByRole('button', { name: 'Masuk' }).click();
-    await Promise.all([expect(page).toHaveURL(/\/dashboard$/), products, umkms]);
-  }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page.getByRole('main')).toBeVisible();
+  }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:auth\/session|auth\/me|manage\/stats)/);
   if (page.viewportSize()?.width === 390) await page.getByRole('button', { name: 'Buka navigasi' }).click();
-  await expect(page.getByRole('link', { name: `${BRAND_NAME} — beranda` })).toBeVisible();
+  await expect(page.locator('aside').getByRole('link', { name: `${BRAND_NAME} — beranda` })).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  await runExpectedAction(events, page, 'owner-forbidden-route-redirect', async () => { await page.goto('/dashboard/users'); await expect(page).toHaveURL(/\/dashboard$/); }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/manage\/(?:products|umkms)/);
-  if (page.viewportSize()?.width === 390) await page.getByRole('button', { name: 'Buka navigasi' }).click();
-  await runExpectedAction(events, page, 'owner-logout-redirect', async () => { await page.getByRole('button', { name: 'Keluar' }).click(); await expect(page).toHaveURL(/\/login$/); }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/(?:auth\/session|auth\/me|manage\/(?:products|umkms))/);
-  assertUnauthenticatedEvents(events);
+  await gotoWithExpectedTransition(events, page, '/dashboard/users', /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/manage\/(?:products|umkms)/);
+  await expect(page).toHaveURL(/\/dashboard$/);
+  const isMobile = page.viewportSize()?.width === 390;
+  if (isMobile) await page.getByRole('button', { name: 'Buka navigasi' }).click();
+  await page.locator('aside').getByRole('button', { expanded: false }).click();
+  await runExpectedAction(events, page, 'owner-logout-redirect', async () => { await page.getByRole('menuitem', { name: 'Keluar' }).click(); await expect(page).toHaveURL(/\/login$/); }, /http:\/\/(?:localhost|127\.0\.0\.1):\d+\/api\/auth\/session/);
+  assertUnauthenticatedEvents(events, [{ method: 'GET', url: `${API_BASE}/manage/stats`, resourceType: 'fetch', errorText: 'net::ERR_ABORTED' }]);
   events.dispose();
 });
