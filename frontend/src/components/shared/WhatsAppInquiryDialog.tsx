@@ -150,7 +150,7 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="relative w-full max-w-md bg-cream-card rounded-xl border border-sage-border shadow-xl flex flex-col overflow-hidden max-h-[90vh]"
+          className="relative w-full max-w-md bg-cream-card rounded-xl border border-sage-border shadow-xl flex flex-col overflow-hidden max-h-[90dvh] overscroll-contain"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-sage-border bg-cream-bg">

@@ -67,7 +67,7 @@ export default function UMKMDetailDialog({ isOpen, onClose, umkm, products, onIn
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="relative w-full max-w-2xl bg-cream-card rounded-xl border border-sage-border shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+          className="relative w-full max-w-2xl bg-cream-card rounded-xl border border-sage-border shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden overscroll-contain"
         >
           {/* Header Cover Image */}
           <div className="relative h-44 md:h-56 w-full overflow-hidden shrink-0">

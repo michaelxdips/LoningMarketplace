@@ -44,7 +44,7 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <main className="min-h-screen bg-cream-bg px-4 py-12">
+    <main className="min-h-dvh bg-cream-bg px-4 py-12">
       <div className="mx-auto max-w-xl rounded-3xl border border-sage-border bg-white p-6 shadow-sm sm:p-9">
         <button
           onClick={() => navigate('/dashboard')}

@@ -291,10 +291,10 @@ export function UMKMFormPage() {
             label="Nama UMKM"
             error={errors.name ?? formErrors(save.error).name}
           >
-            <Input name="name" required defaultValue={value?.name} />
+            <Input name="name" required defaultValue={value?.name} autoCapitalize="words" />
           </Field>
           <Field label="Nama pemilik usaha" error={errors.owner}>
-            <Input name="owner" required defaultValue={value?.owner} />
+            <Input name="owner" required defaultValue={value?.owner} autoCapitalize="words" />
           </Field>
           {canAssignOwner && (
             <Field
@@ -548,7 +548,7 @@ export function ProductFormPage() {
         )}
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Nama produk" error={errors.name}>
-            <Input name="name" required defaultValue={value?.name} />
+            <Input name="name" required defaultValue={value?.name} autoCapitalize="words" />
           </Field>
           <Field label="UMKM / Pengelola" error={errors.umkmId} hint={umkmMode === "create" ? "UMKM baru akan dibuat sebagai draft otomatis." : umkmMode === "standalone" ? "Produk mandiri tidak terikat UMKM. Masukkan nomor kontak WA penjual langsung di bawah." : undefined}>
             <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
@@ -635,6 +635,7 @@ export function ProductFormPage() {
             <Input
               name="price"
               type="number"
+              inputMode="numeric"
               min="0"
               step="1"
               defaultValue={value?.price ?? ""}

@@ -30,7 +30,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="grid min-h-screen bg-gradient-to-br from-cream-bg via-cream-tint/20 to-cream-bg lg:grid-cols-[1fr_1fr]">
+    <main className="grid min-h-dvh bg-gradient-to-br from-cream-bg via-cream-tint/20 to-cream-bg lg:grid-cols-[1fr_1fr]">
       {/* Left Panel: Clean & Professional Hero */}
       <section className="relative hidden overflow-hidden bg-forest p-12 text-white lg:flex lg:flex-col lg:justify-between">
         {/* Subtle Decorative Background Blurs */}

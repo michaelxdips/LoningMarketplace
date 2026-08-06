@@ -40,7 +40,7 @@ export default function ProductDetailDialog({ isOpen, product, onClose, onInquir
 
   return (
     <div id="product-dialog-backdrop" className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/40 p-4 backdrop-blur-xs" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div ref={dialogRef} id="product-dialog-container" role="dialog" aria-modal="true" aria-labelledby="product-dialog-title" className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-sage-border bg-cream-card shadow-2xl">
+      <div ref={dialogRef} id="product-dialog-container" role="dialog" aria-modal="true" aria-labelledby="product-dialog-title" className="relative flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden overscroll-contain rounded-xl border border-sage-border bg-cream-card shadow-2xl">
         <div className="relative h-48 shrink-0 overflow-hidden bg-cream-tint sm:h-60">
           <ProductImage src={product.imageUrl} alt={product.altText || product.name} className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-transparent to-transparent" />

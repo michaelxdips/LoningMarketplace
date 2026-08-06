@@ -31,7 +31,7 @@ class LazyRouteBoundary extends Component<{ children: ReactNode }, { failed: boo
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
   componentDidCatch(_error: Error, _info: ErrorInfo) { /* Keep route chunk failures recoverable. */ }
-  render() { return this.state.failed ? <main className="grid min-h-screen place-items-center p-6"><div className="text-center"><h1 className="text-xl font-extrabold">Halaman tidak dapat dimuat</h1><button className="mt-4 rounded-xl bg-forest px-4 py-2.5 text-sm font-bold text-white" onClick={() => window.location.reload()}>Muat ulang</button></div></main> : this.props.children; }
+  render() { return this.state.failed ? <main className="grid min-h-dvh place-items-center p-6"><div className="text-center"><h1 className="text-xl font-extrabold">Halaman tidak dapat dimuat</h1><button className="mt-4 rounded-xl bg-forest px-4 py-2.5 text-sm font-bold text-white" onClick={() => window.location.reload()}>Muat ulang</button></div></main> : this.props.children; }
 }
 import NotFoundPage from './pages/NotFoundPage.tsx';
 import { setUnauthorizedHandler, shouldRetryApiRequest } from './lib/api.ts';
@@ -84,7 +84,7 @@ function PublicNavigationManager() {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter><LazyRouteBoundary><Suspense fallback={<main className="grid min-h-screen place-items-center"><LoadingPanel /></main>}>
+      <BrowserRouter><LazyRouteBoundary><Suspense fallback={<main className="grid min-h-dvh place-items-center"><LoadingPanel /></main>}>
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/faq" element={<FaqPage />} />

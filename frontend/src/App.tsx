@@ -162,7 +162,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-cream-bg flex flex-col antialiased">
+    <div className="min-h-dvh bg-cream-bg flex flex-col antialiased">
       
       {/* 1. Header Navigation */}
       <Navbar 

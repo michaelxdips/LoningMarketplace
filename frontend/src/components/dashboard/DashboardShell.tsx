@@ -65,7 +65,7 @@ export default function DashboardShell() {
   const initialLetter = (session.user.displayName || 'U').charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-cream-bg lg:grid lg:grid-cols-[260px_1fr]">
+    <div className="min-h-dvh bg-cream-bg lg:grid lg:grid-cols-[260px_1fr]">
       {/* Mobile Drawer Trigger Header */}
       <div className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-sage-border bg-white px-4 shadow-2xs lg:hidden">
         <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-center gap-2.5 text-lg font-black uppercase tracking-wider text-forest">
