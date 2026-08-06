@@ -23,6 +23,9 @@ export interface UMKM {
   longitude: number | null;
   contactVerifiedAt?: string | null;
   catalogUpdatedAt?: string;
+  updatedAt?: string;
+  assignedProductCount?: number;
+  publishedProductCount?: number;
   isContactValid?: boolean;
   isContactVerified?: boolean;
   isContactVerificationFresh?: boolean;

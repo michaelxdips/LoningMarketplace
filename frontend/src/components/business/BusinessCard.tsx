@@ -8,6 +8,7 @@ import { Link } from 'react-router';
 import { Store, ArrowRight, MapPin, Eye } from 'lucide-react';
 import { UMKM } from '../../types';
 import { UMKMImage } from './UMKMImage';
+import { formatPublicUpdatedAt, getBusinessOpenStatus } from '../../lib/umkmStatus';
 
 interface BusinessCardProps {
   umkm: UMKM;
@@ -15,6 +16,8 @@ interface BusinessCardProps {
 }
 
 const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
+  const openStatus = getBusinessOpenStatus(umkm.workingHours);
+  const updatedLabel = formatPublicUpdatedAt(umkm.catalogUpdatedAt ?? umkm.updatedAt);
   return (
     <article
       id={`business-card-${umkm.id}`}
@@ -57,6 +60,8 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
           <p className="text-xs text-warm-gray/90 line-clamp-2 leading-relaxed pt-1">
             {umkm.description}
           </p>
+          <p className={`pt-1 text-xs font-bold ${openStatus.kind === 'open' ? 'text-emerald-700' : 'text-warm-gray'}`}>{openStatus.label}</p>
+          {updatedLabel && <p className="text-[11px] text-warm-gray">{updatedLabel}</p>}
         </div>
 
         {/* Footer Action */}
