@@ -69,7 +69,7 @@ export default function Footer() {
                   Pertanyaan Umum (FAQ)
                 </Link>
                 <Link to="/version-history" className="focus-ring rounded text-cream-tint/70 transition-colors hover:text-white">
-                  Riwayat Versi (Version History)
+                  Riwayat Versi (<span lang="en">Version History</span>)
                 </Link>
                 <Link to="/login" className="focus-ring rounded text-cream-tint/70 transition-colors hover:text-white">
                   Pengelola

@@ -56,7 +56,15 @@ export async function buildApp(env: AppEnv, repository: Repository, dependencies
   await app.register(helmet, { crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: { directives: { imgSrc: ["'self'", 'data:', 'https:'], frameSrc: ["'self'", 'https://www.openstreetmap.org'] } } });
   await app.register(compress, { threshold: 1024 });
   await app.register(cookie);
-  await app.register(rateLimit, { max: env.RATE_LIMIT_MAX, timeWindow: '1 minute' });
+  await app.register(rateLimit, {
+    max: env.RATE_LIMIT_MAX,
+    timeWindow: '1 minute',
+    errorResponseBuilder: (_request, context) => ({
+      statusCode: 429,
+      error: { code: 'RATE_LIMITED', message: 'Terlalu banyak permintaan. Silakan coba kembali.' },
+      retryAfter: context.after,
+    }),
+  });
   const allowedOrigins = (env.CORS_ORIGIN || '').split(',').map((s) => s.trim()).filter(Boolean);
   const isOriginAllowed = (origin: string | undefined): boolean => {
     if (!origin) return true;

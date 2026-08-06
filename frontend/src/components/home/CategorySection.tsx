@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Category } from '../../types';
-import { ChefHat, Hammer, Sprout, ShoppingBag, Truck } from 'lucide-react';
+import { ChefHat, ChevronLeft, ChevronRight, Hammer, Sprout, ShoppingBag, Truck } from 'lucide-react';
 
 interface CategorySectionProps {
   selectedCategory: Category | 'Semua';
@@ -23,6 +23,25 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
     { name: 'Sembako', label: 'Sembako', icon: <ShoppingBag size={14} /> },
     { name: 'Jasa', label: 'Jasa', icon: <Truck size={14} /> }
   ];
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const updateScrollCue = useCallback(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+    setCanScrollLeft(node.scrollLeft > 2);
+    setCanScrollRight(node.scrollLeft + node.clientWidth < node.scrollWidth - 2);
+  }, []);
+  useEffect(() => {
+    updateScrollCue();
+    const node = scrollRef.current;
+    if (!node) return;
+    node.addEventListener('scroll', updateScrollCue, { passive: true });
+    const observer = new ResizeObserver(updateScrollCue);
+    observer.observe(node);
+    return () => { node.removeEventListener('scroll', updateScrollCue); observer.disconnect(); };
+  }, [updateScrollCue]);
+  const scrollCategories = (direction: -1 | 1) => scrollRef.current?.scrollBy({ left: direction * 180, behavior: 'smooth' });
 
   return (
     <section 
@@ -50,8 +69,10 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
           {/* Left fading mask for scroll affordance */}
           <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-cream-card to-transparent pointer-events-none z-10 md:hidden" />
           
+          {canScrollLeft && <button type="button" onClick={() => scrollCategories(-1)} aria-label="Geser kategori ke kiri" className="focus-ring absolute left-1 top-1/2 z-20 hidden -translate-y-1/2 rounded-full border border-sage-border bg-white p-2 text-forest shadow-md sm:flex md:hidden"><ChevronLeft size={16}/></button>}
           {/* Scrollable List */}
-          <div 
+          <div
+            ref={scrollRef}
             className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth snap-x"
             role="group"
             aria-label="Filter kategori produk"
@@ -79,7 +100,8 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
           </div>
 
           {/* Right fading mask for scroll affordance */}
-          <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-cream-card to-transparent pointer-events-none z-10 md:hidden" />
+          {canScrollRight && <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-cream-card to-transparent pointer-events-none z-10 md:hidden" />}
+          {canScrollRight && <button type="button" onClick={() => scrollCategories(1)} aria-label="Geser kategori ke kanan" className="focus-ring absolute right-1 top-1/2 z-20 hidden -translate-y-1/2 rounded-full border border-sage-border bg-white p-2 text-forest shadow-md sm:flex md:hidden"><ChevronRight size={16}/></button>}
         </div>
         
         {/* Helper Hint for mobile */}

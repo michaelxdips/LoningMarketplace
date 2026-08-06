@@ -23,11 +23,13 @@ const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage.tsx'));
 const UMKMDetailPage = lazy(() => import('./pages/UMKMDetailPage.tsx'));
 const PetaUMKMPage = lazy(() => import('./pages/PetaUMKMPage.tsx'));
 const BusinessLocationPage = lazy(() => import('./pages/BusinessLocationPage.tsx'));
+const AdminHelpPage = lazy(() => import('./pages/AdminHelpPage.tsx'));
 const UMKMFormPage = lazy(() => import('./pages/ManagementForms.tsx').then((module) => ({ default: module.UMKMFormPage })));
 const ProductFormPage = lazy(() => import('./pages/ManagementForms.tsx').then((module) => ({ default: module.ProductFormPage })));
 const UserFormPage = lazy(() => import('./pages/ManagementForms.tsx').then((module) => ({ default: module.UserFormPage })));
 import NotFoundPage from './pages/NotFoundPage.tsx';
 import { ToastProvider } from './components/shared/Toast.tsx';
+import { RouteErrorBoundary } from './components/shared/PageErrorBoundary.tsx';
 import { setUnauthorizedHandler, shouldRetryApiRequest } from './lib/api.ts';
 import { shouldFocusMain } from './lib/navigation-focus.ts';
 import './index.css';
@@ -130,14 +132,14 @@ createRoot(document.getElementById('root')!).render(
               }
             >
               <Routes>
-                <Route path="/" element={<App />} />
-                <Route path="/faq" element={<FaqPage />} />
-                <Route path="/tentang-desa" element={<AboutVillagePage />} />
+                <Route path="/" element={<RouteErrorBoundary><App /></RouteErrorBoundary>} />
+                <Route path="/faq" element={<RouteErrorBoundary><FaqPage /></RouteErrorBoundary>} />
+                <Route path="/tentang-desa" element={<RouteErrorBoundary><AboutVillagePage /></RouteErrorBoundary>} />
                 <Route path="/tentang-kami" element={<AboutTeamPage />} />
                 <Route path="/version-history" element={<VersionHistoryPage />} />
-                <Route path="/peta-umkm" element={<PetaUMKMPage />} />
-                <Route path="/produk/:identifier" element={<ProductDetailPage />} />
-                <Route path="/umkm/:identifier" element={<UMKMDetailPage />} />
+                <Route path="/peta-umkm" element={<RouteErrorBoundary><PetaUMKMPage /></RouteErrorBoundary>} />
+                <Route path="/produk/:identifier" element={<RouteErrorBoundary><ProductDetailPage /></RouteErrorBoundary>} />
+                <Route path="/umkm/:identifier" element={<RouteErrorBoundary><UMKMDetailPage /></RouteErrorBoundary>} />
                 <Route element={<PublicOnlyGuard />}>
                   <Route path="/login" element={<LoginPage />} />
                 </Route>
@@ -146,7 +148,8 @@ createRoot(document.getElementById('root')!).render(
                     <Route path="/change-password" element={<ChangePasswordPage />} />
                     <Route element={<CapabilityGuard capabilities={['dashboard:view']} />}>
                       <Route path="/dashboard" element={<DashboardShell />}>
-                        <Route index element={<DashboardHome />} />
+                        <Route index element={<RouteErrorBoundary homeTo="/dashboard"><DashboardHome /></RouteErrorBoundary>} />
+                        <Route path="bantuan" element={<RouteErrorBoundary homeTo="/dashboard"><AdminHelpPage /></RouteErrorBoundary>} />
                         <Route element={<CapabilityGuard capabilities={['umkms:view-all', 'umkms:view-own']} />}>
                           <Route path="umkms" element={<UMKMListPage />} />
                           <Route path="umkms/:id" element={<UMKMFormPage />} />

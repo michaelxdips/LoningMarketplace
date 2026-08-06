@@ -23,6 +23,7 @@ import { CATEGORIES, type Category } from "../types";
 import { useSession, useCsrfToken, getFreshCsrfToken } from "../hooks/useAuth";
 import { hasCapability } from "../lib/auth";
 import { deleteMedia, updateMediaAltText, uploadMedia } from "../lib/api";
+import { useUnsavedChanges } from "../hooks/useUnsavedChanges";
 import { ProductImage } from "../components/product/ProductImage";
 import {
   ConfirmDialog,
@@ -158,6 +159,7 @@ export function UMKMFormPage() {
   const { id } = useParams();
   const editing = Boolean(id);
   const navigate = useNavigate();
+  const unsaved = useUnsavedChanges();
   const client = useQueryClient();
   const csrf = useCsrfToken();
   const sessionUser = useSession().data!.user;
@@ -251,6 +253,7 @@ export function UMKMFormPage() {
           csrf,
         );
       await client.invalidateQueries({ queryKey: ["umkms"] });
+      unsaved.markClean();
       navigate("/dashboard/umkms");
     } catch (error) {
       media.setProgress(undefined);
@@ -313,6 +316,8 @@ export function UMKMFormPage() {
       {verify.isError && <div className="mb-5"><ErrorNotice error={verify.error} /></div>}
       <form
         className="space-y-6 rounded-2xl border border-sage-border bg-white p-5 sm:p-7"
+        onChange={unsaved.markDirty}
+        onInput={unsaved.markDirty}
         onSubmit={submit}
       >
         {(save.isError || item.isError || owners.isError || deleteUmkm.isError) && (
@@ -420,6 +425,7 @@ export function UMKMFormPage() {
           onDelete={canDelete ? () => setConfirmDelete(true) : undefined}
         />
       </form>
+      {unsaved.dialog}
       <ConfirmDialog
         open={confirmDelete}
         title="Hapus UMKM"
@@ -448,6 +454,7 @@ export function ProductFormPage() {
   const { id } = useParams();
   const editing = Boolean(id);
   const navigate = useNavigate();
+  const unsaved = useUnsavedChanges();
   const client = useQueryClient();
   const csrf = useCsrfToken();
   const sessionUser = useSession().data!.user;
@@ -587,6 +594,7 @@ export function ProductFormPage() {
           text(data, "altText") || null,
           csrf,
         );
+      unsaved.markClean();
       navigate("/dashboard/products");
     } catch (error) {
       media.setProgress(undefined);
@@ -609,6 +617,8 @@ export function ProductFormPage() {
       />
       <form
         className="space-y-6 rounded-2xl border border-sage-border bg-white p-5 sm:p-7"
+        onChange={unsaved.markDirty}
+        onInput={unsaved.markDirty}
         onSubmit={submit}
       >
         {(save.isError || item.isError || umkms.isError || deleteProduct.isError) && (
@@ -756,6 +766,7 @@ export function ProductFormPage() {
           onDelete={canDelete ? () => setConfirmDelete(true) : undefined}
         />
       </form>
+      {unsaved.dialog}
       <ConfirmDialog
         open={confirmDelete}
         title="Hapus Produk"
@@ -784,6 +795,7 @@ export function UserFormPage() {
   const { id } = useParams();
   const editing = Boolean(id);
   const navigate = useNavigate();
+  const unsaved = useUnsavedChanges();
   const sessionUser = useSession().data!.user;
   const params = { limit: 100 };
   const users = useManagedList("admin", "users", params, (signal) =>
@@ -839,7 +851,7 @@ export function UserFormPage() {
       setPendingInput(input);
       return;
     }
-    save.mutate(input, { onSuccess: () => navigate("/dashboard/users") });
+    save.mutate(input, { onSuccess: () => { unsaved.markClean(); navigate("/dashboard/users"); } });
   };
   if (users.isPending) return <LoadingPanel />;
   if (editing && !value)
@@ -852,6 +864,8 @@ export function UserFormPage() {
       />
       <form
         className="space-y-6 rounded-2xl border border-sage-border bg-white p-5 sm:p-7"
+        onChange={unsaved.markDirty}
+        onInput={unsaved.markDirty}
         onSubmit={submit}
       >
         {(save.isError || users.isError) && (
@@ -915,6 +929,7 @@ export function UserFormPage() {
           cancelTo="/dashboard/users"
         />
       </form>
+      {unsaved.dialog}
       <ConfirmDialog
         open={Boolean(pendingInput)}
         title="Konfirmasi perubahan akses"
@@ -925,7 +940,7 @@ export function UserFormPage() {
         onConfirm={() => {
           if (pendingInput)
             save.mutate(pendingInput, {
-              onSuccess: () => navigate("/dashboard/users"),
+              onSuccess: () => { unsaved.markClean(); navigate("/dashboard/users"); },
               onSettled: () => setPendingInput(null),
             });
         }}

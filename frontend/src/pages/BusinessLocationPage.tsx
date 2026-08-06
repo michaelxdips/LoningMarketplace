@@ -5,11 +5,13 @@ import { ConfirmDialog, ErrorNotice, Field, Input, LoadingPanel, PageHeader, Pen
 import { useManagedItem, useManagedMutation } from '../hooks/useManagement';
 import { managementApi, type ManagedUMKM } from '../lib/management';
 import { SHORT_LINK_MESSAGE, normalizeCoordinates, parseLocationInput } from '../lib/location';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 
 const parserMessage = (reason: string) => reason === 'short-link' ? SHORT_LINK_MESSAGE : reason === 'unsupported-host' ? 'Host peta tidak didukung.' : reason === 'no-coordinates' ? 'Koordinat tidak ditemukan pada URL tersebut.' : 'URL atau koordinat tidak valid.';
 
 export default function BusinessLocationPage() {
   const { id } = useParams(); const navigate = useNavigate();
+  const unsaved = useUnsavedChanges();
   const item = useManagedItem('umkms', id, managementApi.umkms.get);
   const [mapsInput, setMapsInput] = useState(''); const [latitude, setLatitude] = useState(''); const [longitude, setLongitude] = useState('');
   const [feedback, setFeedback] = useState(''); const [success, setSuccess] = useState(''); const [confirmRemove, setConfirmRemove] = useState(false);
@@ -18,10 +20,11 @@ export default function BusinessLocationPage() {
   const parsed = useMemo(() => latitude.trim() && longitude.trim() ? normalizeCoordinates(Number(latitude), Number(longitude)) : undefined, [latitude, longitude]);
   const initial = item.data && item.data.latitude !== null && item.data.longitude !== null ? normalizeCoordinates(item.data.latitude, item.data.longitude) : undefined;
   const dirty = Boolean(parsed) ? parsed!.latitude !== initial?.latitude || parsed!.longitude !== initial?.longitude : Boolean(initial);
+  useEffect(() => unsaved.setDirty(dirty), [dirty]);
   const save = useManagedMutation<{ id: string; coordinates: { latitude: number; longitude: number } }, ManagedUMKM>('manage', 'umkms', ({ id, coordinates }, csrf) => managementApi.umkms.setLocation(id, coordinates, csrf), 'umkms');
   const remove = useManagedMutation<string, ManagedUMKM>('manage', 'umkms', (targetId, csrf) => managementApi.umkms.clearLocation(targetId, csrf), 'umkms');
   const parseMaps = () => { const result = parseLocationInput(mapsInput); if (result.ok === false) { setFeedback(parserMessage(result.reason)); mapsRef.current?.focus(); return; } setLatitude(String(result.coordinates.latitude)); setLongitude(String(result.coordinates.longitude)); setFeedback('Koordinat ditemukan. Tinjau pratinjau lalu simpan.'); setSuccess(''); };
-  const submit = () => { if (!id || !parsed) { setFeedback('Latitude dan longitude wajib valid dan berada dalam rentang yang benar.'); latitudeRef.current?.focus(); return; } save.mutate({ id, coordinates: parsed }, { onSuccess: data => { setLatitude(String(data.latitude)); setLongitude(String(data.longitude)); setSuccess('Lokasi usaha berhasil disimpan.'); setFeedback(''); mapsRef.current?.focus(); } }); };
+  const submit = () => { if (!id || !parsed) { setFeedback('Latitude dan longitude wajib valid dan berada dalam rentang yang benar.'); latitudeRef.current?.focus(); return; } save.mutate({ id, coordinates: parsed }, { onSuccess: data => { unsaved.markClean(); setLatitude(String(data.latitude)); setLongitude(String(data.longitude)); setSuccess('Lokasi usaha berhasil disimpan.'); setFeedback(''); mapsRef.current?.focus(); } }); };
   if (item.isPending) return <LoadingPanel />;
   if (item.isError || !item.data) return <ErrorNotice error={item.error ?? new Error('UMKM tidak ditemukan.')} />;
   return <>
@@ -36,6 +39,7 @@ export default function BusinessLocationPage() {
       </div>
       <div className="rounded-2xl border border-sage-border bg-white p-5 sm:p-7"><h2 className="mb-4 text-lg font-extrabold">Pratinjau</h2>{parsed ? <BusinessLocation umkmName={item.data.name} address={item.data.address} latitude={parsed.latitude} longitude={parsed.longitude}/> : <p className="text-sm text-warm-gray">Masukkan kedua koordinat valid untuk melihat peta.</p>}</div>
     </form>
+    {unsaved.dialog}
     <ConfirmDialog open={confirmRemove} title="Hapus lokasi usaha?" description="Koordinat akan dihapus. Alamat teks UMKM tidak berubah." confirmLabel="Hapus Lokasi" pending={remove.isPending} onCancel={() => setConfirmRemove(false)} onConfirm={() => id && remove.mutate(id, { onSuccess: () => { setConfirmRemove(false); setLatitude(''); setLongitude(''); setMapsInput(''); setSuccess('Lokasi usaha berhasil dihapus.'); mapsRef.current?.focus(); } })}/>
   </>;
 }
