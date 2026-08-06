@@ -44,21 +44,23 @@ export const umkms = pgTable('umkms', {
 }, (table) => ({
   slugIdx: uniqueIndex('umkms_slug_unique').on(table.slug), categoryIdx: index('umkms_category_idx').on(table.category), orderIdx: index('umkms_display_order_idx').on(table.displayOrder), ownerIdx: index('umkms_owner_user_id_idx').on(table.ownerUserId), statusIdx: index('umkms_publication_status_idx').on(table.publicationStatus),
   slugCheck: check('umkms_slug_nonempty_check', sql`btrim(${table.slug}) <> ''`), phoneCheck: check('umkms_phone_normalized_check', sql`${table.phone} ~ '^628[0-9]{7,12}$'`), publishedPhoneCheck: check('umkms_published_phone_ready_check', sql`${table.publicationStatus} <> 'published' OR ${table.phone} ~ '^628[0-9]{7,12}$'`), orderCheck: check('umkms_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('umkms_image_asset_id_idx').on(table.imageAssetId),
-  imageSourceCheck: check('umkms_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`),
+  imageSourceCheck: check('umkms_image_source_check', sql`${table.imageUrl} IS NULL OR ${table.imageAssetId} IS NULL`),
   locationPairCheck: check('umkms_location_pair_check', sql`(${table.latitude} IS NULL AND ${table.longitude} IS NULL) OR (${table.latitude} IS NOT NULL AND ${table.longitude} IS NOT NULL)`),
   latitudeRangeCheck: check('umkms_latitude_range_check', sql`${table.latitude} IS NULL OR ${table.latitude} BETWEEN -90 AND 90`),
   longitudeRangeCheck: check('umkms_longitude_range_check', sql`${table.longitude} IS NULL OR ${table.longitude} BETWEEN -180 AND 180`),
 }));
 
 export const products = pgTable('products', {
-  id: uuid('id').primaryKey(), umkmId: uuid('umkm_id').notNull().references(() => umkms.id, { onDelete: 'cascade' }), name: text('name').notNull(), slug: varchar('slug', { length: 96 }).notNull(), price: integer('price'),
+  id: uuid('id').primaryKey(), umkmId: uuid('umkm_id').references(() => umkms.id, { onDelete: 'cascade' }), name: text('name').notNull(), slug: varchar('slug', { length: 96 }).notNull(), price: integer('price'),
   description: text('description').notNull(), category: categoryEnum('category').notNull(), imageUrl: text('image_url'), imageAssetId: uuid('image_asset_id').references(() => mediaAssets.id, { onDelete: 'set null' }), isAvailable: boolean('is_available').notNull().default(true),
-  unit: text('unit'), displayOrder: integer('display_order').notNull().default(0), publicationStatus: publicationStatusEnum('publication_status').notNull().default('draft'), publishedAt: timestamp('published_at', { withTimezone: true }),
+  unit: text('unit'), phone: text('phone'), sellerName: text('seller_name'), displayOrder: integer('display_order').notNull().default(0), publicationStatus: publicationStatusEnum('publication_status').notNull().default('draft'), publishedAt: timestamp('published_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   slugIdx: uniqueIndex('products_slug_unique').on(table.slug), umkmIdx: index('products_umkm_id_idx').on(table.umkmId), categoryIdx: index('products_category_idx').on(table.category), orderIdx: index('products_display_order_idx').on(table.displayOrder), statusIdx: index('products_publication_status_idx').on(table.publicationStatus), parentStatusOrderIdx: index('products_umkm_status_order_idx').on(table.umkmId, table.publicationStatus, table.displayOrder),
   slugCheck: check('products_slug_nonempty_check', sql`btrim(${table.slug}) <> ''`), priceCheck: check('products_price_check', sql`${table.price} IS NULL OR ${table.price} >= 0`), orderCheck: check('products_display_order_check', sql`${table.displayOrder} >= 0`), imageAssetIdx: index('products_image_asset_id_idx').on(table.imageAssetId),
   imageSourceCheck: check('products_image_source_check', sql`${table.imageUrl} IS NOT NULL OR ${table.imageAssetId} IS NOT NULL`),
+  phoneCheck: check('products_phone_normalized_check', sql`${table.phone} IS NULL OR ${table.phone} ~ '^628[0-9]{7,12}$'`),
+  standaloneOwnerCheck: check('products_standalone_owner_check', sql`${table.umkmId} IS NOT NULL OR ${table.phone} IS NOT NULL`),
 }));
 
 export const publicEvents = pgTable('public_events', {

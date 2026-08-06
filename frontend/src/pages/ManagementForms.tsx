@@ -184,13 +184,6 @@ export function UMKMFormPage() {
       "category",
       "address",
     ]);
-    const retainsCurrent =
-      !media.cleared &&
-      !media.file &&
-      !media.externalUrl &&
-      (item.data?.imageAssetId || item.data?.imageUrl);
-    if (!media.file && !media.externalUrl && !retainsCurrent)
-      local.imageUrl = "Masukkan URL gambar atau pilih file.";
     if (!/^\d+$/.test(text(data, "phone")))
       local.phone = "Gunakan angka saja, termasuk kode negara.";
     if (Object.keys(local).length) return setErrors(local);
@@ -206,12 +199,14 @@ export function UMKMFormPage() {
           csrf,
           media.setProgress,
         );
-      const imageAssetId =
-        uploaded?.id ??
-        (media.externalUrl ? null : (item.data?.imageAssetId ?? null));
-      const imageUrl = imageAssetId
+      const imageAssetId = media.cleared
         ? null
-        : media.externalUrl || item.data?.imageUrl || null;
+        : uploaded?.id ?? (media.externalUrl ? null : (item.data?.imageAssetId ?? null));
+      const imageUrl = media.cleared
+        ? null
+        : imageAssetId
+          ? null
+          : (media.externalUrl.trim() || (media.file ? null : (item.data?.imageUrl ?? null))) || null;
       const input: UMKMInput = {
         name: text(data, "name"),
         owner: text(data, "owner"),
@@ -404,21 +399,30 @@ export function ProductFormPage() {
   const csrf = useCsrfToken();
   const sessionUser = useSession().data!.user;
   const item = useManagedItem("products", id, managementApi.products.get);
-  const media = usePendingMedia();
+  const media = usePendingMedia(
+    item.data && !item.data.imageAssetId ? item.data.imageUrl : undefined,
+  );
   const params = { limit: 100 };
   const umkms = useManagedList("manage", "umkms", params, (signal) =>
     managementApi.umkms.list(params, signal),
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [imageMode, setImageMode] = useState<ProductImageMode>(editing ? "keep-current" : "managed-upload");
-  const [uploadedAsset, setUploadedAsset] = useState<
-    Awaited<ReturnType<typeof uploadMedia>> | undefined
-  >();
-  const [uploading, setUploading] = useState(false);
-  // UMKM combobox state: allows typing to filter or entering a new UMKM name
   const [umkmSearch, setUmkmSearch] = useState("");
-  const [umkmMode, setUmkmMode] = useState<"select" | "create">("select");
+  const [umkmMode, setUmkmMode] = useState<"select" | "standalone" | "create">("select");
+  const [umkmSelectValue, setUmkmSelectValue] = useState<string>("");
   const [creatingUmkm, setCreatingUmkm] = useState(false);
+
+  useEffect(() => {
+    if (editing && item.data) {
+      if (!item.data.umkmId) {
+        setUmkmMode("standalone");
+        setUmkmSelectValue("__standalone__");
+      } else {
+        setUmkmMode("select");
+        setUmkmSelectValue(item.data.umkmId);
+      }
+    }
+  }, [editing, item.data]);
   const save = useManagedMutation<
     ProductCreateInput | ProductUpdateInput,
     ManagedProduct
@@ -431,63 +435,50 @@ export function ProductFormPage() {
         : managementApi.products.create(input as ProductCreateInput, csrf),
     "products",
   );
-  const selectMode = (mode: typeof imageMode) => {
-    if (uploadedAsset)
-      void deleteMedia(uploadedAsset.id, csrf).catch(() => undefined);
-    setUploadedAsset(undefined);
-    setImageMode(mode);
-    media.clear();
-    setErrors((current) => ({ ...current, imageUrl: "" }));
-  };
-  const selectManagedFile = async (file?: File) => {
-    if (uploadedAsset)
-      void deleteMedia(uploadedAsset.id, csrf).catch(() => undefined);
-    setUploadedAsset(undefined);
-    media.select(file);
-    if (!file || validateMediaFile(file)) return;
-    setUploading(true);
-    try {
-      const asset = await uploadMedia(file, "", csrf, media.setProgress);
-      setUploadedAsset(asset);
-      media.setProgress(undefined);
-    } catch (error) {
-      media.select(undefined);
-      media.setError(
-        error instanceof Error ? error.message : "Upload gambar gagal.",
-      );
-    } finally {
-      setUploading(false);
-    }
-  };
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const local = required(data, ["name", "description", "category"]);
-    // UMKM validation: either select existing or type new name
-    let umkmId = text(data, "umkmId");
+    // UMKM validation: either select existing, type new name, or stand-alone
+    let umkmId: string | null = text(data, "umkmId") || null;
     const newUmkmName = umkmMode === "create" ? umkmSearch.trim() : "";
-    if (umkmMode === "select" && !umkmId) {
+    const standalonePhone = umkmMode === "standalone" ? text(data, "phone") : "";
+    const standaloneSellerName = umkmMode === "standalone" ? text(data, "sellerName") : "";
+    if (umkmMode === "select" && (!umkmId || umkmId === "__standalone__")) {
       local.umkmId = "Pilih UMKM atau ketik nama baru.";
     } else if (umkmMode === "create" && !newUmkmName) {
       local.umkmId = "Nama UMKM baru tidak boleh kosong.";
+    } else if (umkmMode === "standalone") {
+      umkmId = null;
+      if (!standalonePhone) {
+        local.phone = "Nomor WhatsApp wajib diisi untuk produk mandiri.";
+      }
     }
     const price = text(data, "price");
     if (price && !/^\d+$/.test(price))
       local.price = "Gunakan angka rupiah bulat yang valid.";
-    if (imageMode === "managed-upload" && !uploadedAsset)
-      local.imageUrl = "Selesaikan unggahan gambar terkelola terlebih dahulu.";
-    if (imageMode === "external-url" && !media.externalUrl)
-      local.imageUrl = "Masukkan URL gambar eksternal.";
-    if (
-      imageMode === "keep-current" &&
-      (!editing || (!item.data?.imageAssetId && !item.data?.imageUrl))
-    )
-      local.imageUrl = "Gambar saat ini tidak tersedia.";
     if (Object.keys(local).some((key) => local[key])) return setErrors(local);
     setErrors({});
     media.setError(undefined);
+    let uploaded: Awaited<ReturnType<typeof uploadMedia>> | undefined;
     let entitySaved = false;
     try {
+      if (media.file)
+        uploaded = await uploadMedia(
+          media.file,
+          text(data, "altText"),
+          csrf,
+          media.setProgress,
+        );
+      const imageAssetId = media.cleared
+        ? null
+        : uploaded?.id ?? (media.externalUrl ? null : (item.data?.imageAssetId ?? null));
+      const imageUrl = media.cleared
+        ? null
+        : imageAssetId
+          ? null
+          : (media.externalUrl.trim() || (media.file ? null : (item.data?.imageUrl ?? null))) || null;
+
       // Auto-create UMKM draft if user typed a new name
       if (umkmMode === "create" && newUmkmName) {
         setCreatingUmkm(true);
@@ -506,25 +497,22 @@ export function ProductFormPage() {
         umkmId = newUmkm.id;
         setCreatingUmkm(false);
       }
-      const image = productImageInput(imageMode, uploadedAsset?.id, media.externalUrl);
       const common: ProductUpdateInput = {
         umkmId,
+        phone: umkmMode === "standalone" ? standalonePhone || null : null,
+        sellerName: umkmMode === "standalone" ? standaloneSellerName || null : null,
         name: text(data, "name"),
         price: price === "" ? null : Number(price),
         description: text(data, "description"),
         category: text(data, "category") as Category,
-        ...image,
+        imageUrl,
+        imageAssetId,
         isAvailable: data.get("isAvailable") === "on",
         unit: text(data, "unit") || undefined,
       };
       await save.mutateAsync(editing ? common : (common as ProductCreateInput));
       entitySaved = true;
-      const altAssetId =
-        imageMode === "managed-upload"
-          ? uploadedAsset?.id
-          : imageMode === "keep-current"
-            ? item.data?.imageAssetId
-            : undefined;
+      const altAssetId = uploaded?.id ?? item.data?.imageAssetId;
       if (altAssetId && text(data, "altText") !== (item.data?.altText ?? ""))
         await updateMediaAltText(
           altAssetId,
@@ -537,9 +525,8 @@ export function ProductFormPage() {
       media.setError(
         error instanceof Error ? error.message : "Gagal menyimpan gambar.",
       );
-      if (uploadedAsset && !entitySaved) {
-        void deleteMedia(uploadedAsset.id, csrf).catch(() => undefined);
-        setUploadedAsset(undefined);
+      if (uploaded && !entitySaved) {
+        void deleteMedia(uploaded.id, csrf).catch(() => undefined);
       }
       setCreatingUmkm(false);
     }
@@ -563,11 +550,28 @@ export function ProductFormPage() {
           <Field label="Nama produk" error={errors.name}>
             <Input name="name" required defaultValue={value?.name} />
           </Field>
-          <Field label="UMKM" error={errors.umkmId} hint={umkmMode === "create" ? "UMKM baru akan dibuat sebagai draft otomatis." : undefined}>
+          <Field label="UMKM / Pengelola" error={errors.umkmId} hint={umkmMode === "create" ? "UMKM baru akan dibuat sebagai draft otomatis." : umkmMode === "standalone" ? "Produk mandiri tidak terikat UMKM. Masukkan nomor kontak WA penjual langsung di bawah." : undefined}>
             <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-              {umkmMode === "select" ? (
-                <Select name="umkmId" required defaultValue={value?.umkmId} disabled={editing && !hasCapability(sessionUser, 'products:transfer-owner')} className="flex-1">
+              {umkmMode !== "create" ? (
+                <Select
+                  name="umkmId"
+                  required
+                  value={umkmMode === "standalone" ? "__standalone__" : umkmSelectValue}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setUmkmSelectValue(val);
+                    if (val === "__standalone__") {
+                      setUmkmMode("standalone");
+                    } else {
+                      setUmkmMode("select");
+                    }
+                    setErrors((c) => ({ ...c, umkmId: "" }));
+                  }}
+                  disabled={editing && !hasCapability(sessionUser, 'products:transfer-owner')}
+                  className="flex-1"
+                >
                   <option value="">Pilih UMKM</option>
+                  <option value="__standalone__">📦 Tanpa Profil UMKM (Produk Mandiri)</option>
                   {pageItems(umkms.data)
                     .filter(
                       (x) =>
@@ -590,25 +594,35 @@ export function ProductFormPage() {
                   className="focus-ring min-h-11 flex-1 rounded-xl border border-sage-border bg-white px-3.5 py-2.5 text-sm text-charcoal shadow-2xs transition-all focus:border-forest focus:ring-2 focus:ring-forest/15"
                 />
               )}
-              <button
-                type="button"
-                onClick={() => { setUmkmMode(umkmMode === "select" ? "create" : "select"); setUmkmSearch(""); setErrors((c) => ({ ...c, umkmId: "" })); }}
-                className="focus-ring inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-sage-border bg-white px-3.5 py-2.5 text-xs font-bold text-forest shadow-2xs transition-all hover:bg-cream-tint"
-              >
-                {umkmMode === "select" ? "+ UMKM baru" : "Batal"}
-              </button>
-              {umkmMode === "select" && (
-                <Link
-                  to="/dashboard/umkms/new"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="focus-ring inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-forest/30 bg-forest/5 px-3.5 py-2.5 text-xs font-bold text-forest shadow-2xs transition-all hover:bg-forest/10"
+              {umkmMode !== "create" ? (
+                <button
+                  type="button"
+                  onClick={() => { setUmkmMode("create"); setUmkmSearch(""); setErrors((c) => ({ ...c, umkmId: "" })); }}
+                  className="focus-ring inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-sage-border bg-white px-3.5 py-2.5 text-xs font-bold text-forest shadow-2xs transition-all hover:bg-cream-tint"
                 >
-                  Form UMKM ↗
-                </Link>
+                  + UMKM baru
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => { setUmkmMode("select"); setUmkmSearch(""); setErrors((c) => ({ ...c, umkmId: "" })); }}
+                  className="focus-ring inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-sage-border bg-white px-3.5 py-2.5 text-xs font-bold text-forest shadow-2xs transition-all hover:bg-cream-tint"
+                >
+                  Batal
+                </button>
               )}
             </div>
           </Field>
+          {umkmMode === "standalone" && (
+            <>
+              <Field label="Nomor WhatsApp Penjual" error={errors.phone} hint="Contoh: 08123456789 atau 628123456789. Digunakan langsung untuk tombol WhatsApp inquiry.">
+                <Input name="phone" type="tel" required defaultValue={value?.phone ?? ""} placeholder="08xxxxxxxxxx" />
+              </Field>
+              <Field label="Nama Penjual / Pemilik (Opsional)" error={errors.sellerName} hint="Akan ditampilkan sebagai penyedia produk di katalog.">
+                <Input name="sellerName" defaultValue={value?.sellerName ?? ""} placeholder="misal: Pak Ahmad" />
+              </Field>
+            </>
+          )}
           <Field label="Kategori" error={errors.category}>
             <Select name="category" required defaultValue={value?.category}>
               <option value="">Pilih kategori</option>
@@ -629,96 +643,16 @@ export function ProductFormPage() {
           <Field label="Satuan">
             <Input name="unit" defaultValue={value?.unit} />
           </Field>
-          <fieldset className="space-y-2 sm:col-span-2">
-            <legend className="text-sm font-bold text-charcoal">Sumber gambar</legend>
-            <div className="flex flex-wrap gap-4 pt-1">
-              {editing && value?.imageUrl && (
-                <label className="flex items-center gap-2 text-sm font-semibold text-charcoal cursor-pointer">
-                  <input
-                    type="radio"
-                    name="imageMode"
-                    className="accent-forest"
-                    checked={imageMode === "keep-current"}
-                    onChange={() => selectMode("keep-current")}
-                  />
-                  Pertahankan gambar saat ini
-                </label>
-              )}
-              <label className="flex items-center gap-2 text-sm font-semibold text-charcoal cursor-pointer">
-                <input
-                  type="radio"
-                  name="imageMode"
-                  className="accent-forest"
-                  checked={imageMode === "managed-upload"}
-                  onChange={() => selectMode("managed-upload")}
-                />
-                Unggah file dari perangkat
-              </label>
-              <label className="flex items-center gap-2 text-sm font-semibold text-charcoal cursor-pointer">
-                <input
-                  type="radio"
-                  name="imageMode"
-                  className="accent-forest"
-                  checked={imageMode === "external-url"}
-                  onChange={() => selectMode("external-url")}
-                />
-                Pakai URL gambar eksternal
-              </label>
-            </div>
-          </fieldset>
-
-          {imageMode === "keep-current" && value?.imageUrl && (
-            <div className="sm:col-span-2 flex items-center gap-4 rounded-xl border border-sage-border bg-cream-bg p-4">
-              <ProductImage src={value.imageUrl} alt={value.altText || value.name} className="h-20 w-20 rounded-xl object-cover" />
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-forest">Gambar Saat Ini</p>
-                <p className="mt-1 text-xs text-warm-gray">Gambar ini akan tetap digunakan untuk produk ini.</p>
-              </div>
-            </div>
-          )}
-
-          {imageMode === "managed-upload" && (
-            <div className="sm:col-span-2">
-              <MediaField
-                currentUrl={undefined}
-                file={media.file}
-                progress={media.progress}
-                error={media.error ?? errors.imageUrl}
-                onFile={selectManagedFile}
-                onClear={() => selectMode("managed-upload")}
-              />
-              <p className="mt-2 text-xs text-warm-gray" aria-live="polite">
-                {uploading
-                  ? "Mengunggah gambar ke server..."
-                  : uploadedAsset
-                    ? "✓ File berhasil diunggah."
-                    : "Pilih file gambar JPEG, PNG, atau WebP (maks. 5 MiB)."}
-              </p>
-            </div>
-          )}
-
-          {imageMode === "external-url" && (
-            <div className="sm:col-span-2 space-y-3">
-              <Field label="URL gambar eksternal" error={errors.imageUrl} hint="Masukkan URL gambar publik (https://...) yang dapat diakses langsung.">
-                <Input
-                  name="imageUrl"
-                  type="url"
-                  placeholder="https://example.com/gambar-produk.jpg"
-                  value={media.externalUrl}
-                  onChange={(event) => media.useExternal(event.target.value)}
-                />
-              </Field>
-              {media.externalUrl && (
-                <div className="flex items-center gap-4 rounded-xl border border-sage-border bg-cream-bg p-4">
-                  <ProductImage src={media.externalUrl} alt="Pratinjau URL Eksternal" className="h-20 w-20 rounded-xl object-cover" />
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-forest">Pratinjau URL Eksternal</p>
-                    <p className="mt-1 text-xs text-warm-gray break-all max-w-md">{media.externalUrl}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          <div className="sm:col-span-2">
+            <MediaField
+              currentUrl={value?.imageUrl}
+              file={media.file}
+              progress={media.progress}
+              error={media.error ?? errors.imageUrl}
+              onFile={media.select}
+              onClear={media.clear}
+            />
+          </div>
           <div className="sm:col-span-2">
             <Field
               label="Teks alternatif gambar"
@@ -747,7 +681,7 @@ export function ProductFormPage() {
           </label>
         </div>
         <FormActions
-          pending={save.isPending || uploading || creatingUmkm}
+          pending={save.isPending || media.progress !== undefined || creatingUmkm}
           editing={editing}
           cancelTo="/dashboard/products"
         />

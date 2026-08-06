@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { MapPin, Navigation, ExternalLink, Store, MessageCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router';
 import PublicPageShell from '../components/layout/PublicPageShell';
+import { UMKMImage } from '../components/business/UMKMImage';
 import { ProductImage } from '../components/product/ProductImage';
 import WhatsAppInquiryDialog from '../components/shared/WhatsAppInquiryDialog';
 import { getUMKMs } from '../lib/api';
@@ -179,9 +180,11 @@ export default function PetaUMKMPage() {
                 <article id={`active-umkm-card-${activeUMKM.id}`} className="rounded-2xl border border-sage-border bg-cream-card p-5 sm:p-6 shadow-sm">
                   <div className="flex flex-col sm:flex-row gap-5">
                     <div className="h-36 w-full sm:w-44 shrink-0 overflow-hidden rounded-xl bg-sage-light">
-                      <ProductImage
+                      <UMKMImage
                         src={activeUMKM.imageUrl}
                         alt={activeUMKM.altText || activeUMKM.name}
+                        name={activeUMKM.name}
+                        category={activeUMKM.category}
                         className="h-full w-full object-cover"
                       />
                     </div>

@@ -78,6 +78,20 @@
       "when": 1785531600000,
       "tag": "0010_umkm_business_location",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1785989900000,
+      "tag": "0011_optional_umkm_image",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785990800000,
+      "tag": "0012_standalone_products",
+      "breakpoints": true
     }
   ]
 }

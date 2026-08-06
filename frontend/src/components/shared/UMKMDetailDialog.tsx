@@ -10,6 +10,7 @@ import { UMKM, Product } from '../../types';
 import { formatPrice } from '../../lib/price';
 import BusinessLocation from './BusinessLocation';
 import { ProductImage } from '../product/ProductImage';
+import { UMKMImage } from '../business/UMKMImage';
 
 interface UMKMDetailDialogProps {
   isOpen: boolean;
@@ -70,9 +71,11 @@ export default function UMKMDetailDialog({ isOpen, onClose, umkm, products, onIn
         >
           {/* Header Cover Image */}
           <div className="relative h-44 md:h-56 w-full overflow-hidden shrink-0">
-            <img
+            <UMKMImage
               src={umkm.imageUrl}
               alt={umkm.altText || umkm.name}
+              name={umkm.name}
+              category={umkm.category}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/30 to-transparent" />

@@ -16,12 +16,12 @@ export async function eventRoutes(app: FastifyInstance, repository: Repository, 
     if (value.eventType === 'product_view' && !value.productId) return reply.code(400).send(error('Invalid event target', 'TARGET_INVALID'));
     if (!value.umkmId && !value.productId) return reply.code(400).send(error('Event target is required', 'TARGET_INVALID'));
 
-    let umkmId = value.umkmId;
+    let umkmId: string | null = value.umkmId ?? null;
     if (value.productId) {
       const target = await repository.getProduct(value.productId);
       if (!target) return reply.code(404).send(error('Public event target not found', 'TARGET_NOT_PUBLIC'));
       if (umkmId && umkmId !== target.product.umkmId) return reply.code(400).send(error('Product does not belong to UMKM', 'TARGET_MISMATCH'));
-      umkmId = target.product.umkmId;
+      umkmId = target.product.umkmId ?? null;
     } else {
       if (!umkmId || !(await repository.getUMKM(umkmId))) return reply.code(404).send(error('Public event target not found', 'TARGET_NOT_PUBLIC'));
     }

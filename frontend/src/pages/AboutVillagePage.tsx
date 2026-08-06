@@ -17,6 +17,7 @@ import {
   Map
 } from 'lucide-react';
 import { Link } from 'react-router';
+import { UMKMImage } from '../components/business/UMKMImage';
 import PublicPageShell from '../components/layout/PublicPageShell';
 import { useUMKMs } from '../hooks/useUMKMs';
 import { usePageMetadata } from '../lib/seo';
@@ -129,9 +130,11 @@ export default function AboutVillagePage() {
             {gallery.data?.length ? (
               gallery.data.map((umkm, index) => (
                 <div key={umkm.id} className="relative overflow-hidden group h-full">
-                  <img
+                  <UMKMImage
                     src={umkm.imageUrl}
                     alt={umkm.altText || `Kegiatan dan produk ${umkm.name}`}
+                    name={umkm.name}
+                    category={umkm.category}
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-4 flex flex-col justify-end">

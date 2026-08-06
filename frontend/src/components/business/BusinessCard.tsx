@@ -7,6 +7,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import { Store, ArrowRight, MapPin, Eye } from 'lucide-react';
 import { UMKM } from '../../types';
+import { UMKMImage } from './UMKMImage';
 
 interface BusinessCardProps {
   umkm: UMKM;
@@ -21,14 +22,14 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
     >
       {/* Cover Image Stage */}
       <div className="h-44 w-full overflow-hidden bg-cream-tint relative shrink-0">
-        <img
+        <UMKMImage
           src={umkm.imageUrl}
           alt={umkm.altText || umkm.name}
-          loading="lazy"
-          referrerPolicy="no-referrer"
+          name={umkm.name}
+          category={umkm.category}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
         />
-        <span className="absolute top-3 left-3 bg-forest text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-md uppercase shadow-xs">
+        <span className="absolute top-3 left-3 z-20 bg-forest text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-md uppercase shadow-xs">
           {umkm.category}
         </span>
       </div>

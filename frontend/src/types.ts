@@ -32,8 +32,10 @@ export interface UMKM {
 export interface Product {
   id: string;
   slug: string;
-  umkmId: string;
+  umkmId?: string | null;
   umkmName: string; // Denormalized for convenience
+  phone?: string | null;
+  sellerName?: string | null;
   name: string;
   price: number | null;
   description: string;

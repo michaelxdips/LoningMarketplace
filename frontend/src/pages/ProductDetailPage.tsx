@@ -23,12 +23,18 @@ export default function ProductDetailPage() {
   // ponytail: no AbortSignal — a StrictMode/Suspense remount would otherwise cancel the
   // in-flight fetch (net::ERR_ABORTED). Upgrade path: pass signal when real cancellation is needed.
   const productQuery = useQuery({ queryKey: ['product', identifier], queryFn: () => getProduct(identifier), enabled: Boolean(identifier) });
-  const merchantQuery = useQuery({ queryKey: ['umkm', productQuery.data?.umkmId], queryFn: () => getUMKM(productQuery.data!.umkmId), enabled: Boolean(productQuery.data?.umkmId) });
+  const merchantQuery = useQuery({ queryKey: ['umkm', productQuery.data?.umkmId], queryFn: () => getUMKM(productQuery.data!.umkmId!), enabled: Boolean(productQuery.data?.umkmId) });
   const detail = productQuery.data;
   const relatedQuery = useQuery({ queryKey: ['products', 'related', detail?.slug, 4], queryFn: () => getRelatedProducts(detail!.slug, { limit: 4 }), enabled: Boolean(detail?.slug), staleTime: 3 * 60 * 1000 });
   const product: Product | undefined = detail && { ...detail, umkmName: detail.umkm.name };
+  const merchantData = detail?.umkmId
+    ? merchantQuery.data
+    : detail
+      ? { id: '', slug: '', name: detail.umkm.name || 'Penjual Mandiri', owner: 'Penjual Mandiri', description: '', phone: detail.umkm.phone || '6280000000000', category: detail.category, imageUrl: null, address: 'Desa Loning', workingHours: undefined, latitude: null, longitude: null }
+      : undefined;
+
   useEffect(() => { if (detail && identifier !== detail.slug) navigate(`/produk/${encodeURIComponent(detail.slug)}${location.search}${location.hash}`, { replace: true }); }, [detail, identifier, location.hash, location.search, navigate]);
-  useEffect(() => { if (detail) trackPublicEvent({ eventType: 'product_view', productId: detail.id, umkmId: detail.umkmId, source: 'product_page' }); }, [detail?.id, detail?.umkmId]);
+  useEffect(() => { if (detail) trackPublicEvent({ eventType: 'product_view', productId: detail.id, umkmId: detail.umkmId ?? null, source: 'product_page' }); }, [detail?.id, detail?.umkmId]);
   const description = detail?.description ?? 'Informasi produk lokal Desa Loning.';
   usePageMetadata(detail ? { title: `${detail.name} — ${detail.umkm.name} | Loning Maju`, description, image: detail.imageUrl, type: 'product', jsonLd: { '@context': 'https://schema.org', '@type': 'Product', name: detail.name, description, image: detail.imageUrl, category: detail.category, offers: { '@type': 'Offer', availability: detail.isAvailable ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock', ...(detail.price !== null ? { price: detail.price, priceCurrency: 'IDR' } : {}), url: buildSiteUrl(`/produk/${detail.slug}`) } , brand: { '@type': 'Brand', name: detail.umkm.name } } } : { title: 'Detail Produk — Loning Maju', description });
   if (productQuery.isPending) return <PublicPageShell><PublicDetailState state="loading"/></PublicPageShell>;
@@ -54,15 +60,19 @@ export default function ProductDetailPage() {
             </span>
           </div>
           <h1 className="text-balance mt-3 text-3xl font-extrabold tracking-[-0.035em] text-charcoal sm:text-4xl">{detail.name}</h1>
-          <Link to={`/umkm/${encodeURIComponent(detail.umkm.slug)}`} className="focus-ring mt-2 flex w-fit items-center gap-2 rounded text-sm font-bold text-forest hover:text-terracotta">Oleh {detail.umkm.name}<ArrowRight size={14}/></Link>
+          {detail.umkm.slug ? (
+            <Link to={`/umkm/${encodeURIComponent(detail.umkm.slug)}`} className="focus-ring mt-2 flex w-fit items-center gap-2 rounded text-sm font-bold text-forest hover:text-terracotta">Oleh {detail.umkm.name}<ArrowRight size={14}/></Link>
+          ) : (
+            <span className="mt-2 text-sm font-bold text-forest">Oleh {detail.umkm.name}</span>
+          )}
           <p className="mt-4 whitespace-pre-line text-sm leading-6 text-warm-gray">{detail.description}</p>
           <div className="mt-5 border-y border-sage-border py-4">
             <p className="text-[10px] font-bold uppercase tracking-widest text-warm-gray">Informasi harga</p>
-            <p className="mt-1 text-2xl font-extrabold text-forest">{formatPrice(detail.price, 'Hubungi pelaku usaha')}{detail.unit && <span className="ml-2 text-sm font-medium text-warm-gray">/ {detail.unit}</span>}</p>
-            <p className="mt-1.5 text-xs leading-5 text-warm-gray">Harga merupakan informasi awal. Konfirmasi harga akhir dan ketersediaan langsung kepada pelaku usaha.</p>
+            <p className="mt-1 text-2xl font-extrabold text-forest">{formatPrice(detail.price, 'Hubungi penjual')}{detail.unit && <span className="ml-2 text-sm font-medium text-warm-gray">/ {detail.unit}</span>}</p>
+            <p className="mt-1.5 text-xs leading-5 text-warm-gray">Harga merupakan informasi awal. Konfirmasi harga akhir dan ketersediaan langsung kepada penjual.</p>
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
-            <button id="product-page-inquiry" disabled={!merchantQuery.data || !detail.isAvailable} onClick={() => setInquiryOpen(true)} className="focus-ring touch-target inline-flex items-center gap-2 rounded-lg bg-forest px-5 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-forest-hover disabled:cursor-not-allowed disabled:opacity-50"><MessageSquare size={15}/> Tanya Produk</button>
+            <button id="product-page-inquiry" disabled={!merchantData || !detail.isAvailable} onClick={() => setInquiryOpen(true)} className="focus-ring touch-target inline-flex items-center gap-2 rounded-lg bg-forest px-5 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-forest-hover disabled:cursor-not-allowed disabled:opacity-50"><MessageSquare size={15}/> Tanya Produk</button>
             <ShareButton title={detail.name} text={`Lihat ${detail.name} dari ${detail.umkm.name} di Loning Maju.`}/>
           </div>
           {merchantQuery.isError && <p className="mt-3 text-xs text-terracotta">Kontak usaha belum dapat dimuat. Coba muat ulang halaman.</p>}
@@ -70,6 +80,6 @@ export default function ProductDetailPage() {
       </div>
     </article>
     <RelatedProducts products={relatedQuery.data ?? []} isLoading={relatedQuery.isPending} />
-    {merchantQuery.data && <WhatsAppInquiryDialog isOpen={inquiryOpen} onClose={() => setInquiryOpen(false)} product={product} umkm={merchantQuery.data} source="product_detail"/>}
+    {merchantData && <WhatsAppInquiryDialog isOpen={inquiryOpen} onClose={() => setInquiryOpen(false)} product={product} umkm={merchantData} source="product_detail"/>}
   </PublicPageShell>;
 }

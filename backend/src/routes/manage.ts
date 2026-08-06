@@ -34,7 +34,7 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
   const denyOwnership = (reply: FastifyReply, resource: 'UMKM' | 'Product') => reply.code(403).send(error(`${resource} ownership required`, 'FORBIDDEN'));
   const validateImage = async (request: FastifyRequest, value: { imageUrl?: string | null; imageAssetId?: string | null }, required: boolean) => {
     if (required && !hasOneImageSource(value)) return 'Exactly one imageUrl or imageAssetId is required';
-    if (!required && (value.imageUrl !== undefined || value.imageAssetId !== undefined) && !hasOneImageSource(value)) return 'At least one imageUrl or imageAssetId must be provided';
+    if (value.imageUrl && value.imageAssetId) return 'Cannot provide both imageUrl and imageAssetId';
     if (value.imageAssetId) {
       const asset = await repository.getMediaAsset(value.imageAssetId);
       if (!asset) return 'Media asset not found';
@@ -59,7 +59,7 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     if (!parsed.success) return reply.code(400).send(error('Invalid UMKM payload', 'VALIDATION_ERROR'));
     const { ownerUserId = null, ...value } = parsed.data;
     if (ownerUserId && !hasCapability(request.auth!.user.role, 'umkms:assign-owner')) return reply.code(403).send(error('Owner assignment is not assigned', 'FORBIDDEN'));
-    const imageError = await validateImage(request, value, true);
+    const imageError = await validateImage(request, value, false);
     if (imageError) return reply.code(400).send(error(imageError, 'MEDIA_SOURCE_INVALID'));
     if (ownerUserId) {
       const owner = await repository.findUserById(ownerUserId);
@@ -172,10 +172,14 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     if (!parsed.success) return reply.code(400).send(error('Invalid product payload', 'VALIDATION_ERROR'));
     const imageError = await validateImage(request, parsed.data, true);
     if (imageError) return reply.code(400).send(error(imageError, 'MEDIA_SOURCE_INVALID'));
-    const parent = await repository.getManagedUMKM(parsed.data.umkmId);
-    if (!parent) return reply.code(404).send(error('UMKM not found', 'NOT_FOUND'));
-    if (!canViewUMKM(request.auth!.user.role, request.auth!.user.id, parent.ownerUserId)) return denyOwnership(reply, 'UMKM');
-    if (parent.publicationStatus === 'archived') return reply.code(409).send(error('Cannot create a product under an archived UMKM', 'PARENT_ARCHIVED'));
+    if (parsed.data.umkmId) {
+      const parent = await repository.getManagedUMKM(parsed.data.umkmId);
+      if (!parent) return reply.code(404).send(error('UMKM not found', 'NOT_FOUND'));
+      if (!canViewUMKM(request.auth!.user.role, request.auth!.user.id, parent.ownerUserId)) return denyOwnership(reply, 'UMKM');
+      if (parent.publicationStatus === 'archived') return reply.code(409).send(error('Cannot create a product under an archived UMKM', 'PARENT_ARCHIVED'));
+    } else {
+      if (!parsed.data.phone) return reply.code(400).send(error('Nomor WhatsApp wajib diisi untuk produk mandiri', 'VALIDATION_ERROR'));
+    }
     const item = await repository.transaction(async (transaction) => {
       const created = await transaction.createProduct(id(), parsed.data);
       await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.created', entityType: 'product', entityId: created.id, ...info(request) });

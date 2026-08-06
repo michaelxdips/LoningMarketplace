@@ -12,7 +12,7 @@ export interface InquiryAnalytics { from: string; to: string; totals: Record<Inq
 export interface Page<T> { items: T[]; total: number; page: number; pageSize: number }
 export interface ListParams { q?: string; category?: Category; publicationStatus?: PublicationStatus; ownerUserId?: string; umkmId?: string; isAvailable?: boolean; role?: UserRole; isActive?: boolean; limit?: number }
 export interface UMKMInput { name: string; owner: string; description: string; phone: string; category: Category; imageUrl: string | null; imageAssetId: string | null; address: string; workingHours?: string; ownerUserId?: string | null }
-export interface ProductCreateInput { umkmId: string; name: string; price: number | null; description: string; category: Category; imageUrl: string | null; imageAssetId: string | null; isAvailable: boolean; unit?: string }
+export interface ProductCreateInput { umkmId?: string | null; phone?: string | null; sellerName?: string | null; name: string; price: number | null; description: string; category: Category; imageUrl: string | null; imageAssetId: string | null; isAvailable: boolean; unit?: string }
 export type ProductUpdateInput = Partial<ProductCreateInput>;
 export interface UserCreateInput { displayName: string; email: string; username: string; role: UserRole; temporaryPassword: string }
 export interface UserUpdateInput { id: string; input: { username?: string; displayName?: string; role?: UserRole; isActive?: boolean } }
