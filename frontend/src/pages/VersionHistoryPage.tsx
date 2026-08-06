@@ -239,6 +239,22 @@ export default function VersionHistoryPage() {
     description: 'Log lengkap riwayat versi, changelog pembaruan, perbaikan bug, dan commit GitHub resmi platform Loning Maju.',
   });
 
+  // Map known tags/versions to curated titles for maximum clarity
+  const VERSION_TITLES: Record<string, string> = useMemo(
+    () => ({
+      'v1.7.2': 'Fitur Hapus UMKM & Produk di Kelola, serta Perbaikan Media Upload',
+      'v1.7.1': 'Pembaruan UI & Penyelarasan Komponen',
+      'v1.7.0': 'Google Maps Integration & UI Optimization',
+      'v1.6.3': 'Mobile Auth Fix & Security Hardening',
+      'v1.6.2': 'Official Brand Identity & Compact Changelog',
+      'v1.6.1': 'Dashboard V2 Reconstruction & System Refinements',
+      'v1.6.0': 'Production Readiness & Multi-role Access Control',
+      'v1.5.0': 'Media Streaming & Cloud Storage Engine',
+      'v1.0.0': 'Public Portal Launch & Directory Baseline',
+    }),
+    []
+  );
+
   const fetchGitHubData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -289,24 +305,24 @@ export default function VersionHistoryPage() {
 
       // Group commits into releases based on tags and version milestones
       const dynamicGroups: ReleaseGroup[] = [];
-      let currentVersion = tagShaMap.get(parsedCommits[0]?.hash) || rawTags[0]?.name || 'v1.6.3';
-      let currentTitle = currentVersion === 'v1.6.3' ? 'Mobile Auth Fix & Live Sync' : `Release ${currentVersion}`;
-      let currentBadge = 'Versi Terbaru (Live GitHub)';
+      let currentVersion = tagShaMap.get(parsedCommits[0]?.hash) || rawTags[0]?.name || 'v1.7.2';
       let currentCommits: CommitItem[] = [];
 
       for (const c of parsedCommits) {
         const taggedVersion = tagShaMap.get(c.hash);
         if (taggedVersion && taggedVersion !== currentVersion && currentCommits.length > 0) {
+          const derivedTitle =
+            VERSION_TITLES[currentVersion] ||
+            (currentCommits[0] ? `${currentCommits[0].scope ? `[${currentCommits[0].scope}] ` : ''}${currentCommits[0].message}` : `Release ${currentVersion}`);
+
           dynamicGroups.push({
             version: currentVersion,
-            title: currentTitle,
+            title: derivedTitle,
             date: currentCommits[0]?.date || '2026-08-06',
-            badge: currentBadge,
+            badge: currentVersion === dynamicGroups[0]?.version ? 'Versi Terbaru (Live)' : 'Release',
             commits: currentCommits,
           });
           currentVersion = taggedVersion;
-          currentTitle = `Release ${taggedVersion}`;
-          currentBadge = taggedVersion === 'v1.6.0' ? 'Baseline Stable' : taggedVersion === 'v1.5.0' ? 'Media Core' : 'GitHub Release';
           currentCommits = [c];
         } else {
           currentCommits.push(c);
@@ -314,11 +330,15 @@ export default function VersionHistoryPage() {
       }
 
       if (currentCommits.length > 0) {
+        const derivedTitle =
+          VERSION_TITLES[currentVersion] ||
+          (currentCommits[0] ? `${currentCommits[0].scope ? `[${currentCommits[0].scope}] ` : ''}${currentCommits[0].message}` : `Release ${currentVersion}`);
+
         dynamicGroups.push({
           version: currentVersion,
-          title: currentTitle,
+          title: derivedTitle,
           date: currentCommits[0]?.date || '2026-08-06',
-          badge: currentBadge,
+          badge: 'Release',
           commits: currentCommits,
         });
       }
@@ -336,7 +356,7 @@ export default function VersionHistoryPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [VERSION_TITLES]);
 
   useEffect(() => {
     fetchGitHubData();
@@ -370,110 +390,111 @@ export default function VersionHistoryPage() {
 
   return (
     <PublicPageShell>
-      {/* Header Banner */}
-      <header className="mx-auto max-w-4xl px-5 pb-8 pt-10 text-center sm:pt-14">
-        <h1 className="text-balance break-words text-4xl font-extrabold tracking-[-0.035em] text-charcoal sm:text-5xl">
-          Changelog & Version History
-        </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-warm-gray sm:text-base">
-          Catatan pembaruan fitur, optimasi UI/UX, perbaikan bug, serta log commit terverifikasi dari GitHub repository LoningMaju.
-        </p>
-
-        {/* Live GitHub Fetch Status Bar */}
-        <div className="mt-6 flex items-center justify-center gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-sage-border bg-white px-3.5 py-1 text-xs font-bold text-charcoal shadow-2xs">
-            {isLive ? (
-              <>
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                </span>
-                <Wifi className="h-3.5 w-3.5 text-emerald-600" />
-                <span className="text-emerald-700">Terhubung ke GitHub REST API (Live)</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="h-3.5 w-3.5 text-amber-600" />
-                <span className="text-amber-700">Data Lokal (Offline Fallback)</span>
-              </>
-            )}
-            {lastFetchedAt && <span className="text-[11px] font-normal text-warm-gray">({lastFetchedAt})</span>}
+      {/* Header Banner - Sleek & Compact Editorial Style */}
+      <header className="mx-auto max-w-4xl px-4 pb-6 pt-8 sm:px-6 sm:pt-10">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-sage-border bg-sage-light/60 px-3 py-1 text-[11px] font-extrabold uppercase tracking-widest text-forest shadow-2xs">
+            <Sparkles className="h-3 w-3 text-terracotta" />
+            <span>Changelog & System History</span>
           </div>
-
-          <button
-            type="button"
-            onClick={fetchGitHubData}
-            disabled={isLoading}
-            className="inline-flex items-center gap-1.5 rounded-full border border-forest/30 bg-forest/10 px-3 py-1 text-xs font-bold text-forest transition-colors hover:bg-forest hover:text-white disabled:opacity-50"
-            title="Segarkan data commit langsung dari GitHub"
-          >
-            <RotateCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>{isLoading ? 'Mengambil...' : 'Segarkan'}</span>
-          </button>
+          <h1 className="mt-3 text-balance break-words text-3xl font-extrabold tracking-tight text-charcoal sm:text-4xl">
+            Riwayat Pembaruan & Commit Log
+          </h1>
+          <p className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-warm-gray sm:text-sm">
+            Catatan rilis terverifikasi langsung dari GitHub repository <span className="font-semibold text-charcoal">LoningMaju</span>.
+          </p>
         </div>
 
-        {/* Stats Grid Bar */}
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-2xl border border-sage-border bg-white p-4 shadow-xs">
-            <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
-              <Tag className="h-4 w-4 text-forest" />
-              <span>Versi Terbaru</span>
+        {/* Compact Glassmorphic Stats & Live Status Bar */}
+        <div className="mt-6 flex flex-col gap-3 rounded-xl border border-sage-border bg-white/90 p-3 shadow-2xs sm:flex-row sm:items-center sm:justify-between sm:px-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+            {/* Version */}
+            <div className="flex items-center gap-1.5">
+              <Tag className="h-3.5 w-3.5 text-forest" />
+              <span className="text-warm-gray">Versi:</span>
+              <span className="rounded bg-forest/10 px-2 py-0.5 font-mono text-xs font-extrabold text-forest">
+                {releases[0]?.version || 'v1.7.2'}
+              </span>
             </div>
-            <p className="mt-2 text-xl font-extrabold text-forest">{releases[0]?.version || 'v1.6.1'}</p>
+
+            <span className="hidden h-3.5 w-px bg-sage-border sm:inline" />
+
+            {/* Total Commits */}
+            <div className="flex items-center gap-1.5">
+              <GitCommit className="h-3.5 w-3.5 text-terracotta" />
+              <span className="text-warm-gray">Total:</span>
+              <span className="font-bold text-charcoal">{totalCommitsCount} Commit</span>
+            </div>
+
+            <span className="hidden h-3.5 w-px bg-sage-border sm:inline" />
+
+            {/* Live Sync Status */}
+            <div className="flex items-center gap-1.5">
+              {isLive ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                  </span>
+                  <Wifi className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>GitHub Live</span>
+                  {lastFetchedAt && <span className="text-[11px] font-normal text-warm-gray">({lastFetchedAt})</span>}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                  <WifiOff className="h-3.5 w-3.5 text-amber-600" />
+                  <span>Data Lokal</span>
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="rounded-2xl border border-sage-border bg-white p-4 shadow-xs">
-            <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
-              <GitCommit className="h-4 w-4 text-terracotta" />
-              <span>Total Commit</span>
-            </div>
-            <p className="mt-2 text-xl font-extrabold text-charcoal">{totalCommitsCount} Commit</p>
-          </div>
+          <div className="flex items-center gap-2 pt-2 border-t border-sage-border/60 sm:pt-0 sm:border-t-0">
+            {/* Refresh */}
+            <button
+              type="button"
+              onClick={fetchGitHubData}
+              disabled={isLoading}
+              className="inline-flex items-center gap-1 rounded-md border border-sage-border bg-cream-tint px-2.5 py-1 text-xs font-bold text-charcoal transition-colors hover:bg-sage-light hover:text-forest disabled:opacity-50"
+              title="Segarkan commit langsung dari GitHub API"
+            >
+              <RotateCw className={`h-3 w-3 text-forest ${isLoading ? 'animate-spin' : ''}`} />
+              <span>{isLoading ? 'Syncing...' : 'Segarkan'}</span>
+            </button>
 
-          <div className="rounded-2xl border border-sage-border bg-white p-4 shadow-xs">
-            <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              <span>Status Sync</span>
-            </div>
-            <p className="mt-2 text-sm font-extrabold text-emerald-600">{isLive ? 'Realtime Synced' : 'Static Fallback'}</p>
-          </div>
-
-          <div className="rounded-2xl border border-sage-border bg-white p-4 shadow-xs">
-            <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
-              <Terminal className="h-4 w-4 text-purple-600" />
-              <span>Repository</span>
-            </div>
+            {/* Repo Link */}
             <a
               href="https://github.com/michaelxdips/LoningMarketplace"
               target="_blank"
               rel="noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-xs font-bold font-mono text-purple-700 hover:underline truncate"
+              className="inline-flex items-center gap-1 rounded-md bg-purple-50 border border-purple-200/80 px-2.5 py-1 text-xs font-bold font-mono text-purple-700 hover:bg-purple-100 transition-colors"
             >
-              <span>LoningMarketplace</span>
+              <Terminal className="h-3 w-3 text-purple-600" />
+              <span>Repo</span>
               <ExternalLink className="h-3 w-3 shrink-0" />
             </a>
           </div>
         </div>
 
-        {/* Search & Filter Toolbar */}
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* Search & Filter Bar - Ultra Sleek */}
+        <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-warm-gray/60" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray/60" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari commit (contoh: login, dashboard, fix, auth, commit hash)..."
-              className="focus-ring w-full rounded-xl border border-sage-border bg-white py-2.5 pl-10 pr-4 text-xs text-charcoal placeholder:text-warm-gray/60 sm:text-sm"
+              placeholder="Cari commit (contoh: hapus, media, fix, auth, commit hash)..."
+              className="focus-ring w-full rounded-lg border border-sage-border bg-white py-2 pl-9 pr-3 text-xs text-charcoal placeholder:text-warm-gray/60 sm:text-xs"
             />
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-            <Filter size={14} className="shrink-0 text-warm-gray" />
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <Filter size={13} className="shrink-0 text-warm-gray mr-0.5" />
             <button
               type="button"
               onClick={() => setSelectedType('all')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
+              className={`rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-colors ${
                 selectedType === 'all' ? 'bg-forest text-white' : 'border border-sage-border bg-white text-warm-gray hover:text-charcoal'
               }`}
             >
@@ -482,7 +503,7 @@ export default function VersionHistoryPage() {
             <button
               type="button"
               onClick={() => setSelectedType('feat')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
+              className={`rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-colors ${
                 selectedType === 'feat' ? 'bg-emerald-700 text-white' : 'border border-sage-border bg-white text-emerald-700 hover:bg-emerald-50'
               }`}
             >
@@ -491,7 +512,7 @@ export default function VersionHistoryPage() {
             <button
               type="button"
               onClick={() => setSelectedType('fix')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
+              className={`rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-colors ${
                 selectedType === 'fix' ? 'bg-amber-700 text-white' : 'border border-sage-border bg-white text-amber-700 hover:bg-amber-50'
               }`}
             >
@@ -500,7 +521,7 @@ export default function VersionHistoryPage() {
             <button
               type="button"
               onClick={() => setSelectedType('style')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
+              className={`rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-colors ${
                 selectedType === 'style' ? 'bg-purple-700 text-white' : 'border border-sage-border bg-white text-purple-700 hover:bg-purple-50'
               }`}
             >
@@ -511,38 +532,38 @@ export default function VersionHistoryPage() {
       </header>
 
       {/* Release Timeline List */}
-      <section className="mx-auto max-w-4xl px-5 pb-20">
+      <section className="mx-auto max-w-4xl px-4 pb-16 sm:px-6">
         {filteredReleases.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {filteredReleases.map((release, idx) => {
               const isExpanded = expandedVersions.has(release.version);
               const isNewest = idx === 0;
               return (
                 <article
                   key={release.version}
-                  className="overflow-hidden rounded-2xl border border-sage-border bg-white shadow-xs"
+                  className="overflow-hidden rounded-xl border border-sage-border bg-white shadow-2xs transition-all hover:border-forest/30"
                 >
-                  {/* Release Header — single compact row, clickable */}
+                  {/* Release Header — compact, elegant & informative */}
                   <button
                     type="button"
                     onClick={() => toggleVersion(release.version)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-cream-bg/50"
+                    className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-cream-tint/60"
                     aria-expanded={isExpanded}
                   >
-                    {/* Version pill */}
-                    <span className="shrink-0 rounded-lg bg-forest px-2.5 py-0.5 text-xs font-extrabold text-white">
+                    {/* Version Tag */}
+                    <span className="shrink-0 rounded-md bg-forest px-2 py-0.5 font-mono text-xs font-bold text-white shadow-2xs">
                       {release.version}
                     </span>
 
-                    {/* Title — flex-1, truncated */}
-                    <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-charcoal">
+                    {/* Informative Title */}
+                    <h2 className="min-w-0 flex-1 truncate text-xs font-bold text-charcoal sm:text-sm">
                       {release.title}
                     </h2>
 
-                    {/* Right side meta */}
+                    {/* Right side Metadata */}
                     <div className="flex shrink-0 items-center gap-2">
                       {isNewest && (
-                        <span className="hidden rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-emerald-700 sm:inline">
+                        <span className="hidden rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-emerald-800 sm:inline">
                           Terbaru
                         </span>
                       )}
@@ -550,47 +571,47 @@ export default function VersionHistoryPage() {
                         <Calendar className="h-3 w-3 text-forest" />
                         {release.date}
                       </span>
-                      <span className="text-[11px] font-medium text-warm-gray/70">
-                        {release.commits.length}c
+                      <span className="rounded bg-sage-light px-1.5 py-0.5 text-[10px] font-bold text-warm-gray">
+                        {release.commits.length} commit
                       </span>
                       <ChevronDown
-                        className={`h-4 w-4 text-warm-gray/60 transition-transform duration-200 ${
+                        className={`h-4 w-4 text-warm-gray/70 transition-transform duration-200 ${
                           isExpanded ? 'rotate-180' : ''
                         }`}
                       />
                     </div>
                   </button>
 
-                  {/* Commit Items List - Collapsible */}
+                  {/* Commit Items List - Compact Accordion */}
                   {isExpanded && (
-                    <div className="border-t border-sage-border/60 px-4 pb-3 pt-2">
+                    <div className="border-t border-sage-border/60 bg-cream-bg/40 px-3.5 pb-2.5 pt-2">
                       <div className="space-y-1">
-                        {release.commits.map((commit) => {
+                        {release.commits.map((commit, commitIdx) => {
                           const badgeMeta = commitTypeStyles[commit.type] || commitTypeStyles.feat;
                           return (
                             <div
-                              key={commit.hash}
-                              className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-cream-bg/60"
+                              key={`${release.version}-${commit.hash}-${commitIdx}`}
+                              className="group flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-white hover:shadow-2xs"
                             >
-                              {/* Commit Hash */}
+                              {/* Commit Hash Pill */}
                               <a
                                 href={`https://github.com/michaelxdips/LoningMarketplace/commit/${commit.hash}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="shrink-0 font-mono text-[10px] font-bold text-forest/70 hover:text-forest hover:underline"
+                                className="shrink-0 rounded bg-sage-light/80 px-1.5 py-0.5 font-mono text-[10px] font-bold text-forest hover:bg-forest hover:text-white transition-colors"
                                 title="Buka commit di GitHub"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 {commit.hash}
                               </a>
 
-                              {/* Type badge */}
-                              <span className={`shrink-0 rounded px-1.5 py-px text-[9px] uppercase font-extrabold tracking-wider border ${badgeMeta.bg} ${badgeMeta.text}`}>
+                              {/* Type Badge */}
+                              <span className={`shrink-0 rounded px-1.5 py-px text-[9px] uppercase font-bold tracking-wider border ${badgeMeta.bg} ${badgeMeta.text}`}>
                                 {badgeMeta.label}
                               </span>
 
                               {/* Scope + Message */}
-                              <p className="min-w-0 flex-1 truncate text-xs text-charcoal/80">
+                              <p className="min-w-0 flex-1 truncate text-xs text-charcoal">
                                 {commit.scope && (
                                   <span className="font-semibold text-forest">
                                     ({commit.scope}):{' '}
@@ -614,11 +635,11 @@ export default function VersionHistoryPage() {
             })}
           </div>
         ) : (
-          <div className="rounded-3xl border border-sage-border bg-white p-12 text-center">
-            <GitCommit size={40} className="mx-auto text-warm-gray/40 mb-3" />
-            <h3 className="text-base font-bold text-charcoal">Tidak ada commit yang cocok</h3>
+          <div className="rounded-2xl border border-sage-border bg-white p-8 text-center">
+            <GitCommit size={36} className="mx-auto text-warm-gray/40 mb-2" />
+            <h3 className="text-sm font-bold text-charcoal">Tidak ada commit yang cocok</h3>
             <p className="mt-1 text-xs text-warm-gray">
-              Coba ganti kata kunci pencarian atau bersihkan filter tipe commit.
+              Coba kata kunci lain atau bersihkan filter tipe commit.
             </p>
             <button
               type="button"
@@ -626,24 +647,25 @@ export default function VersionHistoryPage() {
                 setSearchQuery('');
                 setSelectedType('all');
               }}
-              className="mt-4 rounded-xl bg-forest px-4 py-2 text-xs font-bold text-white uppercase tracking-wider"
+              className="mt-3 rounded-lg bg-forest px-3.5 py-1.5 text-xs font-bold text-white uppercase tracking-wider"
             >
-              Reset Filter Pencarian
+              Reset Filter
             </button>
           </div>
         )}
 
         {/* Back Link */}
-        <div className="mt-12 text-center">
+        <div className="mt-8 text-center">
           <Link
             to="/"
-            className="focus-ring inline-flex items-center gap-2 rounded-xl border border-sage-border bg-white px-5 py-3 text-xs font-bold text-charcoal hover:bg-cream-tint transition-colors shadow-xs"
+            className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-sage-border bg-white px-4 py-2 text-xs font-bold text-charcoal hover:bg-cream-tint transition-colors shadow-2xs"
           >
-            <ArrowLeft className="h-4 w-4 text-forest" />
-            Kembali ke Beranda Utama
+            <ArrowLeft className="h-3.5 w-3.5 text-forest" />
+            Kembali ke Beranda
           </Link>
         </div>
       </section>
     </PublicPageShell>
   );
 }
+
