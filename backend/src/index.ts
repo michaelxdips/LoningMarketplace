@@ -9,6 +9,6 @@ const database = createDatabase(env.DATABASE_URL);
 const storage = createMediaStorage(mediaConfig(env));
 const app = await buildApp(env, createRepository(database.db, (key) => storage.getPublicUrl(key)), { storage });
 await app.listen({ port: env.PORT, host: env.HOST });
-console.log(`Loning Maju API listening on ${env.HOST}:${env.PORT}`);
+app.log.info(`Loning Maju API listening on ${env.HOST}:${env.PORT}`);
 const shutdown = async () => { await app.close(); await database.close(); process.exit(0); };
-process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);

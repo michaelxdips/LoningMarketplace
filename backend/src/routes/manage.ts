@@ -268,7 +268,7 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     const existing = await loadProduct(request, reply);
     if (!existing || reply.sent) return;
     if (!canViewProduct(request.auth!.user.role, request.auth!.user.id, existing.umkm.ownerUserId)) return denyOwnership(reply, 'Product');
-    return { data: await repository.getProductImages(request.params.id) };
+    return { data: (await repository.getProductImages(request.params.id)).map(({ assetId: _, ...img }) => img) };
   });
 
   app.post<{ Params: { id: string } }>('/manage/products/:id/images', { preHandler: guards.secured }, async (request, reply) => {
@@ -286,7 +286,7 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     return repository.transaction(async (transaction) => {
       await transaction.addProductImage(request.params.id, parsed.data.imageAssetId);
       await transaction.refreshMediaOrphans([parsed.data.imageAssetId], at);
-      await transaction.touchUMKMCatalog(existing.umkm?.id ?? '', at);
+      if (existing.umkm?.id) await transaction.touchUMKMCatalog(existing.umkm.id, at);
       await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.image_added', entityType: 'product_image', entityId: request.params.id, metadata: { mediaAssetId: parsed.data.imageAssetId }, ...info(request) });
       return reply.code(201).send({ data: { added: true } });
     });
@@ -302,7 +302,7 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     const at = now();
     return repository.transaction(async (transaction) => {
       await transaction.removeProductImage(request.params.imageId);
-      await transaction.refreshMediaOrphans([target.id], at);
+      await transaction.refreshMediaOrphans([target.assetId], at);
       if (existing.umkm?.id) await transaction.touchUMKMCatalog(existing.umkm.id, at);
       await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.image_removed', entityType: 'product_image', entityId: request.params.id, metadata: { mediaAssetId: target.id }, ...info(request) });
       return { data: { removed: true } };

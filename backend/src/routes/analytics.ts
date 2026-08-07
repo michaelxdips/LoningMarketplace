@@ -21,7 +21,6 @@ export async function analyticsRoutes(app: FastifyInstance, repository: Reposito
     if (days > 366) return reply.code(400).send(error('Date range cannot exceed 366 days', 'DATE_RANGE_TOO_LARGE'));
     const queryTo = new Date(to.getTime() + 86_400_000);
     const [summary, breakdown] = await Promise.all([repository.inquiryAnalytics(from, queryTo), repository.inquiryAnalyticsByTarget(from, queryTo)]);
-    const breakdownList = Array.isArray(breakdown) ? breakdown : ((breakdown as any)?.rows ?? []);
-    return { data: { from: from.toISOString(), to: to.toISOString(), ...summary, breakdown: breakdownList } };
+    return { data: { from: from.toISOString(), to: to.toISOString(), ...summary, breakdown } };
   });
 }

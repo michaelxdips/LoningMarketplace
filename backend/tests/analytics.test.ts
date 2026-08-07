@@ -130,13 +130,9 @@ describe('Inquiry Analytics Backend API', () => {
     const repoWithObjectResult = {
       ...mockRepository,
       inquiryAnalyticsByTarget: async () => {
-        return {
-          rows: [
-            { umkmId: 'u1', umkmName: 'Warung Nasi Loning', productId: 'p1', productName: 'Nasi Megono', eventType: 'product_view', count: 5 },
-          ],
-          command: 'SELECT',
-          rowCount: 1,
-        } as any;
+        return [
+          { umkmId: 'u1', umkmName: 'Warung Nasi Loning', productId: 'p1', productName: 'Nasi Megono', eventType: 'product_view', count: 5 },
+        ];
       },
     } as unknown as Repository;
 
