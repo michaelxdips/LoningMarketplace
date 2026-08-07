@@ -54,7 +54,16 @@ export const managementApi = {
     setLocation: (id: string, input: { latitude: number; longitude: number }, csrf?: string) => mutation<ManagedUMKM>(`/manage/umkms/${id}/location`, csrf, 'PATCH', input),
     clearLocation: (id: string, csrf?: string) => mutation<ManagedUMKM>(`/manage/umkms/${id}/location`, csrf, 'DELETE'),
   },
-  products: managedResource<ManagedProduct, ProductCreateInput, Partial<ProductUpdateInput>>('/manage/products'),
+  products: {
+    ...managedResource<ManagedProduct, ProductCreateInput, Partial<ProductUpdateInput>>('/manage/products'),
+    images: {
+      list: (productId: string, signal?: AbortSignal) => apiRequest<Array<{ id: string; url: string; thumbUrl: string; width: number; height: number; altText: string | null }>>(`/manage/products/${productId}/images`, { signal }),
+      add: (productId: string, imageAssetId: string, csrf?: string) => mutation<{ added: boolean }>(`/manage/products/${productId}/images`, csrf, 'POST', { imageAssetId }),
+      remove: (productId: string, imageId: string, csrf?: string) => mutation<{ removed: boolean }>(`/manage/products/${productId}/images/${imageId}`, csrf, 'DELETE'),
+      setPrimary: (productId: string, imageId: string, csrf?: string) => mutation<{ primary: string }>(`/manage/products/${productId}/images/${imageId}/primary`, csrf, 'PATCH'),
+      reorder: (productId: string, orderedIds: string[], csrf?: string) => mutation<{ reordered: boolean }>(`/manage/products/${productId}/images/reorder`, csrf, 'PATCH', { orderedIds }),
+    },
+  },
   users: {
     list: (params: ListParams, signal?: AbortSignal) => apiRequest<Page<ManagedUser> | ManagedUser[]>(pathWithQuery('/admin/users', params), { signal }),
     create: (input: UserCreateInput, csrf?: string) => mutation<ManagedUser>('/admin/users', csrf, 'POST', input),

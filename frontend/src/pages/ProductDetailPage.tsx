@@ -7,6 +7,7 @@ import PublicDetailState from '../components/shared/PublicDetailState';
 import ShareButton from '../components/shared/ShareButton';
 import WhatsAppInquiryDialog from '../components/shared/WhatsAppInquiryDialog';
 import { ProductImage } from '../components/product/ProductImage';
+import { ProductGallery, type GalleryImage } from '../components/product/ProductGallery';
 import { ApiError, getProduct, getRelatedProducts, getUMKM, PUBLIC_DETAIL_STALE_TIME } from '../lib/api';
 import { formatPrice } from '../lib/price';
 import { usePageMetadata } from '../lib/seo';
@@ -61,7 +62,11 @@ export default function ProductDetailPage() {
       </nav>
       <div className="grid gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
         <div className="overflow-hidden rounded-2xl border border-sage-border bg-cream-tint lg:col-span-6">
-          <ProductImage src={detail.imageUrl} alt={detail.altText || detail.name} className="aspect-[4/3] h-full w-full object-cover"/>
+          {detail.images && detail.images.length > 0 ? (
+            <ProductGallery images={detail.images as GalleryImage[]} className={`${'aspect-[4/3]'} h-full w-full`} />
+          ) : (
+            <ProductImage src={detail.imageUrl} alt={detail.altText || detail.name} className="aspect-[4/3] h-full w-full object-cover"/>
+          )}
         </div>
         <div className="flex flex-col justify-center lg:col-span-6">
           <div className="flex flex-wrap items-center justify-between gap-4">

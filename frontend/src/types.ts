@@ -47,7 +47,8 @@ export interface Product {
   imageAssetId?: string | null;
   altText?: string | null;
   isAvailable: boolean;
-  unit?: string; // e.g., "250g", "Pcs", "Porsi"
+  unit?: string;
+  images?: Array<{ id: string; url: string; thumbUrl: string; width: number; height: number; altText: string | null }>;
 }
 
 export interface ProductDetail extends Omit<Product, 'umkmName'> {
