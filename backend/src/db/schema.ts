@@ -63,6 +63,25 @@ export const products = pgTable('products', {
   standaloneOwnerCheck: check('products_standalone_owner_check', sql`${table.umkmId} IS NOT NULL OR ${table.phone} IS NOT NULL`),
 }));
 
+export const productImages = pgTable('product_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: uuid('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  mediaAssetId: uuid('media_asset_id').notNull().references(() => mediaAssets.id, { onDelete: 'restrict' }),
+  displayOrder: integer('display_order').notNull().default(0),
+  altText: text('alt_text'),
+  isPrimary: boolean('is_primary').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  productIdx: index('product_images_product_id_idx').on(table.productId),
+  mediaIdx: index('product_images_media_asset_id_idx').on(table.mediaAssetId),
+  orderIdx: index('product_images_display_order_idx').on(table.productId, table.displayOrder),
+  uniqueMediaPerProduct: uniqueIndex('product_images_product_media_unique').on(table.productId, table.mediaAssetId),
+  onePrimaryPerProduct: uniqueIndex('product_images_primary_unique').on(table.productId).where(sql`${table.isPrimary} = true`),
+  orderCheck: check('product_images_display_order_check', sql`${table.displayOrder} >= 0`),
+  altTextCheck: check('product_images_alt_text_check', sql`${table.altText} IS NULL OR char_length(${table.altText}) <= 500`),
+}));
+
 export const publicEvents = pgTable('public_events', {
   id: uuid('id').primaryKey().defaultRandom(), eventType: publicEventTypeEnum('event_type').notNull(),
   umkmId: uuid('umkm_id').references(() => umkms.id, { onDelete: 'set null' }), productId: uuid('product_id').references(() => products.id, { onDelete: 'set null' }),

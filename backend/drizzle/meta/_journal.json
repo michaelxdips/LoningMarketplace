@@ -92,6 +92,13 @@
       "when": 1785990800000,
       "tag": "0012_standalone_products",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1786080000000,
+      "tag": "0013_product_images",
+      "breakpoints": true
     }
   ]
 }
