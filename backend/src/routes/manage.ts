@@ -262,4 +262,76 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
       return reply.code(200).send({ data: { id: existing.product.id } });
     });
   });
+
+  // Gallery image management
+  app.get<{ Params: { id: string } }>('/manage/products/:id/images', { preHandler: [guards.authenticate, guards.requireAnyCapability(['products:view-all', 'products:view-own'])] }, async (request, reply) => {
+    const existing = await loadProduct(request, reply);
+    if (!existing || reply.sent) return;
+    if (!canViewProduct(request.auth!.user.role, request.auth!.user.id, existing.umkm.ownerUserId)) return denyOwnership(reply, 'Product');
+    return { data: await repository.getProductImages(request.params.id) };
+  });
+
+  app.post<{ Params: { id: string } }>('/manage/products/:id/images', { preHandler: guards.secured }, async (request, reply) => {
+    const existing = await loadProduct(request, reply);
+    if (!existing || reply.sent) return;
+    if (!canUpdateProduct(request.auth!.user.role, request.auth!.user.id, existing.umkm.ownerUserId)) return denyOwnership(reply, 'Product');
+    const parsed = z.strictObject({ imageAssetId: uuid }).safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send(error('Invalid image payload', 'VALIDATION_ERROR'));
+    const asset = await repository.getMediaAsset(parsed.data.imageAssetId);
+    if (!asset) return reply.code(400).send(error('Media asset not found', 'INVALID_MEDIA'));
+    if (!canManageMedia(request.auth!.user.role, request.auth!.user.id, asset.createdByUserId)) return reply.code(403).send(error('Media asset ownership required', 'FORBIDDEN'));
+    const count = await repository.countProductImages(request.params.id);
+    if (count >= 5) return reply.code(409).send(error('Produk maksimal memiliki 5 gambar', 'GALLERY_LIMIT'));
+    const at = now();
+    return repository.transaction(async (transaction) => {
+      await transaction.addProductImage(request.params.id, parsed.data.imageAssetId);
+      await transaction.refreshMediaOrphans([parsed.data.imageAssetId], at);
+      await transaction.touchUMKMCatalog(existing.umkm?.id ?? '', at);
+      await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.image_added', entityType: 'product_image', entityId: request.params.id, metadata: { mediaAssetId: parsed.data.imageAssetId }, ...info(request) });
+      return reply.code(201).send({ data: { added: true } });
+    });
+  });
+
+  app.delete<{ Params: { id: string; imageId: string } }>('/manage/products/:id/images/:imageId', { preHandler: guards.secured }, async (request, reply) => {
+    const existing = await loadProduct(request, reply);
+    if (!existing || reply.sent) return;
+    if (!canUpdateProduct(request.auth!.user.role, request.auth!.user.id, existing.umkm.ownerUserId)) return denyOwnership(reply, 'Product');
+    const gallery = await repository.getProductImages(request.params.id);
+    const target = gallery.find((img) => img.id === request.params.imageId);
+    if (!target) return reply.code(404).send(error('Gallery image not found', 'NOT_FOUND'));
+    const at = now();
+    return repository.transaction(async (transaction) => {
+      await transaction.removeProductImage(request.params.imageId);
+      await transaction.refreshMediaOrphans([target.id], at);
+      if (existing.umkm?.id) await transaction.touchUMKMCatalog(existing.umkm.id, at);
+      await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.image_removed', entityType: 'product_image', entityId: request.params.id, metadata: { mediaAssetId: target.id }, ...info(request) });
+      return { data: { removed: true } };
+    });
+  });
+
+  app.patch<{ Params: { id: string; imageId: string } }>('/manage/products/:id/images/:imageId/primary', { preHandler: guards.secured }, async (request, reply) => {
+    const existing = await loadProduct(request, reply);
+    if (!existing || reply.sent) return;
+    if (!canUpdateProduct(request.auth!.user.role, request.auth!.user.id, existing.umkm.ownerUserId)) return denyOwnership(reply, 'Product');
+    return repository.transaction(async (transaction) => {
+      await transaction.setProductPrimaryImage(request.params.imageId);
+      await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.image_primary', entityType: 'product_image', entityId: request.params.id, metadata: { mediaAssetId: request.params.imageId }, ...info(request) });
+      return { data: { primary: request.params.imageId } };
+    });
+  });
+
+  app.patch<{ Params: { id: string } }>('/manage/products/:id/images/reorder', { preHandler: guards.secured }, async (request, reply) => {
+    const existing = await loadProduct(request, reply);
+    if (!existing || reply.sent) return;
+    if (!canUpdateProduct(request.auth!.user.role, request.auth!.user.id, existing.umkm.ownerUserId)) return denyOwnership(reply, 'Product');
+    const parsed = z.strictObject({ orderedIds: z.array(uuid).min(1).max(5) }).safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send(error('Invalid reorder payload', 'VALIDATION_ERROR'));
+    const existingIds = (await repository.getProductImages(request.params.id)).map((img) => img.id);
+    if (parsed.data.orderedIds.length !== existingIds.length || !parsed.data.orderedIds.every((id) => existingIds.includes(id))) return reply.code(400).send(error('Order array must contain every image assigned to this product exactly once', 'VALIDATION_ERROR'));
+    return repository.transaction(async (transaction) => {
+      await transaction.reorderProductImages(request.params.id, parsed.data.orderedIds);
+      await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.images_reordered', entityType: 'product', entityId: request.params.id, ...info(request) });
+      return { data: { reordered: true } };
+    });
+  });
 }
