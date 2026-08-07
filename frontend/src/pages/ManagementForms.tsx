@@ -25,6 +25,7 @@ import { hasCapability } from "../lib/auth";
 import { deleteMedia, updateMediaAltText, uploadMedia } from "../lib/api";
 import { useUnsavedChanges } from "../hooks/useUnsavedChanges";
 import { ProductImage } from "../components/product/ProductImage";
+import GalleryManager, { type GalleryEntry } from "../components/product/GalleryManager";
 import {
   ConfirmDialog,
   dangerButtonClass,
@@ -471,6 +472,7 @@ export function ProductFormPage() {
   const [umkmMode, setUmkmMode] = useState<"select" | "standalone" | "create">("select");
   const [umkmSelectValue, setUmkmSelectValue] = useState<string>("");
   const [creatingUmkm, setCreatingUmkm] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<GalleryEntry[]>([]);
   const canDelete = hasCapability(sessionUser, "products:delete") || hasCapability(sessionUser, "products:archive-all") || hasCapability(sessionUser, "products:archive-own");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const deleteProduct = useManagedMutation<string, void>(
@@ -496,6 +498,12 @@ export function ProductFormPage() {
       }
     }
   }, [editing, item.data]);
+  // Load product gallery images
+  useEffect(() => {
+    if (editing && id) {
+      managementApi.products.images.list(id).then(setGalleryImages).catch(() => undefined);
+    }
+  }, [editing, id]);
   const save = useManagedMutation<
     ProductCreateInput | ProductUpdateInput,
     ManagedProduct
@@ -735,11 +743,39 @@ export function ProductFormPage() {
           <div className="sm:col-span-2">
             <Field
               label="Teks alternatif gambar"
-              hint="Jelaskan isi gambar secara singkat untuk pembaca layar."
             >
               <Input name="altText" defaultValue={value?.altText ?? ""} />
             </Field>
           </div>
+          {editing && (
+          <div className="sm:col-span-2">
+            <Field label="Galeri Produk" hint="Tambah/atur hingga 5 gambar. Gambar pertama jadi cover.">
+              <GalleryManager
+                images={galleryImages}
+                onAdd={async (file) => {
+                  const uploaded = await uploadMedia(file, null, csrf);
+                  if (!uploaded) return null;
+                  await managementApi.products.images.add(id!, uploaded.id, csrf);
+                  const fresh = await managementApi.products.images.list(id!);
+                  setGalleryImages(fresh);
+                  return fresh.find((img) => img.id === uploaded.id) ?? null;
+                }}
+                onRemove={async (imageId) => {
+                  await managementApi.products.images.remove(id!, imageId, csrf);
+                  setGalleryImages((prev) => prev.filter((img) => img.id !== imageId));
+                }}
+                onSetPrimary={async (imageId) => {
+                  await managementApi.products.images.setPrimary(id!, imageId, csrf);
+                  setGalleryImages((prev) => {
+                    const target = prev.find((img) => img.id === imageId);
+                    if (!target) return prev;
+                    return [target, ...prev.filter((img) => img.id !== imageId)];
+                  });
+                }}
+              />
+            </Field>
+          </div>
+          )}
           <div className="sm:col-span-2">
             <Field label="Deskripsi" error={errors.description}>
               <Textarea
