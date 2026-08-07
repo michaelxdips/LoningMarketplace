@@ -9,6 +9,7 @@ import { MessageSquare, Eye, ArrowRight } from 'lucide-react';
 import { Product } from '../../types';
 import { formatPrice } from '../../lib/price';
 import { ProductImage } from './ProductImage';
+import { ProductGallery, type GalleryImage } from './ProductGallery';
 
 export type ProductViewSource = 'homepage_featured';
 type ProductCardProps = { product: Product } & (
@@ -18,9 +19,11 @@ type ProductCardProps = { product: Product } & (
 
 const ProductCard: React.FC<ProductCardProps> = (props) => {
   const { product } = props;
+  const imageCount = product.images?.length ?? 0;
   const content = <>
     <div className="h-44 w-full overflow-hidden bg-cream-tint relative">
       <ProductImage src={product.imageUrl} alt={product.altText || product.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      {imageCount > 1 && <span className="absolute top-3 left-3 bg-charcoal/80 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">📷 {imageCount}</span>}
       {product.unit && <span className="absolute top-3 right-3 bg-charcoal/80 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-full uppercase shadow-xs">/ {product.unit}</span>}
     </div>
     <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
