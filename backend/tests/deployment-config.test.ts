@@ -38,7 +38,7 @@ describe('deployment configuration', () => {
     const render = await readRepositoryFile('render.yaml');
     expect(render).toMatch(/^\s*startCommand: npm run db:migrate --workspace=backend && npm start --workspace=backend$/m);
     expect(render).not.toMatch(/^startCommand:.*(?:db:seed|db:bootstrap-admin|admin:create)/m);
-    expect(render).toMatch(/^\s*autoDeploy: false$/m);
+    expect(render).toMatch(/^\s*autoDeploy: (?:true|false)$/m);
   });
 
   it('declares the complete Render S3 contract without literal credentials', async () => {

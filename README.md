@@ -383,13 +383,13 @@ npm run db:bootstrap-admin
 
 #### Windows (PowerShell)
 ```powershell
-$env:VITE_PUBLIC_SITE_URL="https://loningmaju.desa.id"
+$env:VITE_PUBLIC_SITE_URL='https://www.loningmaju.my.id'
 npm run build
 ```
 
 #### Linux / macOS / Cloud Shell
 ```bash
-VITE_PUBLIC_SITE_URL="https://loningmaju.desa.id" npm run build
+VITE_PUBLIC_SITE_URL='https://www.loningmaju.my.id' npm run build
 ```
 
 | Command | Keterangan |
@@ -454,7 +454,7 @@ LoningMarketplace/
 │   │   ├── scripts/               # Admin, cleanup, audit scripts
 │   │   ├── app.ts                 # Fastify app factory
 │   │   └── index.ts               # Server entry point
-│   ├── drizzle/                   # SQL migration files (11 migrations)
+│   ├── drizzle/                   # SQL migration files (14 migrations, 0000–0013)
 │   └── package.json
 ├── e2e/                           # Playwright E2E tests (8 spec files)
 ├── scripts/                       # Build, test, and dev scripts
@@ -568,7 +568,7 @@ erDiagram
 
 ### Migrations
 
-11 migration files di `backend/drizzle/`, dikelola oleh Drizzle Kit. Jalankan migrasi:
+14 migration files di `backend/drizzle/`, dikelola oleh Drizzle Kit. Jalankan migrasi:
 
 ```bash
 npm --prefix backend run db:migrate
@@ -919,7 +919,7 @@ npx playwright install chromium
 |---|---|
 | Transaksi (cart, checkout, payment) | ❌ Tidak termasuk |
 | Registrasi publik | ❌ Tidak tersedia |
-| Multi-image gallery | ❌ Satu foto per item |
+| Multi-image gallery | ✅ Hingga 5 gambar per produk (v1.9.0) |
 | Rating & review | ❌ Tidak termasuk |
 | OAuth / MFA / password recovery | ❌ Belum tersedia |
 | SSR / prerendering | ❌ SPA only |

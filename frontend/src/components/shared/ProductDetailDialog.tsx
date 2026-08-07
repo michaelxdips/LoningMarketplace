@@ -4,6 +4,7 @@ import { MessageSquare, X } from 'lucide-react';
 import { Product } from '../../types';
 import { formatPrice } from '../../lib/price';
 import { ProductImage } from '../product/ProductImage';
+import { ProductGallery, type GalleryImage } from '../product/ProductGallery';
 
 interface ProductDetailDialogProps {
   isOpen: boolean;
@@ -14,38 +15,35 @@ interface ProductDetailDialogProps {
 }
 
 export default function ProductDetailDialog({ isOpen, product, onClose, onInquire, returnFocusRef }: ProductDetailDialogProps) {
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  const hasGallery = product.images && product.images.length > 0;
+  const availability = product.isAvailable ? 'Tersedia' : 'Belum tersedia';
 
   useEffect(() => {
     if (!isOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const prevElement = document.activeElement as HTMLElement | null;
     closeButtonRef.current?.focus();
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); onClose(); return; }
-      if (event.key !== 'Tab' || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')) as HTMLElement[];
-      if (!focusable.length) return;
-      const first = focusable[0]; const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', handleKeyDown); requestAnimationFrame(() => returnFocusRef?.current?.focus()); };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } };
+    window.addEventListener('keydown', handleKey);
+    return () => { window.removeEventListener('keydown', handleKey); prevElement?.focus(); };
   }, [isOpen, onClose, returnFocusRef]);
 
   if (!isOpen) return null;
-  const availability = product.isAvailable ? 'Tersedia' : 'Saat ini tidak tersedia';
 
   return (
     <div id="product-dialog-backdrop" className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/40 p-4 backdrop-blur-xs" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div ref={dialogRef} id="product-dialog-container" role="dialog" aria-modal="true" aria-labelledby="product-dialog-title" className="relative flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden overscroll-contain rounded-xl border border-sage-border bg-cream-card shadow-2xl">
         <div className="relative h-48 shrink-0 overflow-hidden bg-cream-tint sm:h-60">
-          <ProductImage src={product.imageUrl} alt={product.altText || product.name} className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-transparent to-transparent" />
+          {hasGallery ? (
+            <ProductGallery images={product.images as GalleryImage[]} aspectRatio="aspect-auto" className="h-full w-full" />
+          ) : (
+            <ProductImage src={product.imageUrl} alt={product.altText || product.name} className="h-full w-full object-cover" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-transparent to-transparent pointer-events-none" />
           <button id="product-dialog-close" ref={closeButtonRef} type="button" onClick={onClose} aria-label="Tutup detail produk" className="focus-ring absolute right-4 top-4 rounded-full border border-sage-border bg-cream-card/90 p-2 text-charcoal hover:bg-cream-card"><X size={17} /></button>
-          <div className="absolute bottom-4 left-5 right-5 text-white">
+          <div className="absolute bottom-4 left-5 right-5 text-white pointer-events-none">
             <span className="mb-1.5 inline-block rounded bg-terracotta px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest">{product.category}</span>
             <h2 id="product-dialog-title" className="text-xl font-semibold tracking-tight sm:text-2xl">{product.name}</h2>
           </div>
