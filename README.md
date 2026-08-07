@@ -171,7 +171,7 @@ Brand publik adalah **Loning Maju**. Identifier internal seperti `marketplace-lo
 
 - 🔍 **Pencarian & Filter** — Cari produk/UMKM dengan filter 5 kategori: Kuliner, Kerajinan, Jasa, Sembako, Pertanian
 - 📱 **WhatsApp Inquiry** — Dialog kontak langsung ke penjual via WhatsApp dengan pesan terstruktur
-- 🗺️ **Peta Interaktif UMKM** — Visualisasi lokasi seluruh UMKM di `/peta-umkm` dengan Google Maps Native Embed
+- 🗺️ **Peta Interaktif UMKM** — Visualisasi lokasi seluruh UMKM di `/peta-umkm` dengan Google Maps / OpenStreetMap embed
 - 📄 **Detail Produk & UMKM** — Halaman detail dengan slug canonical (`/produk/:slug`, `/umkm/:slug`)
 - 🏷️ **Produk Terkait** — Rekomendasi produk dari UMKM yang sama
 - 📜 **Riwayat Versi** — Halaman riwayat pembaruan repository live dari GitHub API di `/version-history`
@@ -181,7 +181,7 @@ Brand publik adalah **Loning Maju**. Identifier internal seperti `marketplace-lo
 
 ### Dashboard Admin
 
-- 👥 **Manajemen User** — CRUD user dengan role `admin` dan `pelaku_umkm`
+- 👥 **Manajemen User** — CRUD user dengan 4 role: `superadmin`, `admin`, `perangkat_desa`, `pelaku_umkm`
 - 🏪 **Manajemen UMKM** — Create, edit, foto, lokasi, status publikasi
 - 📦 **Manajemen Produk** — Create, edit, foto, harga, ketersediaan, unit
 - 📍 **Editor Lokasi** — Pin lokasi UMKM di peta
@@ -435,7 +435,7 @@ LoningMarketplace/
 │   │   ├── config/                # Brand configuration
 │   │   ├── hooks/                 # useAuth, useProducts, useUMKMs, discovery
 │   │   ├── lib/                   # API client, analytics, SEO, location, price
-│   │   ├── pages/                 # Route page components (15 files)
+│   │   ├── pages/                 # Route page components (20 files)
 │   │   ├── App.tsx                # Homepage root
 │   │   ├── main.tsx               # Router & providers
 │   │   ├── types.ts               # Shared TypeScript interfaces
@@ -454,7 +454,7 @@ LoningMarketplace/
 │   │   ├── scripts/               # Admin, cleanup, audit scripts
 │   │   ├── app.ts                 # Fastify app factory
 │   │   └── index.ts               # Server entry point
-│   ├── drizzle/                   # SQL migration files (14 migrations, 0000–0013)
+│   ├── drizzle/                   # SQL migration files (15 migrations, 0000–0014)
 │   └── package.json
 ├── e2e/                           # Playwright E2E tests (8 spec files)
 ├── scripts/                       # Build, test, and dev scripts
@@ -484,6 +484,8 @@ erDiagram
     products ||--o{ public_events : "tracked"
     media_assets ||--o| umkms : "image"
     media_assets ||--o| products : "image"
+    media_assets ||--o{ product_images : "gallery"
+    products ||--o{ product_images : "has"
 
     users {
         uuid id PK
@@ -568,7 +570,7 @@ erDiagram
 
 ### Migrations
 
-14 migration files di `backend/drizzle/`, dikelola oleh Drizzle Kit. Jalankan migrasi:
+15 migration files di `backend/drizzle/`, dikelola oleh Drizzle Kit. Jalankan migrasi:
 
 ```bash
 npm --prefix backend run db:migrate
@@ -718,7 +720,8 @@ sequenceDiagram
 
 | Layer | Tool | Files | Command |
 |---|---|---|---|
-| Unit / Component | Vitest + Testing Library | 20 test files | `npm run test:frontend` |
+| Unit / Component | Vitest + Testing Library | 30 test files | `npm run test:frontend` |
+| Backend Unit | Vitest | 21 test files | `npm run test:backend` |
 | E2E Desktop + Mobile | Playwright | 8 spec files | `npm run test:e2e` |
 | Integration Smoke | Custom harness | 1 script | `npm run test:integration` |
 
@@ -928,7 +931,7 @@ npx playwright install chromium
 | Notifikasi push | ❌ Tidak termasuk |
 | Stock management | ❌ Tidak termasuk |
 
-Media upload terbatas pada satu foto utama per UMKM/produk. Development menggunakan `backend/storage/` (di-ignore Git); production membutuhkan S3-compatible storage.
+Media upload mendukung multi-image gallery (hingga 5 gambar per produk) via `product_images`. Development menggunakan `backend/storage/` (di-ignore Git); production membutuhkan S3-compatible storage.
 
 ---
 
