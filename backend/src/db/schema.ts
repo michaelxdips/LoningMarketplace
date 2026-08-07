@@ -91,7 +91,7 @@ export const publicEvents = pgTable('public_events', {
   createdIdx: index('public_events_created_at_idx').on(table.createdAt), typeCreatedIdx: index('public_events_type_created_idx').on(table.eventType, table.createdAt), umkmIdx: index('public_events_umkm_id_idx').on(table.umkmId), productIdx: index('public_events_product_id_idx').on(table.productId),
   umkmDedupeIdx: uniqueIndex('public_events_umkm_dedupe_unique').on(table.anonymousSessionId, table.eventType, table.umkmId, table.source, table.dedupeBucket).where(sql`${table.umkmId} IS NOT NULL AND ${table.productId} IS NULL`),
   productDedupeIdx: uniqueIndex('public_events_product_dedupe_unique').on(table.anonymousSessionId, table.eventType, table.productId, table.source, table.dedupeBucket).where(sql`${table.productId} IS NOT NULL`),
-  targetCheck: check('public_events_target_check', sql`(${table.umkmId} IS NOT NULL AND ${table.productId} IS NULL) OR ${table.productId} IS NOT NULL`),
+  targetCheck: check('public_events_target_check', sql`(${table.umkmId} IS NOT NULL AND ${table.productId} IS NULL) OR (${table.productId} IS NOT NULL) OR (${table.umkmId} IS NULL AND ${table.productId} IS NULL)`),
   sourceCheck: check('public_events_source_check', sql`${table.source} IN ('homepage_featured','homepage_catalog','umkm_detail','product_detail','product_page','umkm_page','search_results')`),
   versionCheck: check('public_events_version_check', sql`${table.eventVersion} = 1`),
 }));
