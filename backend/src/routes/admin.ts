@@ -56,6 +56,23 @@ export async function adminRoutes(app: FastifyInstance, repository: Repository, 
     if (!canManageUserTarget(request.auth!.user.role, target.role)) return reply.code(403).send(error('User management is not assigned for this target', 'FORBIDDEN'));
     await repository.transaction(async (tx) => { await tx.revokeUserSessions(id.data, now()); await tx.addAudit({ actorUserId: request.auth!.user.id, action: 'user.sessions_revoked', entityType: 'user', entityId: id.data, ...requestInfo(request) }); }); return { data: { sessionsRevoked: true } };
   });
+  app.delete<{ Params: { id: string } }>('/admin/users/:id', { preHandler: [guards.authenticate, guards.origin, guards.csrf, guards.requireCapability('users:delete')] }, async (request, reply) => {
+    const id = uuid.safeParse(request.params.id);
+    if (!id.success) return reply.code(400).send(error('Invalid UUID', 'VALIDATION_ERROR'));
+    const target = await repository.findUserById(id.data);
+    if (!target) return reply.code(404).send(error('User not found', 'NOT_FOUND'));
+    if (id.data === request.auth!.user.id) return reply.code(403).send(error('Tidak dapat menghapus akun sendiri.', 'CANNOT_DELETE_SELF'));
+    if (target.role === 'superadmin' && target.isActive && await repository.countActiveSuperadmins() <= 1) {
+      return reply.code(409).send(error('Super Admin aktif terakhir tidak dapat dihapus.', 'LAST_SUPERADMIN'));
+    }
+    const deleted = await repository.transaction(async (tx) => {
+      const result = await tx.deleteUser(id.data);
+      await tx.addAudit({ actorUserId: request.auth!.user.id, action: 'user.deleted', entityType: 'user', entityId: id.data, metadata: { username: target.username, displayName: target.displayName, role: target.role }, ...requestInfo(request) });
+      return result;
+    });
+    if (!deleted) return reply.code(404).send(error('User not found', 'NOT_FOUND'));
+    return { data: { id: id.data, deleted: true } };
+  });
   app.get('/admin/audit-logs', { preHandler: [guards.authenticate, guards.requireCapability('audit:view-global')] }, async (request, reply) => {
     const p = z.object({ q: z.string().trim().optional(), limit: z.coerce.number().int().positive().max(200).default(100), actorUserId: uuid.optional(), action: z.string().trim().min(1).optional(), entityType: z.string().trim().min(1).optional(), from: z.coerce.date().optional(), to: z.coerce.date().optional() }).safeParse(request.query);
     if (!p.success) return reply.code(400).send(error('Invalid query parameters', 'VALIDATION_ERROR'));

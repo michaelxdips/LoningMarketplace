@@ -11,7 +11,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 export const CAPABILITIES = [
   'dashboard:view', 'dashboard:view-global-summary', 'dashboard:view-own-summary',
-  'users:view', 'users:create-superadmin', 'users:create-admin', 'users:create-perangkat-desa', 'users:create-pelaku-umkm', 'users:update', 'users:change-role', 'users:disable', 'users:reset-password', 'users:revoke-sessions',
+  'users:view', 'users:create-superadmin', 'users:create-admin', 'users:create-perangkat-desa', 'users:create-pelaku-umkm', 'users:update', 'users:change-role', 'users:disable', 'users:reset-password', 'users:revoke-sessions', 'users:delete',
   'umkms:view-all', 'umkms:view-own', 'umkms:create', 'umkms:update-all', 'umkms:update-own', 'umkms:assign-owner', 'umkms:publish', 'umkms:archive', 'umkms:restore', 'umkms:delete', 'umkms:manage-location-all', 'umkms:manage-location-own',
   'products:view-all', 'products:view-own', 'products:create', 'products:update-all', 'products:update-own', 'products:publish', 'products:archive-all', 'products:archive-own', 'products:restore-all', 'products:restore-own', 'products:transfer-owner', 'products:delete',
   'media:manage-all', 'media:manage-own', 'analytics:view-global', 'audit:view-global',
