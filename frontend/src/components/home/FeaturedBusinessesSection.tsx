@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Store } from 'lucide-react';
+import { ChevronDown, ChevronUp, Store } from 'lucide-react';
+import { useState } from 'react';
 import { UMKM } from '../../types';
 import BusinessCard from '../business/BusinessCard';
 import EmptyState from '../shared/EmptyState';
@@ -23,6 +24,11 @@ interface FeaturedBusinessesSectionProps {
 }
 
 export default function FeaturedBusinessesSection({ umkms, searchQuery, onSearchChange, onSearchSubmit, onClearFilters, onViewDetails, isLoading, isError, onRetry }: FeaturedBusinessesSectionProps) {
+  const [showAll, setShowAll] = useState(false);
+  const displayLimit = 12;
+  const displayedUmkms = showAll ? umkms : umkms.slice(0, displayLimit);
+  const hasMore = umkms.length > displayLimit;
+
   return (
     <section
       id="umkm" 
@@ -51,6 +57,8 @@ export default function FeaturedBusinessesSection({ umkms, searchQuery, onSearch
                 ? 'Gagal memuat UMKM.'
                 : umkms.length === 0
                 ? 'Tidak ada UMKM yang sesuai.'
+                : hasMore && !showAll
+                ? `Ditemukan ${umkms.length} UMKM (menampilkan 12 teratas).`
                 : `Ditemukan ${umkms.length} UMKM.`}
             </p>
           </div>
@@ -79,15 +87,39 @@ export default function FeaturedBusinessesSection({ umkms, searchQuery, onSearch
             onAction={onClearFilters && searchQuery.trim() ? onClearFilters : undefined}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {umkms.map((umkm) => (
-              <BusinessCard
-                key={umkm.id}
-                umkm={umkm}
-                onViewDetails={onViewDetails}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayedUmkms.map((umkm) => (
+                <BusinessCard
+                  key={umkm.id}
+                  umkm={umkm}
+                  onViewDetails={onViewDetails}
+                />
+              ))}
+            </div>
+
+            {hasMore && (
+              <div className="mt-8 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setShowAll((prev) => !prev)}
+                  className="focus-ring inline-flex items-center gap-2 rounded-2xl border border-sage-border bg-white px-6 py-3 text-sm font-extrabold text-forest hover:bg-cream-bg shadow-sm transition-all"
+                >
+                  {showAll ? (
+                    <>
+                      <ChevronUp className="h-4 w-4" />
+                      Persingkat Tampilan (12 Teratas)
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-4 w-4" />
+                      Tampilkan Selengkapnya ({umkms.length} UMKM)
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
       </div>
