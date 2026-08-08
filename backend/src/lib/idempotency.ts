@@ -9,29 +9,22 @@ export interface CacheEntry<T> {
 }
 
 class IdempotencyCache {
-  private store: Map<string, CacheEntry<any>> = new Map();
+  private store: Map<string, CacheEntry<unknown>> = new Map();
   private readonly defaultTtlMs = 3600_000; // 1 hour
   private readonly maxEntries = 10000; // Prevent unbounded growth
-  private cleanupInterval?: NodeJS.Timeout;
+  private cleanupTimer?: ReturnType<typeof setInterval>;
+  private mutex = Promise.resolve();
+
+  private async lock<T>(fn: () => T): Promise<T> {
+    const prev = this.mutex;
+    let release!: () => void;
+    this.mutex = new Promise<void>(resolve => { release = resolve; });
+    await prev;
+    try { return fn(); } finally { release(); }
+  }
 
   set<T>(key: string, value: T, ttlMs?: number): void {
     const expiresAt = Date.now() + (ttlMs ?? this.defaultTtlMs);
-    
-    // Clean up expired entries before adding new ones
-    this._cleanupExpired();
-    
-    // Enforce max size limit - remove oldest entries if needed
-    if (this.store.size >= this.maxEntries) {
-      const now = Date.now();
-      const sorted = Array.from(this.store.entries())
-        .sort((a, b) => a[1].expiresAt - b[1].expiresAt);
-      
-      // Keep only the newest 80% to avoid immediate evictions
-      const keepCount = Math.floor(this.maxEntries * 0.8);
-      const toRemove = sorted.slice(0, sorted.length - keepCount);
-      toRemove.forEach(([k]) => this.store.delete(k));
-    }
-    
     this.store.set(key, { value, expiresAt });
   }
 
@@ -44,7 +37,7 @@ class IdempotencyCache {
       return null;
     }
     
-    return entry.value;
+    return entry.value as T;
   }
 
   delete(key: string): boolean {
@@ -52,47 +45,35 @@ class IdempotencyCache {
   }
 
   size(): number {
-    this._cleanupExpired();
     return this.store.size;
   }
 
   private _cleanupExpired(): void {
     const now = Date.now();
-    let hasExpired = false;
-    
     for (const [key, entry] of this.store.entries()) {
-      if (now > entry.expiresAt) {
-        this.store.delete(key);
-        hasExpired = true;
-      }
+      if (now > entry.expiresAt) this.store.delete(key);
     }
-    
-    if (hasExpired) {
-      // Schedule next cleanup in 5 minutes instead of busy-waiting
-      if (!this.cleanupInterval) {
-        this.cleanupInterval = setTimeout(() => {
-          this.cleanupInterval = undefined;
-        }, 300_000);
-      }
-    }
+  }
+
+  // Periodic cleanup — call once at startup
+  startPeriodicCleanup(intervalMs = 300_000): void {
+    if (this.cleanupTimer) return;
+    this.cleanupTimer = setInterval(() => this._cleanupExpired(), intervalMs);
+  }
+
+  stopPeriodicCleanup(): void {
+    if (this.cleanupTimer) { clearInterval(this.cleanupTimer); this.cleanupTimer = undefined; }
   }
 
   clear(): void {
     this.store.clear();
-    if (this.cleanupInterval) {
-      clearTimeout(this.cleanupInterval);
-      this.cleanupInterval = undefined;
-    }
   }
 
   // For monitoring/debugging
-  stats(): { total: number; expired: number } {
+  stats(): { active: number; expired: number } {
     const now = Date.now();
     const expired = Array.from(this.store.values()).filter(e => now > e.expiresAt).length;
-    return { 
-      total: this.store.size - expired, 
-      expired 
-    };
+    return { active: this.store.size - expired, expired };
   }
 }
 

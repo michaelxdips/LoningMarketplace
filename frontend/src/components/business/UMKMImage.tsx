@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Store, Utensils, Palette, Wrench, Sprout, ShoppingBag } from 'lucide-react';
+import { Store, Utensils, Palette, Wrench, Sprout, ShoppingBag, Shirt, HardHat, Armchair, Ellipsis } from 'lucide-react';
 import { Category } from '../../types';
 
 const failedUMKMImageUrls = new Set<string>();
@@ -22,13 +22,25 @@ const getCategoryIcon = (category?: string) => {
     case 'Kuliner':
       return Utensils;
     case 'Kerajinan':
+    case 'Kerajinan & Olahan Kreatif':
       return Palette;
     case 'Jasa':
+    case 'Jasa & Otomotif':
       return Wrench;
     case 'Pertanian':
+    case 'Pertanian, Peternakan & Perikanan':
       return Sprout;
     case 'Perdagangan':
+    case 'Sembako':
+    case 'Sembako & Kebutuhan Harian':
+    case 'Ritel & Perabot':
       return ShoppingBag;
+    case 'Fashion & Konveksi':
+      return Shirt;
+    case 'Bahan Bangunan & Material':
+      return HardHat;
+    case 'Lainnya':
+      return Ellipsis;
     default:
       return Store;
   }
@@ -39,12 +51,18 @@ const getCategoryGradient = (category?: string) => {
     case 'Kuliner':
       return 'from-amber-100/90 via-orange-50 to-amber-200/60 text-amber-900 border-amber-200/80';
     case 'Kerajinan':
+    case 'Kerajinan & Olahan Kreatif':
       return 'from-emerald-100/90 via-teal-50 to-emerald-200/60 text-emerald-900 border-emerald-200/80';
     case 'Jasa':
+    case 'Jasa & Otomotif':
       return 'from-blue-100/90 via-sky-50 to-indigo-100/60 text-blue-900 border-blue-200/80';
     case 'Pertanian':
+    case 'Pertanian, Peternakan & Perikanan':
       return 'from-lime-100/90 via-emerald-50 to-green-200/60 text-green-900 border-green-200/80';
     case 'Perdagangan':
+    case 'Sembako':
+    case 'Sembako & Kebutuhan Harian':
+    case 'Ritel & Perabot':
       return 'from-purple-100/90 via-fuchsia-50 to-pink-100/60 text-purple-900 border-purple-200/80';
     default:
       return 'from-cream-tint via-sage-light/70 to-cream-bg text-forest border-sage-border';

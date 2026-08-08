@@ -26,7 +26,7 @@ const mockData = [
     owner: 'Siti',
     description: 'Anyaman bambu khas Loning.',
     phone: '081987654321',
-    category: 'Kerajinan' as const,
+    category: 'Kerajinan & Olahan Kreatif' as const,
     imageUrl: '/images/bambu.jpg',
     address: 'Dusun II Desa Loning',
     latitude: null,

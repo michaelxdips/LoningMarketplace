@@ -5,7 +5,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Category } from '../../types';
-import { ChefHat, ChevronLeft, ChevronRight, Hammer, Sprout, ShoppingBag, Truck } from 'lucide-react';
+import { ChefHat, ChevronLeft, ChevronRight, Hammer, Sprout, ShoppingBag, Truck, Shirt, HardHat, Armchair, Ellipsis } from 'lucide-react';
 
 interface CategorySectionProps {
   selectedCategory: Category | 'Semua';
@@ -18,10 +18,14 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
   const categoriesList: { name: Category | 'Semua'; label: string; icon: React.ReactNode }[] = [
     { name: 'Semua', label: 'Semua Produk', icon: <ShoppingBag size={14} /> },
     { name: 'Kuliner', label: 'Kuliner', icon: <ChefHat size={14} /> },
-    { name: 'Kerajinan', label: 'Kerajinan', icon: <Hammer size={14} /> },
-    { name: 'Pertanian', label: 'Pertanian', icon: <Sprout size={14} /> },
-    { name: 'Sembako', label: 'Sembako', icon: <ShoppingBag size={14} /> },
-    { name: 'Jasa', label: 'Jasa', icon: <Truck size={14} /> }
+    { name: 'Sembako & Kebutuhan Harian', label: 'Sembako & Harian', icon: <ShoppingBag size={14} /> },
+    { name: 'Fashion & Konveksi', label: 'Fashion', icon: <Shirt size={14} /> },
+    { name: 'Bahan Bangunan & Material', label: 'Bangunan', icon: <HardHat size={14} /> },
+    { name: 'Jasa & Otomotif', label: 'Jasa & Otomotif', icon: <Truck size={14} /> },
+    { name: 'Pertanian, Peternakan & Perikanan', label: 'Tani & Ternak', icon: <Sprout size={14} /> },
+    { name: 'Ritel & Perabot', label: 'Ritel & Perabot', icon: <Armchair size={14} /> },
+    { name: 'Kerajinan & Olahan Kreatif', label: 'Kerajinan', icon: <Hammer size={14} /> },
+    { name: 'Lainnya', label: 'Lainnya', icon: <Ellipsis size={14} /> },
   ];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -64,13 +68,9 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
         </div>
         {hasFilters && onClearFilters && <button type="button" onClick={onClearFilters} className="focus-ring mt-4 rounded-lg border border-sage-border px-3 py-2 text-xs font-bold text-forest hover:bg-sage-light/40">Hapus semua filter</button>}
 
-        {/* Scrollable Container with Affordance */}
         <div className="relative">
-          {/* Left fading mask for scroll affordance */}
           <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-cream-card to-transparent pointer-events-none z-10 md:hidden" />
-          
           {canScrollLeft && <button type="button" onClick={() => scrollCategories(-1)} aria-label="Geser kategori ke kiri" className="focus-ring absolute left-1 top-1/2 z-20 hidden -translate-y-1/2 rounded-full border border-sage-border bg-white p-2 text-forest shadow-md sm:flex md:hidden"><ChevronLeft size={16}/></button>}
-          {/* Scrollable List */}
           <div
             ref={scrollRef}
             className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth snap-x"
@@ -98,13 +98,9 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
               );
             })}
           </div>
-
-          {/* Right fading mask for scroll affordance */}
           {canScrollRight && <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-cream-card to-transparent pointer-events-none z-10 md:hidden" />}
           {canScrollRight && <button type="button" onClick={() => scrollCategories(1)} aria-label="Geser kategori ke kanan" className="focus-ring absolute right-1 top-1/2 z-20 hidden -translate-y-1/2 rounded-full border border-sage-border bg-white p-2 text-forest shadow-md sm:flex md:hidden"><ChevronRight size={16}/></button>}
         </div>
-        
-        {/* Helper Hint for mobile */}
         <div className="mt-1.5 flex justify-center text-xs italic text-warm-gray/70 md:hidden">
           Geser ke samping untuk melihat kategori lainnya
         </div>

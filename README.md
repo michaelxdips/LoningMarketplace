@@ -169,7 +169,7 @@ Brand publik adalah **Loning Maju**. Identifier internal seperti `marketplace-lo
 
 ### Publik
 
-- 🔍 **Pencarian & Filter** — Cari produk/UMKM dengan filter 5 kategori: Kuliner, Kerajinan, Jasa, Sembako, Pertanian
+- 🔍 **Pencarian & Filter** — Cari produk/UMKM dengan filter 9 kategori: Kuliner, Sembako & Kebutuhan Harian, Fashion & Konveksi, Bahan Bangunan & Material, Jasa & Otomotif, Pertanian, Peternakan & Perikanan, Ritel & Perabot, Kerajinan & Olahan Kreatif, Lainnya
 - 📱 **WhatsApp Inquiry** — Dialog kontak langsung ke penjual via WhatsApp dengan pesan terstruktur
 - 🗺️ **Peta Interaktif UMKM** — Visualisasi lokasi seluruh UMKM di `/peta-umkm` dengan Google Maps / OpenStreetMap embed
 - 📄 **Detail Produk & UMKM** — Halaman detail dengan slug canonical (`/produk/:slug`, `/umkm/:slug`)
@@ -197,7 +197,7 @@ Brand publik adalah **Loning Maju**. Identifier internal seperti `marketplace-lo
 - ♿ **Aksesibilitas** — Focus trapping, keyboard navigation, screen reader labels
 - 🛡️ **Perlindungan Form** — Konfirmasi perubahan belum disimpan pada form produk, UMKM, pengguna, dan lokasi
 - 🧯 **Pemulihan Halaman** — Error boundary per rute dengan aksi coba lagi
-- 🕐 **Informasi UMKM** — Status buka/tutup (WIB), terakhir diperbarui, dan petunjuk arah
+- 🕐 **Jam Operasional** — Jam buka & tutup terstruktur (format HH:MM) serta teks jam operasional lengkap
 - ✅ **Kelengkapan Profil** — Persentase dan daftar bagian UMKM yang belum lengkap
 - 📥 **Ekspor CSV** — Ekspor UMKM/produk untuk role dengan akses global; UTF-8 dan aman dari formula injection
 - 📖 **Panduan Admin** — Bantuan singkat di `/dashboard/bantuan`
@@ -454,7 +454,7 @@ LoningMarketplace/
 │   │   ├── scripts/               # Admin, cleanup, audit scripts
 │   │   ├── app.ts                 # Fastify app factory
 │   │   └── index.ts               # Server entry point
-│   ├── drizzle/                   # SQL migration files (15 migrations, 0000–0014)
+│   ├── drizzle/                   # SQL migration files (16 migrations, 0000–0016)
 │   └── package.json
 ├── e2e/                           # Playwright E2E tests (8 spec files)
 ├── scripts/                       # Build, test, and dev scripts
@@ -563,14 +563,14 @@ erDiagram
 
 | Enum | Values |
 |---|---|
-| `category` | `Kuliner`, `Kerajinan`, `Jasa`, `Sembako`, `Pertanian` |
+| `category` | `Kuliner`, `Sembako & Kebutuhan Harian`, `Fashion & Konveksi`, `Bahan Bangunan & Material`, `Jasa & Otomotif`, `Pertanian, Peternakan & Perikanan`, `Ritel & Perabot`, `Kerajinan & Olahan Kreatif`, `Lainnya` |
 | `user_role` | `superadmin`, `admin`, `perangkat_desa`, `pelaku_umkm` |
 | `publication_status` | `draft`, `published`, `archived` |
 | `public_event_type` | `umkm_view`, `product_view`, `inquiry_started`, `message_copied`, `whatsapp_opened` |
 
 ### Migrations
 
-15 migration files di `backend/drizzle/`, dikelola oleh Drizzle Kit. Jalankan migrasi:
+16 migration files di `backend/drizzle/`, dikelola oleh Drizzle Kit. Jalankan migrasi:
 
 ```bash
 npm --prefix backend run db:migrate
@@ -578,7 +578,7 @@ npm --prefix backend run db:migrate
 
 ### Seed Data
 
-Development seed menyediakan **52 produk** di **15 profil UMKM** fiktif dengan 5 kategori. Foto produk dan profil adalah ilustrasi AI-generated, bukan foto bisnis nyata. Seed bersifat idempotent dan hanya mengganti data di namespace ID `e3000000-...`.
+Development seed menyediakan **52 produk** di **15 profil UMKM** fiktif dengan 9 kategori. Foto produk dan profil adalah ilustrasi AI-generated, bukan foto bisnis nyata. Seed bersifat idempotent dan hanya mengganti data di namespace ID `e3000000-...`.
 
 ```powershell
 $env:NODE_ENV="development"
@@ -629,7 +629,7 @@ Remove-Item Env:ALLOW_SEED
 
 | Method | Path | Keterangan |
 |---|---|---|
-| `GET` | `/api/manage/umkms` | List UMKMs (role-scoped) |
+| `GET` | `/api/manage/umkms` | List UMKMs (role-scoped, 9 kategori) |
 | `GET` | `/api/manage/umkms/:id` | Detail UMKM |
 | `PATCH` | `/api/manage/umkms/:id` | Update UMKM |
 | `POST` | `/api/manage/umkms/:id/publish` | Publish UMKM (admin) |
@@ -699,7 +699,7 @@ sequenceDiagram
 | Session storage | SHA-256 hash in DB; raw token in HTTP-only cookie |
 | CSRF protection | In-memory token + `X-CSRF-Token` header + `Origin` check |
 | Cookie settings | `HttpOnly`, `SameSite=Lax`, `Secure` in production |
-| Rate limiting | Login: 10 req/minute, API: 100 req/window |
+| Rate limiting | Login: 10 req/min, API: 100 req/min, Change Password: 5 req/min, Admin Reset: 5 req/min |
 | Account lockout | 5 failed attempts → 15 minute lock |
 | CORS | Explicit single-origin allowlist (credentialed) |
 
@@ -922,7 +922,7 @@ npx playwright install chromium
 |---|---|
 | Transaksi (cart, checkout, payment) | ❌ Tidak termasuk |
 | Registrasi publik | ❌ Tidak tersedia |
-| Multi-image gallery | ✅ Hingga 5 gambar per produk (v1.9.0) |
+| Multi-image gallery | ✅ Hingga 5 gambar per produk (v2.0) |
 | Rating & review | ❌ Tidak termasuk |
 | OAuth / MFA / password recovery | ❌ Belum tersedia |
 | SSR / prerendering | ❌ SPA only |

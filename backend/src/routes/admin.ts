@@ -44,7 +44,7 @@ export async function adminRoutes(app: FastifyInstance, repository: Repository, 
     const item = await repository.transaction(async (tx) => { const updated = await tx.updateUser(id.data, p.data); if (shouldRevoke) await tx.revokeUserSessions(id.data, now()); await tx.addAudit({ actorUserId: request.auth!.user.id, action: 'user.updated', entityType: 'user', entityId: id.data, metadata: { fields: Object.keys(p.data) }, ...requestInfo(request) }); return updated; });
     return { data: item && { ...item, roleLabel: roleLabel(item.role) } };
   });
-  app.post<{ Params: { id: string } }>('/admin/users/:id/reset-password', { preHandler: [guards.authenticate, guards.origin, guards.csrf, guards.requireCapability('users:reset-password')] }, async (request, reply) => {
+  app.post<{ Params: { id: string } }>('/admin/users/:id/reset-password', { config: { rateLimit: { max: 5, timeWindow: '1 minute' } }, preHandler: [guards.authenticate, guards.origin, guards.csrf, guards.requireCapability('users:reset-password')] }, async (request, reply) => {
     const id = uuid.safeParse(request.params.id), p = z.strictObject({ temporaryPassword: passwordSetterSchema }).safeParse(request.body); if (!id.success || !p.success) return reply.code(400).send(error('Kata sandi minimal 8 karakter.', 'VALIDATION_ERROR'));
     const target = await repository.findUserById(id.data); if (!target) return reply.code(404).send(error('User not found', 'NOT_FOUND'));
     if (!canManageUserTarget(request.auth!.user.role, target.role)) return reply.code(403).send(error('User management is not assigned for this target', 'FORBIDDEN'));

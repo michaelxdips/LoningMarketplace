@@ -34,7 +34,7 @@ export async function seedUmkms(db: PostgresJsDatabase<typeof schema>, mediaPubl
       owner: 'Budi Santoso',
       description: 'Kerajinan tangan berbahan lokal',
       phone: '6281234567891',
-      category: 'Kerajinan' as Category,
+      category: 'Kerajinan & Olahan Kreatif' as Category,
       imageUrl, // Required by check constraint
       imageAssetId: null,
       address: 'Jl. Loning Timur No. 45',

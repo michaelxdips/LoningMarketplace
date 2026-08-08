@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { canArchiveProduct, canDeleteProduct, canDeleteUMKM, canManageMedia, canManageUMKMLocation, canRestoreProduct, canUpdateProduct, canUpdateUMKM, canViewProduct, canViewUMKM, hasCapability } from '../auth/policy.js';
 import type { PublicationStatus, Repository } from '../db/repository.js';
+import { categories } from '../db/repository.js';
 import type { ReturnTypeGuards } from './types.js';
 import { error, hasOneImageSource, productInput, umkmInput, uuid } from './validation.js';
 import { isValidIndonesianWhatsAppNumber } from '../domain/phone.js';
@@ -10,7 +11,7 @@ import { csvDocument, csvFilename } from '../lib/csv.js';
 import { idempotencyCache } from '../lib/idempotency.js';
 
 const locationInput = z.strictObject({ latitude: z.number(), longitude: z.number() });
-const categoryEnum = z.enum(['Kuliner', 'Sembako & Kebutuhan Harian', 'Fashion & Konveksi', 'Bahan Bangunan & Material', 'Jasa & Otomotif', 'Pertanian, Peternakan & Perikanan', 'Ritel & Perabot', 'Kerajinan & Olahan Kreatif', 'Lainnya']);
+const categoryEnum = z.enum(categories);
 const query = z.object({ q: z.string().trim().optional(), category: categoryEnum.optional(), publicationStatus: z.enum(['draft', 'published', 'archived']).optional(), ownerUserId: uuid.optional(), umkmId: uuid.optional(), isAvailable: z.enum(['true', 'false']).transform((value) => value === 'true').optional(), limit: z.coerce.number().int().positive().max(100).default(100) });
 const info = (request: { ip: string; headers: Record<string, unknown> }) => ({ ipAddress: request.ip, userAgent: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'] : undefined });
 
@@ -75,10 +76,13 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
   });
   app.post('/manage/umkms', { preHandler: [guards.authenticate, guards.origin, guards.csrf, guards.requireCapability('umkms:create')] }, async (request, reply) => {
     // Check idempotency key if provided
-    const idempotencyKey = request.headers['idempotency-key'] as string | undefined;
+    const idempotencyHeader = request.headers['idempotency-key'];
+    const idempotencyKey = Array.isArray(idempotencyHeader) ? idempotencyHeader[0] : idempotencyHeader;
     if (idempotencyKey) {
       const existing = idempotencyCache.get<{ data: any }>(`umkm:create:${idempotencyKey}`);
       if (existing) return reply.code(200).send(existing);
+      // Reserve placeholder to prevent concurrent duplicate creation
+      idempotencyCache.set(`umkm:create:${idempotencyKey}`, { data: { pending: true } }, 30_000);
     }
     
     const parsed = umkmInput.extend({ ownerUserId: uuid.nullable().optional() }).safeParse(request.body);
@@ -205,10 +209,13 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
   });
   app.post('/manage/products', { preHandler: [guards.authenticate, guards.origin, guards.csrf, guards.requireCapability('products:create')] }, async (request, reply) => {
     // Check idempotency key if provided
-    const idempotencyKey = request.headers['idempotency-key'] as string | undefined;
+    const idempotencyHeader = request.headers['idempotency-key'];
+    const idempotencyKey = Array.isArray(idempotencyHeader) ? idempotencyHeader[0] : idempotencyHeader;
     if (idempotencyKey) {
       const existing = idempotencyCache.get<{ data: any }>(`product:create:${idempotencyKey}`);
       if (existing) return reply.code(200).send(existing);
+      // Reserve placeholder to prevent concurrent duplicate creation
+      idempotencyCache.set(`product:create:${idempotencyKey}`, { data: { pending: true } }, 30_000);
     }
     
     const parsed = productInput.safeParse(request.body);
@@ -332,7 +339,7 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
       await transaction.removeProductImage(request.params.imageId);
       await transaction.refreshMediaOrphans([target.assetId], at);
       if (existing.umkm?.id) await transaction.touchUMKMCatalog(existing.umkm.id, at);
-      await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.image_removed', entityType: 'product_image', entityId: request.params.id, metadata: { mediaAssetId: target.id }, ...info(request) });
+      await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.image_removed', entityType: 'product_image', entityId: request.params.id, metadata: { mediaAssetId: target.assetId }, ...info(request) });
       return { data: { removed: true } };
     });
   });

@@ -37,7 +37,7 @@ export const umkms = pgTable('umkms', {
   id: uuid('id').primaryKey(), name: text('name').notNull(), slug: varchar('slug', { length: 96 }).notNull(), owner: text('owner').notNull(), description: text('description').notNull(),
   phone: text('phone').notNull(), category: categoryEnum('category').notNull(), imageUrl: text('image_url'), imageAssetId: uuid('image_asset_id').references(() => mediaAssets.id, { onDelete: 'set null' }), address: text('address').notNull(),
   latitude: numeric('latitude', { precision: 9, scale: 6 }), longitude: numeric('longitude', { precision: 9, scale: 6 }),
-  workingHours: text('working_hours'), ownerUserId: uuid('owner_user_id').references(() => users.id, { onDelete: 'set null' }), displayOrder: integer('display_order').notNull().default(0),
+  workingHours: text('working_hours'), openingTime: text('opening_time'), closingTime: text('closing_time'), ownerUserId: uuid('owner_user_id').references(() => users.id, { onDelete: 'set null' }), displayOrder: integer('display_order').notNull().default(0),
   publicationStatus: publicationStatusEnum('publication_status').notNull().default('draft'), publishedAt: timestamp('published_at', { withTimezone: true }),
   contactVerifiedAt: timestamp('contact_verified_at', { withTimezone: true }), catalogUpdatedAt: timestamp('catalog_updated_at', { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

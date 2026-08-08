@@ -13,8 +13,8 @@ function Probe() {
       <input aria-label="Draf pencarian" value={discovery.draftQuery} onChange={(event) => discovery.setDraftQuery(event.currentTarget.value)} />
       <button type="button" onClick={discovery.submitQuery}>Cari</button>
       <button type="button" onClick={discovery.clearQuery}>Bersihkan pencarian</button>
-      <button type="button" onClick={() => discovery.setCategory('Kerajinan')}>Kerajinan</button>
-      <button type="button" onClick={() => discovery.setCategory('Jasa')}>Jasa</button>
+      <button type="button" onClick={() => discovery.setCategory('Kerajinan & Olahan Kreatif')}>Kerajinan & Olahan Kreatif</button>
+      <button type="button" onClick={() => discovery.setCategory('Jasa & Otomotif')}>Jasa & Otomotif</button>
       <button type="button" onClick={discovery.clearFilters}>Hapus filter</button>
       <button type="button" onClick={() => navigate(-1)}>Kembali</button>
       <output aria-label="Kategori">{discovery.category}</output>
@@ -45,7 +45,7 @@ describe('useDiscoveryUrlState', () => {
     expect(new URLSearchParams(screen.getByLabelText('Lokasi').textContent ?? '').get('q')).toHaveLength(80);
     expect(screen.getByLabelText('Lokasi')).toHaveTextContent('category=Kuliner');
     expect(input).toHaveValue('a'.repeat(80));
-    fireEvent.click(screen.getByRole('button', { name: 'Jasa' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Jasa & Otomotif' }));
     fireEvent.click(screen.getByRole('button', { name: 'Kembali' }));
     expect(screen.getByLabelText('Lokasi')).toHaveTextContent(`?q=${'a'.repeat(80)}&category=Kuliner`);
   });
@@ -53,16 +53,16 @@ describe('useDiscoveryUrlState', () => {
   it('pushes category changes, clears all filters, and follows back navigation without loops', () => {
     render(<MemoryRouter initialEntries={['/?q=kopi&category=Kuliner']}><Probe /></MemoryRouter>);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Kerajinan' }));
-    expect(screen.getByLabelText('Lokasi')).toHaveTextContent('?q=kopi&category=Kerajinan');
+    fireEvent.click(screen.getByRole('button', { name: 'Kerajinan & Olahan Kreatif' }));
+    expect(screen.getByLabelText('Lokasi')).toHaveTextContent('?q=kopi&category=Kerajinan+%26+Olahan+Kreatif');
     fireEvent.click(screen.getByRole('button', { name: 'Hapus filter' }));
     expect(screen.getByLabelText('Lokasi')).toBeEmptyDOMElement();
     expect(screen.getByLabelText('Draf pencarian')).toHaveValue('');
 
     fireEvent.click(screen.getByRole('button', { name: 'Kembali' }));
-    expect(screen.getByLabelText('Lokasi')).toHaveTextContent('?q=kopi&category=Kerajinan');
+    expect(screen.getByLabelText('Lokasi')).toHaveTextContent('?q=kopi&category=Kerajinan+%26+Olahan+Kreatif');
     expect(screen.getByLabelText('Draf pencarian')).toHaveValue('kopi');
-    expect(screen.getByLabelText('Kategori')).toHaveTextContent('Kerajinan');
+    expect(screen.getByLabelText('Kategori')).toHaveTextContent('Kerajinan & Olahan Kreatif');
   });
 
   it('clears only the query immediately and preserves the selected category', () => {
@@ -78,7 +78,7 @@ describe('useDiscoveryUrlState', () => {
   it('preserves hash navigation while search and category state changes', () => {
     render(<MemoryRouter initialEntries={['/?q=kopi#featured-products']}><Probe /></MemoryRouter>);
     fireEvent.change(screen.getByLabelText('Draf pencarian'), { target: { value: 'teh' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Kerajinan' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Kerajinan & Olahan Kreatif' }));
     expect(screen.getByLabelText('Hash')).toHaveTextContent('#featured-products');
   });
 });

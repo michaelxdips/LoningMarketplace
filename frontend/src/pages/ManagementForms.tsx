@@ -244,6 +244,8 @@ export function UMKMFormPage() {
         imageAssetId,
         address: text(data, "address"),
         workingHours: text(data, "workingHours") || undefined,
+        openingTime: text(data, "openingTime") || undefined,
+        closingTime: text(data, "closingTime") || undefined,
         ...(canAssignOwner ? { ownerUserId: text(data, "ownerUserId") || null } : {}),
       };
       await save.mutateAsync(input);
@@ -376,9 +378,17 @@ export function UMKMFormPage() {
               defaultValue={value?.phone}
             />
           </Field>
-          <Field label="Jam operasional">
-            <Input name="workingHours" defaultValue={value?.workingHours} />
+          <Field label="Jam buka">
+            <Input name="openingTime" type="time" defaultValue={value?.openingTime} />
           </Field>
+          <Field label="Jam tutup">
+            <Input name="closingTime" type="time" defaultValue={value?.closingTime} />
+          </Field>
+          <div className="sm:col-span-2">
+            <Field label="Jam operasional lengkap">
+              <Input name="workingHours" defaultValue={value?.workingHours} placeholder="Contoh: Senin-Minggu 08.00 - 17.00 WIB" />
+            </Field>
+          </div>
           <div className="sm:col-span-2">
             <Field label="Alamat" error={errors.address}>
               <Input name="address" required defaultValue={value?.address} />
