@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export const CATEGORIES = ['Kuliner', 'Kerajinan', 'Jasa', 'Sembako', 'Pertanian'] as const;
+export const CATEGORIES = ['Kuliner', 'Sembako & Kebutuhan Harian', 'Fashion & Konveksi', 'Bahan Bangunan & Material', 'Jasa & Otomotif', 'Pertanian, Peternakan & Perikanan', 'Ritel & Perabot', 'Kerajinan & Olahan Kreatif', 'Lainnya'] as const;
 export type Category = typeof CATEGORIES[number];
 
 export interface UMKM {

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, MapPin, Clock, User, Phone, MessageSquare, Info, Grid } from 'lucide-react';
+import { X, Clock, User, Phone, MessageSquare, Info, Grid } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UMKM, Product } from '../../types';
 import { formatPrice } from '../../lib/price';
@@ -158,10 +158,6 @@ export default function UMKMDetailDialog({ isOpen, onClose, umkm, products, onIn
                         <span>Jam Buka: {umkm.workingHours}</span>
                       </div>
                     )}
-                    <div className="flex items-start gap-2 text-xs text-warm-gray">
-                      <MapPin size={14} className="text-forest shrink-0 mt-0.5" />
-                      <span>Alamat: {umkm.address}</span>
-                    </div>
                   </div>
 
                   <div className="space-y-2.5">

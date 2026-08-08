@@ -206,7 +206,7 @@ export function UMKMFormPage() {
       "category",
       "address",
     ]);
-    if (!/^\d+$/.test(text(data, "phone")))
+    if (!(/^\d+$/.test(text(data, "phone"))))
       local.phone = "Gunakan angka saja, termasuk kode negara.";
     if (Object.keys(local).length) return setErrors(local);
     setErrors({});
@@ -214,16 +214,21 @@ export function UMKMFormPage() {
     let uploaded: Awaited<ReturnType<typeof uploadMedia>> | undefined;
     let entitySaved = false;
     try {
-      if (media.file)
+      // Get fresh CSRF token for each operation to prevent expiry issues
+      const uploadCsrf = await getFreshCsrfToken(client);
+      if (media.file && uploadCsrf) {
         uploaded = await uploadMedia(
           media.file,
           text(data, "altText"),
-          csrf,
+          uploadCsrf,
           media.setProgress,
         );
+      }
+      
+      const saveCsrf = await getFreshCsrfToken(client);
       const imageAssetId = media.cleared
         ? null
-        : uploaded?.id ?? ((media.externalUrl ?? "").trim() ? null : (item.data?.imageAssetId ?? null));
+        : uploaded?.id ?? ((media.externalUrl ?? "").trim() ? null : (item.data?.imageAssetId ?? null)) ?? null;
       const imageUrl = media.cleared
         ? null
         : imageAssetId
@@ -251,9 +256,10 @@ export function UMKMFormPage() {
         await updateMediaAltText(
           imageAssetId,
           text(data, "altText") || null,
-          csrf,
+          saveCsrf,
         );
       await client.invalidateQueries({ queryKey: ["umkms"] });
+      await client.invalidateQueries({ queryKey: ["manage", "umkms", "list"] });
       unsaved.markClean();
       navigate("/dashboard/umkms");
     } catch (error) {
@@ -261,8 +267,10 @@ export function UMKMFormPage() {
       media.setError(
         error instanceof Error ? error.message : "Gagal menyimpan gambar.",
       );
-      if (uploaded && !entitySaved)
-        void deleteMedia(uploaded.id, csrf).catch(() => undefined);
+      // Cleanup uploaded media if entity wasn't saved
+      if (uploaded) {
+        void deleteMedia(uploaded.id, await getFreshCsrfToken(client)).catch(() => undefined);
+      }
     }
   };
   const canDelete = hasCapability(sessionUser, "umkms:archive") || hasCapability(sessionUser, "umkms:delete");
@@ -404,9 +412,13 @@ export function UMKMFormPage() {
           <div className="sm:col-span-2">
             <Field
               label="Teks alternatif gambar"
-              hint="Jelaskan isi gambar secara singkat untuk pembaca layar."
+              hint="Jelaskan isi gambar secara singkat untuk pembaca layar. Maksimal 500 karakter."
             >
-              <Input name="altText" defaultValue={value?.altText ?? ""} />
+              <Input 
+                name="altText" 
+                defaultValue={value?.altText ?? ""} 
+                maxLength={500}
+              />
             </Field>
           </div>
           <div className="sm:col-span-2">
@@ -543,17 +555,24 @@ export function ProductFormPage() {
     media.setError(undefined);
     let uploaded: Awaited<ReturnType<typeof uploadMedia>> | undefined;
     let entitySaved = false;
+    
+    // Get fresh CSRF token for each operation to prevent expiry issues
+    const uploadCsrf = await getFreshCsrfToken(client);
+    
     try {
-      if (media.file)
+      if (media.file && uploadCsrf) {
         uploaded = await uploadMedia(
           media.file,
           text(data, "altText"),
-          csrf,
+          uploadCsrf,
           media.setProgress,
         );
+      }
+      
+      const saveCsrf = await getFreshCsrfToken(client);
       const imageAssetId = media.cleared
         ? null
-        : uploaded?.id ?? ((media.externalUrl ?? "").trim() ? null : (item.data?.imageAssetId ?? null));
+        : uploaded?.id ?? ((media.externalUrl ?? "").trim() ? null : (item.data?.imageAssetId ?? null)) ?? null;
       const imageUrl = media.cleared
         ? null
         : imageAssetId
@@ -564,7 +583,6 @@ export function ProductFormPage() {
       if (umkmMode === "create" && newUmkmName) {
         setCreatingUmkm(true);
         const placeholderImage = "https://placehold.co/600x400/e8eee8/4a6b4a?text=" + encodeURIComponent(newUmkmName);
-        const freshCsrf = await getFreshCsrfToken(client);
         const newUmkm = await managementApi.umkms.create({
           name: newUmkmName,
           owner: newUmkmName,
@@ -574,7 +592,7 @@ export function ProductFormPage() {
           imageUrl: placeholderImage,
           imageAssetId: null,
           address: "Belum diisi",
-        }, freshCsrf);
+        }, saveCsrf);
         umkmId = newUmkm.id;
         setCreatingUmkm(false);
       }
@@ -600,7 +618,7 @@ export function ProductFormPage() {
         await updateMediaAltText(
           altAssetId,
           text(data, "altText") || null,
-          csrf,
+          saveCsrf,
         );
       unsaved.markClean();
       navigate("/dashboard/products");
@@ -609,8 +627,9 @@ export function ProductFormPage() {
       media.setError(
         error instanceof Error ? error.message : "Gagal menyimpan gambar.",
       );
-      if (uploaded && !entitySaved) {
-        void deleteMedia(uploaded.id, csrf).catch(() => undefined);
+      // Cleanup uploaded media if entity wasn't saved
+      if (uploaded) {
+        void deleteMedia(uploaded.id, await getFreshCsrfToken(client)).catch(() => undefined);
       }
       setCreatingUmkm(false);
     }
@@ -743,8 +762,13 @@ export function ProductFormPage() {
           <div className="sm:col-span-2">
             <Field
               label="Teks alternatif gambar"
+              hint="Maksimal 500 karakter untuk deskripsi gambar."
             >
-              <Input name="altText" defaultValue={value?.altText ?? ""} />
+              <Input 
+                name="altText" 
+                defaultValue={value?.altText ?? ""} 
+                maxLength={500}
+              />
             </Field>
           </div>
           {editing && (
@@ -859,6 +883,13 @@ export function UserFormPage() {
       "role",
       ...(editing ? [] : ["email", "temporaryPassword"]),
     ]);
+    if (!editing) {
+      const email = text(data, "email");
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        local.email = "Format email tidak valid.";
+      }
+    }
     if (!editing && text(data, "temporaryPassword").length < 8)
       local.temporaryPassword = "Kata sandi sementara minimal 8 karakter.";
     if (Object.keys(local).length) return setErrors(local);

@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { boolean, check, index, integer, jsonb, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 
-export const categoryEnum = pgEnum('category', ['Kuliner', 'Kerajinan', 'Jasa', 'Sembako', 'Pertanian']);
+export const categoryEnum = pgEnum('category', ['Kuliner', 'Sembako & Kebutuhan Harian', 'Fashion & Konveksi', 'Bahan Bangunan & Material', 'Jasa & Otomotif', 'Pertanian, Peternakan & Perikanan', 'Ritel & Perabot', 'Kerajinan & Olahan Kreatif', 'Lainnya']);
 export const userRoleEnum = pgEnum('user_role', ['superadmin', 'admin', 'perangkat_desa', 'pelaku_umkm']);
 export const publicationStatusEnum = pgEnum('publication_status', ['draft', 'published', 'archived']);
 export const publicEventTypeEnum = pgEnum('public_event_type', ['umkm_view', 'product_view', 'inquiry_started', 'message_copied', 'whatsapp_opened']);

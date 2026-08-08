@@ -6,7 +6,7 @@ import { hasCapability, manageableUserRoles, USER_ROLES, type UserRole } from '.
 import { allocateSlugWithRetry, slugify } from '../lib/slug.js';
 import { parsePgNumeric, type Coordinates } from '../domain/location.js';
 
-export const categories = ['Kuliner', 'Kerajinan', 'Jasa', 'Sembako', 'Pertanian'] as const;
+export const categories = ['Kuliner', 'Sembako & Kebutuhan Harian', 'Fashion & Konveksi', 'Bahan Bangunan & Material', 'Jasa & Otomotif', 'Pertanian, Peternakan & Perikanan', 'Ritel & Perabot', 'Kerajinan & Olahan Kreatif', 'Lainnya'] as const;
 export const publicationStatuses = ['draft', 'published', 'archived'] as const;
 export type Category = typeof categories[number]; export type PublicationStatus = typeof publicationStatuses[number];
 export type { UserRole } from '../auth/policy.js';

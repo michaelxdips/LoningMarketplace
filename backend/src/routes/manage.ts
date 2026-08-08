@@ -7,9 +7,11 @@ import { error, hasOneImageSource, productInput, umkmInput, uuid } from './valid
 import { isValidIndonesianWhatsAppNumber } from '../domain/phone.js';
 import { normalizeCoordinates } from '../domain/location.js';
 import { csvDocument, csvFilename } from '../lib/csv.js';
+import { idempotencyCache } from '../lib/idempotency.js';
 
 const locationInput = z.strictObject({ latitude: z.number(), longitude: z.number() });
-const query = z.object({ q: z.string().trim().optional(), category: z.enum(['Kuliner', 'Kerajinan', 'Jasa', 'Sembako', 'Pertanian']).optional(), publicationStatus: z.enum(['draft', 'published', 'archived']).optional(), ownerUserId: uuid.optional(), umkmId: uuid.optional(), isAvailable: z.enum(['true', 'false']).transform((value) => value === 'true').optional(), limit: z.coerce.number().int().positive().max(100).default(100) });
+const categoryEnum = z.enum(['Kuliner', 'Sembako & Kebutuhan Harian', 'Fashion & Konveksi', 'Bahan Bangunan & Material', 'Jasa & Otomotif', 'Pertanian, Peternakan & Perikanan', 'Ritel & Perabot', 'Kerajinan & Olahan Kreatif', 'Lainnya']);
+const query = z.object({ q: z.string().trim().optional(), category: categoryEnum.optional(), publicationStatus: z.enum(['draft', 'published', 'archived']).optional(), ownerUserId: uuid.optional(), umkmId: uuid.optional(), isAvailable: z.enum(['true', 'false']).transform((value) => value === 'true').optional(), limit: z.coerce.number().int().positive().max(100).default(100) });
 const info = (request: { ip: string; headers: Record<string, unknown> }) => ({ ipAddress: request.ip, userAgent: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'] : undefined });
 
 export async function manageRoutes(app: FastifyInstance, repository: Repository, guards: ReturnTypeGuards, now: () => Date, id: () => string) {
@@ -72,6 +74,13 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     return { data: item };
   });
   app.post('/manage/umkms', { preHandler: [guards.authenticate, guards.origin, guards.csrf, guards.requireCapability('umkms:create')] }, async (request, reply) => {
+    // Check idempotency key if provided
+    const idempotencyKey = request.headers['idempotency-key'] as string | undefined;
+    if (idempotencyKey) {
+      const existing = idempotencyCache.get<{ data: any }>(`umkm:create:${idempotencyKey}`);
+      if (existing) return reply.code(200).send(existing);
+    }
+    
     const parsed = umkmInput.extend({ ownerUserId: uuid.nullable().optional() }).safeParse(request.body);
     if (!parsed.success) return reply.code(400).send(error('Invalid UMKM payload', 'VALIDATION_ERROR'));
     const { ownerUserId = null, ...value } = parsed.data;
@@ -87,6 +96,12 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
       await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'umkm.created', entityType: 'umkm', entityId: created.id, ...info(request) });
       return created;
     });
+    
+    // Cache result for idempotency
+    if (idempotencyKey) {
+      idempotencyCache.set(`umkm:create:${idempotencyKey}`, { data: item });
+    }
+    
     return reply.code(201).send({ data: item });
   });
   app.patch<{ Params: { id: string } }>('/manage/umkms/:id', { preHandler: guards.secured }, async (request, reply) => {
@@ -189,6 +204,13 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     return { data: { ...item.product, umkmName: item.umkm.name } };
   });
   app.post('/manage/products', { preHandler: [guards.authenticate, guards.origin, guards.csrf, guards.requireCapability('products:create')] }, async (request, reply) => {
+    // Check idempotency key if provided
+    const idempotencyKey = request.headers['idempotency-key'] as string | undefined;
+    if (idempotencyKey) {
+      const existing = idempotencyCache.get<{ data: any }>(`product:create:${idempotencyKey}`);
+      if (existing) return reply.code(200).send(existing);
+    }
+    
     const parsed = productInput.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send(error('Invalid product payload', 'VALIDATION_ERROR'));
     const imageError = await validateImage(request, parsed.data, true);
@@ -206,6 +228,12 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
       await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.created', entityType: 'product', entityId: created.id, ...info(request) });
       return created;
     });
+    
+    // Cache result for idempotency
+    if (idempotencyKey) {
+      idempotencyCache.set(`product:create:${idempotencyKey}`, { data: item });
+    }
+    
     return reply.code(201).send({ data: item });
   });
   app.patch<{ Params: { id: string } }>('/manage/products/:id', { preHandler: guards.secured }, async (request, reply) => {
