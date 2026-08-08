@@ -1,6 +1,5 @@
 /**
- * Generate unique idempotency key for API requests
- * Used to prevent duplicate operations on network retries
+ * Idempotency key generator for API requests
  */
 export function generateIdempotencyKey(operation: string, resourceId?: string): string {
   const timestamp = Date.now();
