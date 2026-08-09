@@ -32,7 +32,7 @@
     "build:frontend": "npm run build --workspace=frontend",
     "build:backend": "npm run build --workspace=backend",
     "build:all": "npm run build",
-    "clean": "node -e \"const fs=require('node:fs'); for(const p of ['dist','server.js','frontend/dist']) fs.rmSync(p,{recursive:true,force:true})\"",
+    "clean": "node -e \"const{rmSync}=require('node:fs');['dist','server.js','frontend/dist'].forEach(p=>{try{rmSync(p,{recursive:true,force:true})}catch{}})\"",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
