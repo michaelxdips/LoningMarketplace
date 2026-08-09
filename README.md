@@ -211,7 +211,7 @@ Brand publik adalah **Loning Maju**. Identifier internal seperti `marketplace-lo
 
 | Requirement | Keterangan |
 |---|---|
-| **Node.js** | `>=20 <27` (diverifikasi dengan `v26.4.0`) |
+| **Node.js** | `>=20 <27` (diverifikasi dengan `v26.7.0`) |
 | **npm** | Bundled dengan Node.js |
 | **Docker Desktop** | Untuk PostgreSQL lokal via Docker Compose |
 
@@ -454,7 +454,7 @@ LoningMarketplace/
 │   │   ├── scripts/               # Admin, cleanup, audit scripts
 │   │   ├── app.ts                 # Fastify app factory
 │   │   └── index.ts               # Server entry point
-│   ├── drizzle/                   # SQL migration files (16 migrations, 0000–0016)
+│   ├── drizzle/                   # SQL migration files (17 migrations, 0000–0016, idempotent)
 │   └── package.json
 ├── e2e/                           # Playwright E2E tests (8 spec files)
 ├── scripts/                       # Build, test, and dev scripts
@@ -570,7 +570,7 @@ erDiagram
 
 ### Migrations
 
-16 migration files di `backend/drizzle/`, dikelola oleh Drizzle Kit. Jalankan migrasi:
+17 migration files di `backend/drizzle/`, dikelola oleh Drizzle Kit. Semua migration idempotent — aman dijalankan berkali-kali, termasuk di Render deploy. Jalankan migrasi:
 
 ```bash
 npm --prefix backend run db:migrate
@@ -631,9 +631,11 @@ Remove-Item Env:ALLOW_SEED
 |---|---|---|
 | `GET` | `/api/manage/umkms` | List UMKMs (role-scoped, 9 kategori) |
 | `GET` | `/api/manage/umkms/:id` | Detail UMKM |
-| `PATCH` | `/api/manage/umkms/:id` | Update UMKM |
-| `POST` | `/api/manage/umkms/:id/publish` | Publish UMKM (admin) |
-| `DELETE` | `/api/manage/umkms/:id` | Archive UMKM |
+| `POST` | `/api/manage/umkms` | Create UMKM (idempotency-key supported) |
+| `DELETE` | `/api/manage/umkms/:id` | Delete UMKM (archived only) |
+| `POST` | `/api/manage/umkms/:id/verify-contact` | Verify WhatsApp contact |
+| `PATCH` | `/api/manage/umkms/:id/location` | Set/clear location |
+| `GET` | `/api/manage/umkms/export.csv` | Export CSV (admin only) |
 | `GET` | `/api/manage/products` | List products (role-scoped) |
 | `POST` | `/api/manage/products` | Create product |
 | `PATCH` | `/api/manage/products/:id` | Update product |
