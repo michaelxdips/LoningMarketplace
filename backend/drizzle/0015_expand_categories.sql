@@ -1,16 +1,16 @@
--- 0015: Expand category enum from 5 to 9 values
--- Adds 4 new categories and renames 4 existing via ALTER TYPE + data migration
+-- 0015: Expand category enum (IDEMPOTENT — safe to re-run)
+-- Each ALTER TYPE is wrapped in exception handler
 
-ALTER TYPE "public"."category" ADD VALUE 'Sembako & Kebutuhan Harian';
-ALTER TYPE "public"."category" ADD VALUE 'Fashion & Konveksi';
-ALTER TYPE "public"."category" ADD VALUE 'Bahan Bangunan & Material';
-ALTER TYPE "public"."category" ADD VALUE 'Jasa & Otomotif';
-ALTER TYPE "public"."category" ADD VALUE 'Pertanian, Peternakan & Perikanan';
-ALTER TYPE "public"."category" ADD VALUE 'Ritel & Perabot';
-ALTER TYPE "public"."category" ADD VALUE 'Kerajinan & Olahan Kreatif';
-ALTER TYPE "public"."category" ADD VALUE 'Lainnya';
+DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Sembako & Kebutuhan Harian'; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Fashion & Konveksi'; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Bahan Bangunan & Material'; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Jasa & Otomotif'; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Pertanian, Peternakan & Perikanan'; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Ritel & Perabot'; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Kerajinan & Olahan Kreatif'; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Lainnya'; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- Migrate existing data from old category names to new expanded names
+-- Migrate existing data (idempotent — no-op if already done)
 UPDATE "umkms" SET category = 'Sembako & Kebutuhan Harian' WHERE category = 'Sembako';
 UPDATE "umkms" SET category = 'Jasa & Otomotif' WHERE category = 'Jasa';
 UPDATE "umkms" SET category = 'Pertanian, Peternakan & Perikanan' WHERE category = 'Pertanian';
