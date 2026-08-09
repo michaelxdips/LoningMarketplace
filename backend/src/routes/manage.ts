@@ -116,7 +116,7 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     const existing = await loadUMKM(request, reply);
     if (!existing || reply.sent) return;
     if (!canUpdateUMKM(request.auth!.user.role, request.auth!.user.id, existing.ownerUserId)) return denyOwnership(reply, 'UMKM');
-    const parsed = umkmInput.partial().extend({ ownerUserId: uuid.nullable().optional() }).safeParse(request.body);
+    const parsed = umkmInput.partial().passthrough().extend({ ownerUserId: uuid.nullable().optional() }).safeParse(request.body);
     if (!parsed.success || Object.keys(parsed.data).length === 0) return reply.code(400).send(error('Invalid UMKM update', 'VALIDATION_ERROR'));
     if (parsed.data.ownerUserId !== undefined && !hasCapability(request.auth!.user.role, 'umkms:assign-owner')) return reply.code(403).send(error('Owner assignment is not assigned', 'FORBIDDEN'));
     const imageError = await validateImage(request, parsed.data, false);
@@ -254,7 +254,7 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     const existing = await loadProduct(request, reply);
     if (!existing || reply.sent) return;
     if (!canUpdateProduct(request.auth!.user.role, request.auth!.user.id, existing.umkm.ownerUserId)) return denyOwnership(reply, 'Product');
-    const parsed = productInput.partial().safeParse(request.body);
+    const parsed = productInput.partial().passthrough().safeParse(request.body);
     if (!parsed.success || Object.keys(parsed.data).length === 0) return reply.code(400).send(error('Invalid product update', 'VALIDATION_ERROR'));
     const imageError = await validateImage(request, parsed.data, false);
     if (imageError) return reply.code(400).send(error(imageError, 'MEDIA_SOURCE_INVALID'));
