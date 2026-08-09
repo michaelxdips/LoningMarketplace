@@ -24,9 +24,9 @@ export default function ProductDetailPage() {
   // ponytail: no AbortSignal — a StrictMode/Suspense remount would otherwise cancel the
   // in-flight fetch (net::ERR_ABORTED). Upgrade path: pass signal when real cancellation is needed.
   const productQuery = useQuery({ queryKey: ['product', identifier], queryFn: () => getProduct(identifier), enabled: Boolean(identifier), staleTime: PUBLIC_DETAIL_STALE_TIME });
-  const merchantQuery = useQuery({ queryKey: ['umkm', productQuery.data?.umkmId], queryFn: () => getUMKM(productQuery.data!.umkmId!), enabled: Boolean(productQuery.data?.umkmId), staleTime: PUBLIC_DETAIL_STALE_TIME });
+  const merchantQuery = useQuery({ queryKey: ['umkm', productQuery.data?.umkmId], queryFn: () => getUMKM(productQuery.data?.umkmId ?? ''), enabled: Boolean(productQuery.data?.umkmId), staleTime: PUBLIC_DETAIL_STALE_TIME });
   const detail = productQuery.data;
-  const relatedQuery = useQuery({ queryKey: ['products', 'related', detail?.slug, 4], queryFn: () => getRelatedProducts(detail!.slug, { limit: 4 }), enabled: Boolean(detail?.slug), staleTime: PUBLIC_DETAIL_STALE_TIME });
+  const relatedQuery = useQuery({ queryKey: ['products', 'related', detail?.slug, 4], queryFn: () => getRelatedProducts(detail?.slug ?? '', { limit: 4 }), enabled: Boolean(detail?.slug), staleTime: PUBLIC_DETAIL_STALE_TIME });
   const product: Product | undefined = detail && { ...detail, umkmName: detail.umkm.name };
   const merchantData = detail?.umkmId
     ? merchantQuery.data

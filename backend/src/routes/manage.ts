@@ -99,6 +99,10 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
       const created = await transaction.createUMKM(id(), value, ownerUserId);
       await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'umkm.created', entityType: 'umkm', entityId: created.id, ...info(request) });
       return created;
+    }).catch((err) => {
+      // Clean up idempotency placeholder on failure
+      if (idempotencyKey) idempotencyCache.delete(`umkm:create:${idempotencyKey}`);
+      throw err;
     });
     
     // Cache result for idempotency
@@ -234,6 +238,9 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
       const created = await transaction.createProduct(id(), parsed.data);
       await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.created', entityType: 'product', entityId: created.id, ...info(request) });
       return created;
+    }).catch((err) => {
+      if (idempotencyKey) idempotencyCache.delete(`product:create:${idempotencyKey}`);
+      throw err;
     });
     
     // Cache result for idempotency
