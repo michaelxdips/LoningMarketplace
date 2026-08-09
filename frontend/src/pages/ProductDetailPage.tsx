@@ -31,7 +31,7 @@ export default function ProductDetailPage() {
   const merchantData = detail?.umkmId
     ? merchantQuery.data
     : detail
-      ? { id: '', slug: '', name: detail.umkm.name || 'Penjual Mandiri', owner: 'Penjual Mandiri', description: '', phone: detail.umkm.phone || '6280000000000', category: detail.category, imageUrl: null, address: 'Desa Loning', workingHours: undefined, latitude: null, longitude: null }
+      ? { id: '', slug: '', name: detail.umkm.name || 'Penjual Mandiri', owner: 'Penjual Mandiri', description: '', phone: detail.umkm.phone || '6280000000000', category: detail.category, imageUrl: null, address: 'Desa Loning', workingHours: undefined, openingTime: undefined, closingTime: undefined, latitude: null, longitude: null }
       : undefined;
 
   useEffect(() => { if (detail && identifier !== detail.slug) navigate(`/produk/${encodeURIComponent(detail.slug)}${location.search}${location.hash}`, { replace: true }); }, [detail, identifier, location.hash, location.search, navigate]);

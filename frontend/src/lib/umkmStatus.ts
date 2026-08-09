@@ -21,6 +21,24 @@ export function parseWorkingHours(value?: string | null): OpeningWindow | null {
   return start === null || end === null ? null : { start, end, raw: value.trim() };
 }
 
+/** Builds an opening window from structured openingTime/closingTime fields. */
+export function buildOpeningWindow(openingTime?: string | null, closingTime?: string | null): OpeningWindow | null {
+  if (!openingTime || !closingTime) return null;
+  const start = parseClock(openingTime);
+  const end = parseClock(closingTime);
+  if (start === null || end === null) return null;
+  return { start, end, raw: `${openingTime}–${closingTime}` };
+}
+
+/** Resolves the best available opening window: structured fields first, then free-text workingHours. */
+export function resolveOpeningWindow(workingHours?: string | null, openingTime?: string | null, closingTime?: string | null): OpeningWindow | null {
+  if (openingTime && closingTime) {
+    const window = buildOpeningWindow(openingTime, closingTime);
+    if (window) return window;
+  }
+  return parseWorkingHours(workingHours);
+}
+
 function jakartaParts(at: Date) {
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: JAKARTA_TIME_ZONE,
@@ -34,8 +52,8 @@ const clockLabel = (minutes: number) => `${String(Math.floor(minutes / 60)).padS
 
 export type BusinessOpenStatus = { kind: 'open' | 'closed' | 'unknown'; label: string; detail: string };
 
-export function getBusinessOpenStatus(workingHours?: string | null, at = new Date()): BusinessOpenStatus {
-  const window = parseWorkingHours(workingHours);
+export function getBusinessOpenStatus(workingHours?: string | null, at = new Date(), openingTime?: string | null, closingTime?: string | null): BusinessOpenStatus {
+  const window = resolveOpeningWindow(workingHours, openingTime, closingTime);
   if (!window) return { kind: 'unknown', label: 'Jam operasional belum tersedia', detail: 'Hubungi UMKM untuk memastikan waktu layanan.' };
   const now = jakartaParts(at);
   const overnight = window.end <= window.start;
@@ -47,6 +65,13 @@ export function getBusinessOpenStatus(workingHours?: string | null, at = new Dat
     label: opensTomorrow ? `Tutup · Buka besok pukul ${clockLabel(window.start)}` : `Tutup · Buka pukul ${clockLabel(window.start)}`,
     detail: `Berdasarkan jam operasional ${window.raw} WIB.`,
   };
+}
+
+/** Extracts a display-friendly hours label from structured fields or free-text. */
+export function formatOperatingHours(workingHours?: string | null, openingTime?: string | null, closingTime?: string | null): string | null {
+  if (openingTime && closingTime) return `${openingTime} – ${closingTime} WIB`;
+  if (workingHours) return workingHours;
+  return null;
 }
 
 export function formatPublicUpdatedAt(value?: string | Date | null, at = new Date()): string | null {
@@ -67,13 +92,14 @@ export function formatPublicUpdatedAt(value?: string | Date | null, at = new Dat
 export function profileCompleteness(umkm: {
   name?: string | null; description?: string | null; category?: string | null; imageUrl?: string | null;
   isContactValid?: boolean; phone?: string | null; address?: string | null; latitude?: number | null; longitude?: number | null;
-  workingHours?: string | null; assignedProductCount?: number; publishedProductCount?: number;
+  workingHours?: string | null; openingTime?: string | null; closingTime?: string | null; assignedProductCount?: number; publishedProductCount?: number;
 }) {
   const checks = [
     ['Nama UMKM', Boolean(umkm.name?.trim())], ['Deskripsi', Boolean(umkm.description?.trim())], ['Kategori', Boolean(umkm.category)],
     ['Foto usaha', Boolean(umkm.imageUrl)], ['Nomor WhatsApp valid', umkm.isContactValid ?? /^628\d{7,12}$/.test(umkm.phone ?? '')],
     ['Alamat', Boolean(umkm.address?.trim())], ['Lokasi usaha', umkm.latitude != null && umkm.longitude != null],
-    ['Jam operasional', Boolean(parseWorkingHours(umkm.workingHours))], ['Minimal satu produk', Number(umkm.assignedProductCount ?? 0) > 0],
+    ['Jam operasional', Boolean(resolveOpeningWindow(umkm.workingHours, umkm.openingTime, umkm.closingTime))],
+    ['Minimal satu produk', Number(umkm.assignedProductCount ?? 0) > 0],
     ['Minimal satu produk terbit', Number(umkm.publishedProductCount ?? 0) > 0],
   ] as const;
   const completed = checks.filter(([, ready]) => ready).length;

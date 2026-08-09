@@ -16,7 +16,7 @@ interface BusinessCardProps {
 }
 
 const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
-  const openStatus = getBusinessOpenStatus(umkm.workingHours);
+  const openStatus = getBusinessOpenStatus(umkm.workingHours, new Date(), umkm.openingTime, umkm.closingTime);
   const updatedLabel = formatPublicUpdatedAt(umkm.catalogUpdatedAt ?? umkm.updatedAt);
   return (
     <article

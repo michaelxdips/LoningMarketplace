@@ -193,7 +193,10 @@ export default function PetaUMKMPage() {
                       <div>
                         <div className="flex flex-wrap items-center gap-2 mb-2">
                           <span className="badge-category">{activeUMKM.category}</span>
-                          {activeUMKM.workingHours && (
+                          {activeUMKM.openingTime && activeUMKM.closingTime && (
+                            <span className="badge-tag">{activeUMKM.openingTime} – {activeUMKM.closingTime} WIB</span>
+                          )}
+                          {!activeUMKM.openingTime && activeUMKM.workingHours && (
                             <span className="badge-tag">{activeUMKM.workingHours}</span>
                           )}
                         </div>

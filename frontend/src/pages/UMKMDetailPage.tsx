@@ -25,7 +25,7 @@ export default function UMKMDetailPage() {
   // in-flight fetch (net::ERR_ABORTED). Upgrade path: pass signal when real cancellation is needed.
   const umkmQuery = useQuery({ queryKey: ['umkm', identifier], queryFn: () => getUMKM(identifier), enabled: Boolean(identifier), staleTime: PUBLIC_DETAIL_STALE_TIME });
   const umkm = umkmQuery.data;
-  const openStatus = getBusinessOpenStatus(umkm?.workingHours);
+  const openStatus = getBusinessOpenStatus(umkm?.workingHours, new Date(), umkm?.openingTime, umkm?.closingTime);
   const updatedLabel = formatPublicUpdatedAt(umkm?.catalogUpdatedAt ?? umkm?.updatedAt);
   const productsQuery = useQuery({ queryKey: ['products', { umkmId: umkm?.id }], queryFn: () => getProducts({ umkmId: umkm!.id }), enabled: Boolean(umkm?.id), staleTime: PUBLIC_DETAIL_STALE_TIME });
   useEffect(() => { if (umkm && identifier !== umkm.slug) navigate(`/umkm/${encodeURIComponent(umkm.slug)}${location.search}${location.hash}`, { replace: true }); }, [identifier, location.hash, location.search, navigate, umkm]);

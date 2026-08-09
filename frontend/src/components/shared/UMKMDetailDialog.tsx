@@ -152,7 +152,13 @@ export default function UMKMDetailDialog({ isOpen, onClose, umkm, products, onIn
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-sage-border">
                   <div className="space-y-2.5">
                     <h4 className="text-[10px] font-semibold uppercase tracking-widest text-warm-gray">Detail Operasional</h4>
-                    {umkm.workingHours && (
+                    {umkm.openingTime && umkm.closingTime && (
+                      <div className="flex items-center gap-2 text-xs text-warm-gray">
+                        <Clock size={14} className="text-forest shrink-0" />
+                        <span>Jam Buka: {umkm.openingTime} – {umkm.closingTime} WIB</span>
+                      </div>
+                    )}
+                    {!umkm.openingTime && umkm.workingHours && (
                       <div className="flex items-center gap-2 text-xs text-warm-gray">
                         <Clock size={14} className="text-forest shrink-0" />
                         <span>Jam Buka: {umkm.workingHours}</span>

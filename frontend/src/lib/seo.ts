@@ -57,7 +57,7 @@ export function buildLocalBusinessJsonLd(umkm: UMKM, description = umkm.descript
     '@context': 'https://schema.org', '@type': 'LocalBusiness', name: umkm.name, description, image: umkm.imageUrl,
     telephone: umkm.phone, url: buildSiteUrl(`/umkm/${umkm.slug}`),
     address: { '@type': 'PostalAddress', streetAddress: umkm.address, addressLocality: 'Loning', addressRegion: 'Jawa Tengah', addressCountry: 'ID' },
-    openingHours: umkm.workingHours,
+    openingHours: umkm.openingTime && umkm.closingTime ? `${umkm.openingTime}-${umkm.closingTime}` : (umkm.workingHours ?? undefined),
     ...(coordinates ? { geo: { '@type': 'GeoCoordinates', latitude: coordinates.latitude, longitude: coordinates.longitude } } : {}),
   };
 }
