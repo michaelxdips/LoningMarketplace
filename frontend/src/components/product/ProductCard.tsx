@@ -6,7 +6,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import { MessageSquare, Eye, ArrowRight } from 'lucide-react';
-import { Product } from '../../types';
+import { getCategoryShortLabel, Product } from '../../types';
 import { formatPrice } from '../../lib/price';
 import { ProductImage } from './ProductImage';
 import { ProductGallery, type GalleryImage } from './ProductGallery';
@@ -28,7 +28,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
     </div>
     <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
       <div>
-        <span className="text-[10px] font-bold text-terracotta uppercase tracking-widest block mb-1">{product.category}</span>
+        <span title={product.category} className="text-[10px] font-bold text-terracotta uppercase tracking-widest block mb-1 truncate">{getCategoryShortLabel(product.category)}</span>
         {props.variant === 'related' ? <h3 title={product.name} className="text-sm font-bold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">{product.name}</h3> : <h4 title={product.name} className="text-sm font-bold text-charcoal line-clamp-1 group-hover:text-forest transition-colors">{product.name}</h4>}
         <p className="text-xs text-warm-gray line-clamp-2 leading-relaxed mt-1">{product.description}</p>
       </div>

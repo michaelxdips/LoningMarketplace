@@ -10,7 +10,7 @@ import { getUMKMs } from '../lib/api';
 import { useUMKMs } from '../hooks/useUMKMs';
 import { normalizeCoordinates, buildGoogleMapsEmbedUrl, buildGoogleMapsSearchUrl, buildGoogleMapsDirectionsUrl } from '../lib/location';
 import { usePageMetadata } from '../lib/seo';
-import type { UMKM } from '../types';
+import { getCategoryShortLabel, type UMKM } from '../types';
 
 export default function PetaUMKMPage() {
   const [selectedUMKMId, setSelectedUMKMId] = useState<string | null>(null);
@@ -192,7 +192,7 @@ export default function PetaUMKMPage() {
                     <div className="flex flex-1 flex-col justify-between">
                       <div>
                         <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <span className="badge-category">{activeUMKM.category}</span>
+                          <span className="badge-category">{getCategoryShortLabel(activeUMKM.category)}</span>
                           {activeUMKM.openingTime && activeUMKM.closingTime && (
                             <span className="badge-tag">{activeUMKM.openingTime} – {activeUMKM.closingTime} WIB</span>
                           )}
@@ -265,9 +265,11 @@ export default function PetaUMKMPage() {
                             : 'border-sage-border bg-cream-card hover:bg-sage-light/30'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-charcoal truncate pr-2">{umkm.name}</span>
-                          <span className="badge-category text-[10px] py-0.5 px-2">{umkm.category}</span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-charcoal truncate min-w-0 flex-1">{umkm.name}</span>
+                          <span className="badge-category text-[9.5px] py-0.5 px-2 shrink-0 whitespace-nowrap" title={umkm.category}>
+                            {getCategoryShortLabel(umkm.category)}
+                          </span>
                         </div>
                         <p className="mt-1 text-[11px] text-warm-gray truncate">{umkm.address}</p>
                       </button>

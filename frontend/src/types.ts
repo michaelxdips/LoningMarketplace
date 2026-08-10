@@ -6,6 +6,24 @@
 export const CATEGORIES = ['Kuliner', 'Sembako & Kebutuhan Harian', 'Fashion & Konveksi', 'Bahan Bangunan & Material', 'Jasa & Otomotif', 'Pertanian, Peternakan & Perikanan', 'Ritel & Perabot', 'Kerajinan & Olahan Kreatif', 'Lainnya'] as const;
 export type Category = typeof CATEGORIES[number];
 
+export const CATEGORY_SHORT_LABELS: Record<Category, string> = {
+  'Kuliner': 'Kuliner',
+  'Sembako & Kebutuhan Harian': 'Sembako & Harian',
+  'Fashion & Konveksi': 'Fashion',
+  'Bahan Bangunan & Material': 'Bangunan',
+  'Jasa & Otomotif': 'Jasa & Otomotif',
+  'Pertanian, Peternakan & Perikanan': 'Tani & Ternak',
+  'Ritel & Perabot': 'Ritel & Perabot',
+  'Kerajinan & Olahan Kreatif': 'Kerajinan',
+  'Lainnya': 'Lainnya',
+};
+
+export function getCategoryShortLabel(category?: string | null): string {
+  if (!category) return '';
+  return CATEGORY_SHORT_LABELS[category as Category] || category;
+}
+
+
 export interface UMKM {
   id: string;
   slug: string;

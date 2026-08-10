@@ -7,6 +7,11 @@ import React from 'react';
 import { ArrowRight, Store } from 'lucide-react';
 import { ProductImage } from '../product/ProductImage';
 
+import produkLokalImg from '../../assets/hero/produk-lokal.png';
+import kulinerImg from '../../assets/hero/kuliner.png';
+import jasaImg from '../../assets/hero/jasa.png';
+import pelakuUmkmImg from '../../assets/hero/pelaku-umkm.png';
+
 interface HeroSectionProps {
   onBrowseProducts: () => void;
   onBrowseUMKMs: () => void;
@@ -78,12 +83,12 @@ export default function HeroSection({ onBrowseProducts, onBrowseUMKMs }: HeroSec
           <div className="relative lg:col-span-5">
             <div className="grid grid-cols-2 gap-4" aria-label="Pilihan produk dan usaha Desa Loning">
               <div className="space-y-4">
-                <HeroPhoto src="/images/hero/produk-loning-1.jpg" alt="Produk lokal Desa Loning" label="Produk lokal" className="h-56 md:h-64" priority />
-                <HeroPhoto src="/images/hero/produk-loning-2.jpg" alt="Produk kuliner Desa Loning" label="Kuliner" className="h-36 md:h-40" />
+                <HeroPhoto src={produkLokalImg} alt="Produk lokal kerajinan Desa Loning" label="Produk lokal" className="h-56 md:h-64" priority />
+                <HeroPhoto src={kulinerImg} alt="Produk kuliner Desa Loning" label="Kuliner" className="h-36 md:h-40" />
               </div>
               <div className="space-y-4 pt-8">
-                <HeroPhoto src="/images/hero/produk-loning-3.jpg" alt="Layanan usaha warga Desa Loning" label="Jasa" className="h-36 md:h-40" />
-                <HeroPhoto src="/images/hero/pelaku-umkm-loning.jpg" alt="Pelaku UMKM Desa Loning" label="Pelaku UMKM" className="h-56 md:h-64" />
+                <HeroPhoto src={jasaImg} alt="Layanan usaha dan jasa warga Desa Loning" label="Jasa" className="h-36 md:h-40" />
+                <HeroPhoto src={pelakuUmkmImg} alt="Pelaku UMKM Desa Loning" label="Pelaku UMKM" className="h-56 md:h-64" />
               </div>
             </div>
           </div>

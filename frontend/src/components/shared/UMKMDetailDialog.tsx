@@ -94,7 +94,7 @@ export default function UMKMDetailDialog({ isOpen, onClose, umkm, products, onIn
             {/* Head Info Overlay */}
             <div className="absolute bottom-4 left-4 right-4 text-white">
               <span className="inline-block px-2 py-0.5 bg-terracotta text-white text-[9px] font-semibold rounded uppercase tracking-widest mb-1.5">
-                {umkm.category}
+                {getCategoryShortLabel(umkm.category)}
               </span>
               <h2 id="umkm-dialog-title" className="text-xl md:text-2xl font-semibold text-white tracking-tight">
                 {umkm.name}
