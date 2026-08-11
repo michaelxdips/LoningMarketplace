@@ -10,7 +10,13 @@ export const phone = z.string().trim().max(40).transform((value, context) => {
 });
 export const optionalUrl = z.union([z.string().url(), z.literal(''), z.null()]).optional().transform((val) => (val === '' ? null : val));
 export const timeString = z.preprocess(
-  (val) => typeof val === 'string' && val.trim() === '' ? null : val,
+  (val) => {
+    if (typeof val !== 'string') return val;
+    const trimmed = val.trim();
+    if (!trimmed) return null;
+    const match = /^([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?$/.exec(trimmed);
+    return match ? `${match[1]}:${match[2]}` : trimmed;
+  },
   z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).nullable().optional()
 );
 export const umkmInput = z.strictObject({

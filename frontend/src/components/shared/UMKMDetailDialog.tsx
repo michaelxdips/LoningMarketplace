@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Clock, User, Phone, MessageSquare, Info, Grid } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UMKM, Product } from '../../types';
+import { getCategoryShortLabel, UMKM, Product } from '../../types';
 import { formatPrice } from '../../lib/price';
 import BusinessLocation from './BusinessLocation';
 import { ProductImage } from '../product/ProductImage';

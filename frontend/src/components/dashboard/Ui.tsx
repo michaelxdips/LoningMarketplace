@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type RefObject, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { forwardRef, useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type RefObject, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 import { AlertCircle, LoaderCircle, Search, X, Upload, Trash2 } from 'lucide-react';
 import { ApiError } from '../../lib/api';
 import { ProductImage } from '../product/ProductImage';
@@ -15,9 +15,12 @@ export function PageHeader({ title, description, action }: { title: string; desc
 export function Field({ label, error, children, hint }: { label: string; error?: string; children: ReactNode; hint?: string }) {
   return <div><label className="block"><span className="mb-1.5 block text-sm font-bold text-charcoal">{label}</span>{children}</label>{error ? <p className="mt-1.5 text-sm text-red-700" role="alert">{error}</p> : hint ? <p className="mt-1.5 text-xs text-warm-gray">{hint}</p> : null}</div>;
 }
-export const Input = (props: InputHTMLAttributes<HTMLInputElement>) => <input {...props} className={`${controlClass} ${props.className ?? ''}`} />;
-export const Select = (props: SelectHTMLAttributes<HTMLSelectElement>) => <select {...props} className={`${controlClass} ${props.className ?? ''}`} />;
-export const Textarea = (props: TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea {...props} className={`${controlClass} min-h-28 resize-y ${props.className ?? ''}`} />;
+export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>((props, ref) => <input ref={ref} {...props} className={`${controlClass} ${props.className ?? ''}`} />);
+Input.displayName = 'Input';
+export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>((props, ref) => <select ref={ref} {...props} className={`${controlClass} ${props.className ?? ''}`} />);
+Select.displayName = 'Select';
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>((props, ref) => <textarea ref={ref} {...props} className={`${controlClass} min-h-28 resize-y ${props.className ?? ''}`} />);
+Textarea.displayName = 'Textarea';
 export const mediaInputAccept = 'image/jpeg,image/png,image/webp';
 export function MediaField({ currentUrl, file, progress, error, onFile, onClear }: { currentUrl?: string; file?: File; progress?: number; error?: string; onFile: (file?: File) => void; onClear: () => void }) {
   const inputId = useId(); const errorId = useId(); const [objectUrl, setObjectUrl] = useState<{ file: File; url: string }>();

@@ -80,28 +80,51 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     const idempotencyKey = Array.isArray(idempotencyHeader) ? idempotencyHeader[0] : idempotencyHeader;
     if (idempotencyKey) {
       const existing = idempotencyCache.get<{ data: any }>(`umkm:create:${idempotencyKey}`);
-      if (existing) return reply.code(200).send(existing);
-      // Reserve placeholder to prevent concurrent duplicate creation
-      idempotencyCache.set(`umkm:create:${idempotencyKey}`, { data: { pending: true } }, 30_000);
+      if (existing) {
+        if (existing.data && 'pending' in existing.data && existing.data.pending) {
+          return reply.code(409).send(error('Permintaan sedang diproses, mohon tunggu sebentar.', 'CONCURRENT_REQUEST'));
+        }
+        return reply.code(200).send(existing);
+      }
     }
+
+    const cleanupIdempotency = () => {
+      if (idempotencyKey) idempotencyCache.delete(`umkm:create:${idempotencyKey}`);
+    };
     
     const parsed = umkmInput.extend({ ownerUserId: uuid.nullable().optional() }).safeParse(request.body);
-    if (!parsed.success) return reply.code(400).send(error('Invalid UMKM payload', 'VALIDATION_ERROR'));
+    if (!parsed.success) {
+      cleanupIdempotency();
+      return reply.code(400).send(error('Invalid UMKM payload', 'VALIDATION_ERROR'));
+    }
     const { ownerUserId = null, ...value } = parsed.data;
-    if (ownerUserId && !hasCapability(request.auth!.user.role, 'umkms:assign-owner')) return reply.code(403).send(error('Owner assignment is not assigned', 'FORBIDDEN'));
+    if (ownerUserId && !hasCapability(request.auth!.user.role, 'umkms:assign-owner')) {
+      cleanupIdempotency();
+      return reply.code(403).send(error('Owner assignment is not assigned', 'FORBIDDEN'));
+    }
     const imageError = await validateImage(request, value, false);
-    if (imageError) return reply.code(400).send(error(imageError, 'MEDIA_SOURCE_INVALID'));
+    if (imageError) {
+      cleanupIdempotency();
+      return reply.code(400).send(error(imageError, 'MEDIA_SOURCE_INVALID'));
+    }
     if (ownerUserId) {
       const owner = await repository.findUserById(ownerUserId);
-      if (!owner || owner.role !== 'pelaku_umkm' || !owner.isActive) return reply.code(400).send(error('Invalid owner assignment', 'VALIDATION_ERROR'));
+      if (!owner || owner.role !== 'pelaku_umkm' || !owner.isActive) {
+        cleanupIdempotency();
+        return reply.code(400).send(error('Invalid owner assignment', 'VALIDATION_ERROR'));
+      }
     }
+
+    if (idempotencyKey) {
+      idempotencyCache.set(`umkm:create:${idempotencyKey}`, { data: { pending: true } }, 30_000);
+    }
+
     const item = await repository.transaction(async (transaction) => {
       const created = await transaction.createUMKM(id(), value, ownerUserId);
       await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'umkm.created', entityType: 'umkm', entityId: created.id, ...info(request) });
       return created;
     }).catch((err) => {
-      // Clean up idempotency placeholder on failure
-      if (idempotencyKey) idempotencyCache.delete(`umkm:create:${idempotencyKey}`);
+      cleanupIdempotency();
       throw err;
     });
     
@@ -217,29 +240,59 @@ export async function manageRoutes(app: FastifyInstance, repository: Repository,
     const idempotencyKey = Array.isArray(idempotencyHeader) ? idempotencyHeader[0] : idempotencyHeader;
     if (idempotencyKey) {
       const existing = idempotencyCache.get<{ data: any }>(`product:create:${idempotencyKey}`);
-      if (existing) return reply.code(200).send(existing);
-      // Reserve placeholder to prevent concurrent duplicate creation
-      idempotencyCache.set(`product:create:${idempotencyKey}`, { data: { pending: true } }, 30_000);
+      if (existing) {
+        if (existing.data && 'pending' in existing.data && existing.data.pending) {
+          return reply.code(409).send(error('Permintaan sedang diproses, mohon tunggu sebentar.', 'CONCURRENT_REQUEST'));
+        }
+        return reply.code(200).send(existing);
+      }
     }
+
+    const cleanupIdempotency = () => {
+      if (idempotencyKey) idempotencyCache.delete(`product:create:${idempotencyKey}`);
+    };
     
     const parsed = productInput.safeParse(request.body);
-    if (!parsed.success) return reply.code(400).send(error('Invalid product payload', 'VALIDATION_ERROR'));
+    if (!parsed.success) {
+      cleanupIdempotency();
+      return reply.code(400).send(error('Invalid product payload', 'VALIDATION_ERROR'));
+    }
     const imageError = await validateImage(request, parsed.data, true);
-    if (imageError) return reply.code(400).send(error(imageError, 'MEDIA_SOURCE_INVALID'));
+    if (imageError) {
+      cleanupIdempotency();
+      return reply.code(400).send(error(imageError, 'MEDIA_SOURCE_INVALID'));
+    }
     if (parsed.data.umkmId) {
       const parent = await repository.getManagedUMKM(parsed.data.umkmId);
-      if (!parent) return reply.code(404).send(error('UMKM not found', 'NOT_FOUND'));
-      if (!canViewUMKM(request.auth!.user.role, request.auth!.user.id, parent.ownerUserId)) return denyOwnership(reply, 'UMKM');
-      if (parent.publicationStatus === 'archived') return reply.code(409).send(error('Cannot create a product under an archived UMKM', 'PARENT_ARCHIVED'));
+      if (!parent) {
+        cleanupIdempotency();
+        return reply.code(404).send(error('UMKM not found', 'NOT_FOUND'));
+      }
+      if (!canViewUMKM(request.auth!.user.role, request.auth!.user.id, parent.ownerUserId)) {
+        cleanupIdempotency();
+        return denyOwnership(reply, 'UMKM');
+      }
+      if (parent.publicationStatus === 'archived') {
+        cleanupIdempotency();
+        return reply.code(409).send(error('Cannot create a product under an archived UMKM', 'PARENT_ARCHIVED'));
+      }
     } else {
-      if (!parsed.data.phone) return reply.code(400).send(error('Nomor WhatsApp wajib diisi untuk produk mandiri', 'VALIDATION_ERROR'));
+      if (!parsed.data.phone) {
+        cleanupIdempotency();
+        return reply.code(400).send(error('Nomor WhatsApp wajib diisi untuk produk mandiri', 'VALIDATION_ERROR'));
+      }
     }
+
+    if (idempotencyKey) {
+      idempotencyCache.set(`product:create:${idempotencyKey}`, { data: { pending: true } }, 30_000);
+    }
+
     const item = await repository.transaction(async (transaction) => {
       const created = await transaction.createProduct(id(), parsed.data);
       await transaction.addAudit({ actorUserId: request.auth!.user.id, action: 'product.created', entityType: 'product', entityId: created.id, ...info(request) });
       return created;
     }).catch((err) => {
-      if (idempotencyKey) idempotencyCache.delete(`product:create:${idempotencyKey}`);
+      cleanupIdempotency();
       throw err;
     });
     

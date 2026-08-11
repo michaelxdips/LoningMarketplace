@@ -32,7 +32,9 @@ describe('shared slug allocation', () => {
 
   it.each([
     [{ code: '23505', constraint_name: 'products_slug_unique' }, 'products_slug_unique', true],
+    [{ code: '23505', constraint: 'products_slug_unique' }, 'products_slug_unique', true],
     [{ code: '23505', constraint_name: 'umkms_slug_unique' }, 'umkms_slug_unique', true],
+    [{ code: '23505', constraint: 'umkms_slug_unique' }, 'umkms_slug_unique', true],
     [{ code: '23505', constraint_name: 'users_email_unique' }, 'products_slug_unique', false],
     [{ code: '23505', constraint_name: 'users_username_lower_unique' }, 'umkms_slug_unique', false],
     [{ code: '23505' }, 'products_slug_unique', false],

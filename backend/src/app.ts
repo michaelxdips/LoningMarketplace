@@ -87,7 +87,17 @@ export async function buildApp(env: AppEnv, repository: Repository, dependencies
   // Deterministic: no startup-time filesystem probing; bucket stays private.
   if (media instanceof FilesystemMediaStorage) await mkdir(media.root, { recursive: true });
   await mediaServeRoutes(app, media, env.CORS_ORIGIN);
-  app.setErrorHandler((error, _request, reply) => { app.log.error(error); if (error instanceof SlugConflictError) return reply.code(error.statusCode).send(errorEnvelope(error.message, error.code)); const statusCode = typeof error === 'object' && error !== null && 'statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : 500; const message = error instanceof Error ? error.message : 'Request failed'; return reply.code(statusCode < 500 ? statusCode : 500).send(errorEnvelope(statusCode < 500 ? message : 'Internal server error', statusCode < 500 ? 'REQUEST_ERROR' : 'INTERNAL_ERROR')); });
+  app.setErrorHandler((error, _request, reply) => {
+    app.log.error(error);
+    if (error instanceof SlugConflictError) return reply.code(error.statusCode).send(errorEnvelope(error.message, error.code));
+    const pgCode = typeof error === 'object' && error !== null && 'code' in error ? String((error as { code?: unknown }).code) : '';
+    if (pgCode === '23505') return reply.code(409).send(errorEnvelope('Data dengan nama atau pengenal ini sudah ada', 'DUPLICATE_ENTRY'));
+    if (pgCode === '23503') return reply.code(400).send(errorEnvelope('Referensi data atau gambar tidak ditemukan', 'INVALID_REFERENCE'));
+    if (pgCode === '23514') return reply.code(400).send(errorEnvelope('Data tidak memenuhi batasan kriteria', 'VALIDATION_ERROR'));
+    const statusCode = typeof error === 'object' && error !== null && 'statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : 500;
+    const message = error instanceof Error ? error.message : 'Request failed';
+    return reply.code(statusCode < 500 ? statusCode : 500).send(errorEnvelope(statusCode < 500 ? message : 'Internal server error', statusCode < 500 ? 'REQUEST_ERROR' : 'INTERNAL_ERROR'));
+  });
   await app.register(async (api) => { await healthRoutes(api, repository); await umkmRoutes(api, repository); await productRoutes(api, repository); await eventRoutes(api, repository, now); await authRoutes(api, repository, guards, crypto, env, now); await adminRoutes(api, repository, guards, crypto, now); await analyticsRoutes(api, repository, guards); await manageRoutes(api, repository, guards, now, id); await mediaRoutes(api, repository, guards, media, env, id); }, { prefix: '/api' });
   await sitemapRoutes(app, repository, env);
   // Same-origin static frontend serving (production only). Serves hashed assets and SPA fallback.

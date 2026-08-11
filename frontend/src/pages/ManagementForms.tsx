@@ -597,7 +597,7 @@ export function ProductFormPage() {
           name: newUmkmName,
           owner: newUmkmName,
           description: `UMKM ${newUmkmName} — dibuat otomatis dari form produk. Lengkapi data UMKM ini.`,
-          phone: "62000000000",
+          phone: "628000000000",
           category: text(data, "category") as Category,
           imageUrl: placeholderImage,
           imageAssetId: null,

@@ -1,4 +1,4 @@
-﻿import { SlugConflictError } from '../errors/domain.js';
+import { SlugConflictError } from '../errors/domain.js';
 
 export const MAX_SLUG_LENGTH = 96;
 export const MAX_PUBLIC_IDENTIFIER_LENGTH = 128;
@@ -32,8 +32,8 @@ export function allocateAvailableSlug(base: string, used: Set<string>, maxAttemp
 }
 
 export function isExpectedUniqueViolation(error: unknown, constraint: string): boolean {
-  const value = error as { code?: string; constraint_name?: string };
-  return value?.code === '23505' && value.constraint_name === constraint;
+  const value = error as { code?: string; constraint_name?: string; constraint?: string };
+  return value?.code === '23505' && (value.constraint_name === constraint || value.constraint === constraint);
 }
 
 export async function allocateSlugWithRetry<T>(
