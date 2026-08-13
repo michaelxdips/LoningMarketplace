@@ -39,7 +39,7 @@ export default function LoginPage() {
 
         <div className="relative z-10">
           <Link to="/" aria-label={`${brand.name} — beranda`} className="inline-flex items-center gap-3 text-2xl font-black uppercase tracking-wider">
-            <img src={brand.logoSvg} alt="" className="h-11 w-11 object-contain shrink-0" />
+            <img src={brand.logoSvg} alt="" className="h-24 w-24 object-contain shrink-0" />
             <span>LONING<span className="text-[#E9AD91]">MAJU</span></span>
           </Link>
         </div>

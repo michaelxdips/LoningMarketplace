@@ -31,7 +31,7 @@ export default function Footer() {
                 onClick={scrollToTop}
                 className="focus-ring flex w-fit items-center gap-3 rounded text-white transition-opacity hover:opacity-90"
               >
-                <img src={brand.logoSvg} alt="" className="h-9 w-9 object-contain shrink-0" />
+                <img src={brand.logoSvg} alt="" className="h-16 w-16 object-contain shrink-0" />
                 <span className="text-base font-black uppercase tracking-wider" aria-label={brand.name}>
                   LONING<span className="text-terracotta">MAJU</span>
                 </span>
