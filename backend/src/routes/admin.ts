@@ -61,6 +61,7 @@ export async function adminRoutes(app: FastifyInstance, repository: Repository, 
     if (!id.success) return reply.code(400).send(error('Invalid UUID', 'VALIDATION_ERROR'));
     const target = await repository.findUserById(id.data);
     if (!target) return reply.code(404).send(error('User not found', 'NOT_FOUND'));
+    if (!canManageUserTarget(request.auth!.user.role, target.role)) return reply.code(403).send(error('User management is not assigned for this target', 'FORBIDDEN'));
     if (id.data === request.auth!.user.id) return reply.code(403).send(error('Tidak dapat menghapus akun sendiri.', 'CANNOT_DELETE_SELF'));
     if (target.role === 'superadmin' && target.isActive && await repository.countActiveSuperadmins() <= 1) {
       return reply.code(409).send(error('Super Admin aktif terakhir tidak dapat dihapus.', 'LAST_SUPERADMIN'));

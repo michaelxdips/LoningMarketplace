@@ -25,9 +25,9 @@ export async function mediaRoutes(app: FastifyInstance, repository: Repository, 
     if (invalid) return reply.code(400).send(error('Only one image file and optional altText are accepted', 'MEDIA_UPLOAD_INVALID'));
     if (!file) return reply.code(400).send(error('Image file is required', 'MEDIA_FILE_REQUIRED'));
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) return reply.code(415).send(error('Only JPEG, PNG, and WebP images are supported', 'MEDIA_UNSUPPORTED'));
+    if (altText && altText.length > 500) return reply.code(400).send(error('altText is too long', 'VALIDATION_ERROR'));
     let processed; try { processed = await processImage(file.buffer, { MEDIA_MAX_BYTES: env.MEDIA_MAX_BYTES ?? 5 * 1024 * 1024, MEDIA_MAX_WIDTH: env.MEDIA_MAX_WIDTH ?? 8_000, MEDIA_MAX_HEIGHT: env.MEDIA_MAX_HEIGHT ?? 8_000, MEDIA_MAX_PIXELS: env.MEDIA_MAX_PIXELS ?? 40_000_000 }); } catch (e) { if (e instanceof MediaProcessingError) return reply.code(e.statusCode).send(error(e.message, e.code)); throw e; }
     if (!mimeMatches(file.mimetype, processed.originalMimeType)) return reply.code(415).send(error('Declared MIME type does not match image content', 'MEDIA_UNSUPPORTED'));
-    if (altText && altText.length > 500) return reply.code(400).send(error('altText is too long', 'VALIDATION_ERROR'));
     const assetId = id(), cardStorageKey = `media/${assetId}/card.webp`, thumbnailStorageKey = `media/${assetId}/thumbnail.webp`;
     try { await storage.putObject(cardStorageKey, { body: processed.card, contentType: processed.outputMimeType, cacheControl: 'public, max-age=31536000, immutable' }); await storage.putObject(thumbnailStorageKey, { body: processed.thumb, contentType: processed.outputMimeType, cacheControl: 'public, max-age=31536000, immutable' }); } catch { await storage.deleteObject(cardStorageKey).catch(() => undefined); await storage.deleteObject(thumbnailStorageKey).catch(() => undefined); return reply.code(503).send(error('Media storage unavailable', 'MEDIA_STORAGE_ERROR')); }
     try {
