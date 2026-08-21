@@ -27,7 +27,7 @@ export const umkmInput = z.strictObject({
   closingTime: timeString.default(null),
 });
 export const productInput = z.strictObject({
-  umkmId: uuid.nullable().optional(), name: z.string().trim().min(1).max(200), price: z.number().int().nonnegative().nullable().optional(), description: z.string().trim().min(1).max(5000),
+  umkmId: uuid.nullable().optional(), name: z.string().trim().min(1).max(200), price: z.number().int().nonnegative().max(2_147_483_647).nullable().optional(), description: z.string().trim().min(1).max(5000),
   category: z.enum(categories), imageUrl: optionalUrl, imageAssetId: uuid.nullable().optional(), isAvailable: z.boolean().optional(), unit: z.string().trim().max(100).nullable().optional(),
   phone: phone.nullable().optional(), sellerName: z.string().trim().min(1).max(200).nullable().optional(),
 });
