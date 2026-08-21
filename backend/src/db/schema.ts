@@ -75,7 +75,7 @@ export const productImages = pgTable('product_images', {
 }, (table) => ({
   productIdx: index('product_images_product_id_idx').on(table.productId),
   mediaIdx: index('product_images_media_asset_id_idx').on(table.mediaAssetId),
-  orderIdx: index('product_images_display_order_idx').on(table.productId, table.displayOrder),
+  orderIdx: uniqueIndex('product_images_product_display_order_unique').on(table.productId, table.displayOrder),
   uniqueMediaPerProduct: uniqueIndex('product_images_product_media_unique').on(table.productId, table.mediaAssetId),
   onePrimaryPerProduct: uniqueIndex('product_images_primary_unique').on(table.productId).where(sql`${table.isPrimary} = true`),
   orderCheck: check('product_images_display_order_check', sql`${table.displayOrder} >= 0`),

@@ -120,6 +120,13 @@
       "when": 1786183000000,
       "tag": "0016_add_opening_closing_time",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786183600000,
+      "tag": "0017_product_image_display_order_unique",
+      "breakpoints": true
     }
   ]
 }

@@ -113,7 +113,18 @@ function createRepositoryCore(db: PostgresJsDatabase<typeof schema>, publicUrl: 
     async listManagedUMKMs(u: SessionUser, f: { q?: string; category?: Category; publicationStatus?: PublicationStatus; ownerUserId?: string; limit?: number } = {}) { const p = f.q && pattern(f.q); const global = hasCapability(u.role, 'umkms:view-all'); const rows = await db.select({ row: umkms, asset: mediaAssets, assignedCount: sql<number>`count(${products.id})`, publishedCount: sql<number>`count(case when ${products.publicationStatus} = 'published' then 1 end)` }).from(umkms).leftJoin(products, eq(products.umkmId, umkms.id)).leftJoin(mediaAssets, and(eq(umkms.imageAssetId, mediaAssets.id), isNull(mediaAssets.deletedAt))).where(and(global ? undefined : eq(umkms.ownerUserId, u.id), f.publicationStatus ? eq(umkms.publicationStatus, f.publicationStatus) : undefined, f.ownerUserId && global ? eq(umkms.ownerUserId, f.ownerUserId) : undefined, f.category ? eq(umkms.category, f.category) : undefined, p ? or(ilike(umkms.name, p), ilike(umkms.owner, p), ilike(umkms.description, p), ilike(umkms.address, p)) : undefined)).groupBy(umkms.id, mediaAssets.id).orderBy(asc(umkms.displayOrder), asc(umkms.id)).limit(Math.min(100, f.limit ?? 100)); return rows.map((r) => ({ ...mapManagedUMKM(r.row), ...image(r.row.imageUrl, r.asset, publicUrl), assignedProductCount: Number(r.assignedCount), publishedProductCount: Number(r.publishedCount) })); },
     async getManagedUMKM(id: string) { const row = (await db.select({ row: umkms, asset: mediaAssets }).from(umkms).leftJoin(mediaAssets, and(eq(umkms.imageAssetId, mediaAssets.id), isNull(mediaAssets.deletedAt))).where(eq(umkms.id, id)).limit(1))[0]; return row && { ...mapManagedUMKM(row.row), ...image(row.row.imageUrl, row.asset, publicUrl) }; },
     async createUMKM(id: string, v: UMKMInput, ownerUserId: string | null) { const base = slugify(v.name, 'umkm'); return allocateSlugWithRetry(base, 'umkms_slug_unique', (slug) => db.transaction(async (tx) => { const order = Number((await tx.select({ value: sql<number>`coalesce(max(${umkms.displayOrder}), -1) + 1` }).from(umkms))[0].value); const now = new Date(); const row = (await tx.insert(umkms).values({ id, ...v, slug, ownerUserId, displayOrder: order, catalogUpdatedAt: now }).returning())[0]; if (v.imageAssetId) await tx.update(mediaAssets).set({ orphanedAt: null, updatedAt: now }).where(eq(mediaAssets.id, v.imageAssetId)); return row; })); },
-    async updateUMKM(id: string, v: Partial<UMKMInput>) { const current = (await db.select({ phone: umkms.phone }).from(umkms).where(eq(umkms.id, id)).limit(1))[0]; const at = new Date(); return (await db.update(umkms).set({ ...v, ...(v.phone !== undefined && v.phone !== current?.phone ? { contactVerifiedAt: null } : {}), catalogUpdatedAt: at, updatedAt: at }).where(eq(umkms.id, id)).returning())[0]; },
+    async updateUMKM(id: string, v: Partial<UMKMInput>) {
+      const at = new Date();
+      // Reset contactVerifiedAt atomically when the phone actually changes.
+      // The CASE WHEN runs inside a single UPDATE statement, so a concurrent
+      // PATCH cannot interleave a stale read between SELECT and UPDATE (lost-update race).
+      const row = (await db.update(umkms).set({
+        ...v,
+        contactVerifiedAt: v.phone !== undefined ? sql`CASE WHEN ${umkms.phone} <> ${v.phone} THEN NULL ELSE ${umkms.contactVerifiedAt} END` : undefined,
+        catalogUpdatedAt: at, updatedAt: at,
+      }).where(eq(umkms.id, id)).returning())[0];
+      return row;
+    },
     async verifyUMKMContact(id: string, at: Date) { return (await db.update(umkms).set({ contactVerifiedAt: at, updatedAt: at }).where(eq(umkms.id, id)).returning())[0]; },
     async assignUMKMOwner(id: string, ownerUserId: string | null) { await db.update(umkms).set({ ownerUserId, updatedAt: new Date() }).where(eq(umkms.id, id)); },
     async setUMKMPublication(id: string, status: PublicationStatus, at: Date) { return (await db.update(umkms).set({ publicationStatus: status, publishedAt: status === 'published' ? at : null, catalogUpdatedAt: at, updatedAt: at }).where(eq(umkms.id, id)).returning())[0]; },
@@ -151,10 +162,28 @@ function createRepositoryCore(db: PostgresJsDatabase<typeof schema>, publicUrl: 
     async listExpiredOrphanMedia(before: Date, limit = 100) { return db.select().from(mediaAssets).where(and(or(lte(mediaAssets.orphanedAt, before), lte(mediaAssets.deletedAt, before)), or(sql`${mediaAssets.orphanedAt} IS NOT NULL`, sql`${mediaAssets.deletedAt} IS NOT NULL`))).orderBy(asc(mediaAssets.createdAt)).limit(limit); },
     async refreshMediaOrphans(ids: Array<string | null | undefined>, at = new Date()) { const uniqueIds = [...new Set(ids.filter((x): x is string => Boolean(x)))]; const results = await Promise.all(uniqueIds.map(async (mediaId) => { const refs = await this.mediaReferenceCount(mediaId); return { mediaId, orphaned: !refs }; })); for (const { mediaId, orphaned } of results) { await db.update(mediaAssets).set({ orphanedAt: orphaned ? at : null, updatedAt: at }).where(eq(mediaAssets.id, mediaId)); } },
     async getProductImages(productId: string) { const rows = await db.select({ asset: mediaAssets, pi: productImages }).from(productImages).innerJoin(mediaAssets, eq(productImages.mediaAssetId, mediaAssets.id)).where(and(eq(productImages.productId, productId), isNull(mediaAssets.deletedAt))).orderBy(asc(productImages.displayOrder)); return rows.map((r) => ({ id: r.pi.id, assetId: r.asset.id, url: publicUrl(r.asset.cardStorageKey), thumbUrl: publicUrl(r.asset.thumbnailStorageKey), width: r.asset.cardWidth, height: r.asset.cardHeight, altText: r.pi.altText ?? r.asset.altText })); },
-    async addProductImage(productId: string, mediaAssetId: string) { const maxOrder = (await db.select({ max: sql<number>`COALESCE(MAX(${productImages.displayOrder}), -1)` }).from(productImages).where(eq(productImages.productId, productId)))[0].max; await db.insert(productImages).values({ productId, mediaAssetId, displayOrder: maxOrder + 1, isPrimary: false }); },
+    async addProductImage(productId: string, mediaAssetId: string) {
+      // Atomic INSERT ... SELECT: the display order is computed inside the same
+      // statement, eliminating the SELECT-MAX-then-INSERT race window.
+      await db.execute(sql`
+        INSERT INTO product_images (product_id, media_asset_id, display_order, is_primary)
+        SELECT ${productId}, ${mediaAssetId}, COALESCE(MAX(display_order), -1) + 1, false
+        FROM product_images WHERE product_id = ${productId}
+      `);
+    },
     async removeProductImage(imageId: string) { await db.delete(productImages).where(eq(productImages.id, imageId)); },
     async setProductPrimaryImage(imageId: string) { await db.transaction(async (tx) => { const img = (await tx.select({ productId: productImages.productId }).from(productImages).where(eq(productImages.id, imageId)).limit(1))[0]; if (!img) throw new Error('Image not found'); await tx.update(productImages).set({ isPrimary: false }).where(eq(productImages.productId, img.productId)); await tx.update(productImages).set({ isPrimary: true }).where(eq(productImages.id, imageId)); }); },
-    async reorderProductImages(productId: string, orderedIds: string[]) { await db.transaction(async (tx) => { for (let i = 0; i < orderedIds.length; i += 1) await tx.update(productImages).set({ displayOrder: i }).where(and(eq(productImages.id, orderedIds[i]), eq(productImages.productId, productId))); }); },
+    async reorderProductImages(productId: string, orderedIds: string[]) {
+      await db.transaction(async (tx) => {
+        // Two-phase reorder to stay safe with the unique (product_id, display_order)
+        // constraint: first shift every row out of the final range by a constant,
+        // then assign the final 0..n-1 order. A direct sequential UPDATE could
+        // transiently collide with a still-occupied display_order.
+        const shift = 1_000_000;
+        await tx.update(productImages).set({ displayOrder: sql`${productImages.displayOrder} + ${shift}` }).where(eq(productImages.productId, productId));
+        for (let i = 0; i < orderedIds.length; i += 1) await tx.update(productImages).set({ displayOrder: i }).where(and(eq(productImages.id, orderedIds[i]), eq(productImages.productId, productId)));
+      });
+    },
     async countProductImages(productId: string) { return Number((await db.select({ count: sql<number>`count(*)` }).from(productImages).where(eq(productImages.productId, productId)))[0].count); },
   };
 }
