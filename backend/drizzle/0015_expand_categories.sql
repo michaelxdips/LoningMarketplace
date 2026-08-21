@@ -10,6 +10,11 @@ DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Ritel & Perabot'; EXCEPTIO
 DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Kerajinan & Olahan Kreatif'; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN ALTER TYPE "public"."category" ADD VALUE 'Lainnya'; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
+-- PostgreSQL forbids using a freshly ADD VALUE'd enum literal in the same
+-- transaction. COMMIT here so the new category values become usable below
+-- (otherwise a fresh install fails with error 55P04 "unsafe use of new value").
+COMMIT;
+
 -- Migrate existing data (idempotent — no-op if already done)
 UPDATE "umkms" SET category = 'Sembako & Kebutuhan Harian' WHERE category = 'Sembako';
 UPDATE "umkms" SET category = 'Jasa & Otomotif' WHERE category = 'Jasa';

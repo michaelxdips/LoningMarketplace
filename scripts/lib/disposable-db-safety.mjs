@@ -1,7 +1,7 @@
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 const DATABASE_SUFFIX = /_(?:test|e2e)$/;
 const PROJECT_NAME = /^marketplace-loning-(?:test|e2e)-[a-z0-9][a-z0-9-]{0,39}$/;
-const RESERVED_DATABASES = new Set(['loning_digital', 'postgres', 'template0', 'template1']);
+const RESERVED_DATABASES = new Set(['loning_digital', 'loning_digital_dev', 'postgres', 'template0', 'template1']);
 const PRODUCTION_LIKE_DATABASE = /(?:^|_)(?:prod|production|live)(?:_|$)/;
 const FORBIDDEN_PORTS = new Set([5432]);
 

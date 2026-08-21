@@ -64,5 +64,8 @@
   },
   "dependencies": {
     "pg": "^8.22.0"
+  },
+  "allowScripts": {
+    "argon2@0.45.0": true
   }
 }

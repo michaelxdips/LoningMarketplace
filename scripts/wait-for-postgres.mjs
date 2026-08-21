@@ -7,7 +7,7 @@ const timeoutMs = Number(process.env.LOCAL_DB_WAIT_TIMEOUT_MS ?? 120000);
 const started = Date.now();
 
 function composeReady() {
-  const result = spawnSync('docker', ['compose', '--project-name', 'marketplace-loning-local', 'exec', '-T', 'postgres', 'pg_isready', '-U', 'loning', '-d', 'loning_digital'], { stdio: 'ignore', windowsHide: true });
+  const result = spawnSync('docker', ['compose', '--project-name', 'marketplace-loning-local', 'exec', '-T', 'postgres', 'pg_isready', '-U', 'loning', '-d', 'loning_digital_dev'], { stdio: 'ignore', windowsHide: true });
   return result.status === 0;
 }
 

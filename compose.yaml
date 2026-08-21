@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: loning_digital
+      POSTGRES_DB: loning_digital_dev
       POSTGRES_USER: loning
       POSTGRES_PASSWORD: loning_local_dev
     ports:
