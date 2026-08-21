@@ -1,0 +1,25 @@
+%% Loning Maju — Public Events & Analytics Flow
+%% Render: mermaid.live
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant FE as lib/analytics.ts
+    participant API as POST /api/events
+    participant DB as public_events
+    participant ADM as GET /api/admin/inquiry-analytics
+
+    B->>FE: interaksi (view / inquiry / WA open)
+    FE->>FE: anonymousSessionId (sessionStorage UUID)
+    FE->>API: fire-and-forget fetch (swallow error)
+    API->>API: validasi eventType + source + target + rate (30/mnt)
+    alt target invalid
+        API-->>FE: 400/404 (ignored)
+    else valid
+        API->>DB: insertPublicEvent (onConflictDoNothing)
+        DB-->>API: dedupe 5-menit bucket
+        API-->>FE: 202 { accepted: true }
+    end
+
+    Note over ADM,DB: Analitik (admin only)
+    ADM->>DB: inquiryAnalytics(from, to) + inquiryAnalyticsByTarget
+    DB-->>ADM: totals + rates + breakdown

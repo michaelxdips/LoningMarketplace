@@ -1,0 +1,14 @@
+%% Loning Maju — Migration Pipeline & Integrity
+%% Render: mermaid.live
+graph LR
+    A["migratePending<br/>(migrasi 0000–0007)"] --> B["preparePublicIntegrity<br/>(backfill-slugs)"]
+    B --> B1["Preflight: duplicate slug + invalid phone"]
+    B1 -->|"gagal"| REF["❌ MigrationPreflightError"]
+    B1 -->|"lolos"| B2["Backfill slug NULL/empty<br/>(deterministik -2, -3)"]
+    B2 --> C["migratePending<br/>(migrasi 0008–0016)"]
+    C --> D["assertPublicIntegrity"]
+    D --> E["assertBusinessLocationIntegrity"]
+    E --> F["✅ Migration complete"]
+
+    style REF fill:#C85C43,color:#fff
+    style F fill:#1C3F24,color:#fff

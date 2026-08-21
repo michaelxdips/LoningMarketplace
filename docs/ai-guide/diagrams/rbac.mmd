@@ -1,0 +1,13 @@
+%% Loning Maju — Role-Based Access Control
+%% Render: mermaid.live
+graph TD
+    SA["👑 superadmin"] --> SA_CAP["Semua capability<br/>(termasuk kelola semua role)"]
+    AD["🛡️ admin"] --> AD_USER["User mgmt<br/>(perangkat_desa + pelaku_umkm saja)"]
+    AD --> AD_CONTENT["Semua UMKM/produk<br/>+ publish + audit + analytics"]
+    PD["🏛️ perangkat_desa"] --> PD_CONTENT["Semua UMKM/produk<br/>+ publish + analytics<br/>(tanpa user mgmt)"]
+    PU["🏪 pelaku_umkm"] --> PU_OWN["UMKM/produk milik sendiri<br/>(tanpa publish, tanpa admin)"]
+
+    style SA fill:#1C3F24,color:#fff
+    style AD fill:#C85C43,color:#fff
+    style PD fill:#DFE4E1,color:#1F2421
+    style PU fill:#FAF9F6,color:#1F2421

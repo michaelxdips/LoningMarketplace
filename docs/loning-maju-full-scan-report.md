@@ -1,7 +1,7 @@
 # Full Project Scan — Refactor & Rebranding ke Loning Maju
 
 **Tanggal audit:** 22 Juli 2026  
-**Repository:** `C:/Users/Michael/Documents/Marketplace-Loning`  
+**Repository:** `C:/Users/Michael/Documents/LoningMarketplace`  
 **Mode:** audit read-only; tidak ada source code, dependency, konfigurasi runtime, schema, atau data yang diubah oleh audit ini.
 
 > [!NOTE]
@@ -43,20 +43,20 @@
 
 | Area | Teknologi terverifikasi | Bukti |
 |---|---|---|
-| Monorepo | npm workspaces (`frontend`, `backend`) | [package.json:L7-L10](file:///C:/Users/Michael/Documents/Marketplace-Loning/package.json#L7-L10) |
-| Runtime | Node.js `>=20 <27`, ESM | [package.json:L5-L6](file:///C:/Users/Michael/Documents/Marketplace-Loning/package.json#L5-L6) |
-| Frontend | React 19, TypeScript, Vite 6, React Router 7 | [frontend/package.json](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/package.json), [main.tsx:L38-L68](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/main.tsx#L38-L68) |
-| Styling | Tailwind CSS 4 plus project CSS tokens | [frontend/package.json](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/package.json), [index.css](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/index.css) |
-| Client state | TanStack Query; local React state | [main.tsx:L31-L36](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/main.tsx#L31-L36), [App.tsx:L29-L57](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/App.tsx#L29-L57) |
-| Backend | Fastify 5, TypeScript | [backend/package.json](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/package.json), [app.ts](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/app.ts) |
-| Validation | Zod | [validation.ts:L1-L15](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/routes/validation.ts#L1-L15) |
-| Database | PostgreSQL 16, Drizzle ORM, postgres.js | [compose.yaml:L2-L13](file:///C:/Users/Michael/Documents/Marketplace-Loning/compose.yaml#L2-L13), [schema.ts](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/schema.ts) |
-| Authentication | Opaque HTTP-only cookie session; Argon2id; hashed token and CSRF | [schema.ts:L53-L57](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/schema.ts#L53-L57), [auth.ts](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/routes/auth.ts) |
-| Authorization | `admin` / `owner`, route guards and repository scoping | [repository.ts:L41-L57](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/repository.ts#L41-L57) |
-| Media | Sharp processing; filesystem local or S3-compatible storage | [storage.ts:L21-L45](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/media/storage.ts#L21-L45), [processor.ts](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/media/processor.ts) |
-| Unit/component/API tests | Vitest, Testing Library, Fastify inject | [frontend/package.json](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/package.json), [backend/package.json](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/package.json) |
-| Browser tests | Playwright desktop 1440×900 dan mobile 390×844 | [playwright.config.ts:L11-L14](file:///C:/Users/Michael/Documents/Marketplace-Loning/playwright.config.ts#L11-L14) |
-| Local infrastructure | Docker Compose PostgreSQL | [compose.yaml](file:///C:/Users/Michael/Documents/Marketplace-Loning/compose.yaml) |
+| Monorepo | npm workspaces (`frontend`, `backend`) | [package.json:L7-L10](file:///C:/Users/Michael/Documents/LoningMarketplace/package.json#L7-L10) |
+| Runtime | Node.js `>=20 <27`, ESM | [package.json:L5-L6](file:///C:/Users/Michael/Documents/LoningMarketplace/package.json#L5-L6) |
+| Frontend | React 19, TypeScript, Vite 6, React Router 7 | [frontend/package.json](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/package.json), [main.tsx:L38-L68](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/main.tsx#L38-L68) |
+| Styling | Tailwind CSS 4 plus project CSS tokens | [frontend/package.json](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/package.json), [index.css](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/index.css) |
+| Client state | TanStack Query; local React state | [main.tsx:L31-L36](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/main.tsx#L31-L36), [App.tsx:L29-L57](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/App.tsx#L29-L57) |
+| Backend | Fastify 5, TypeScript | [backend/package.json](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/package.json), [app.ts](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/app.ts) |
+| Validation | Zod | [validation.ts:L1-L15](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/routes/validation.ts#L1-L15) |
+| Database | PostgreSQL 16, Drizzle ORM, postgres.js | [compose.yaml:L2-L13](file:///C:/Users/Michael/Documents/LoningMarketplace/compose.yaml#L2-L13), [schema.ts](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/schema.ts) |
+| Authentication | Opaque HTTP-only cookie session; Argon2id; hashed token and CSRF | [schema.ts:L53-L57](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/schema.ts#L53-L57), [auth.ts](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/routes/auth.ts) |
+| Authorization | `admin` / `owner`, route guards and repository scoping | [repository.ts:L41-L57](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/repository.ts#L41-L57) |
+| Media | Sharp processing; filesystem local or S3-compatible storage | [storage.ts:L21-L45](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/media/storage.ts#L21-L45), [processor.ts](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/media/processor.ts) |
+| Unit/component/API tests | Vitest, Testing Library, Fastify inject | [frontend/package.json](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/package.json), [backend/package.json](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/package.json) |
+| Browser tests | Playwright desktop 1440×900 dan mobile 390×844 | [playwright.config.ts:L11-L14](file:///C:/Users/Michael/Documents/LoningMarketplace/playwright.config.ts#L11-L14) |
+| Local infrastructure | Docker Compose PostgreSQL | [compose.yaml](file:///C:/Users/Michael/Documents/LoningMarketplace/compose.yaml) |
 | CI/CD / production deployment | Tidak ditemukan workflow CI, Dockerfile, reverse proxy, atau deployment config aktif | Repository map; `supabase/snippets` kosong |
 | Monitoring / analytics | Tidak ditemukan telemetry, analytics, error tracking, atau metrics project | Full source/config scan |
 
@@ -64,18 +64,18 @@
 
 | Path | Fungsi / source of truth |
 |---|---|
-| [`frontend/`](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend) | SPA publik dan dashboard. Entry: [main.tsx](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/main.tsx); public composition: [App.tsx](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/App.tsx). |
-| [`backend/`](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend) | Fastify API, auth, repository, media, scripts. Entry: [index.ts](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/index.ts); bootstrap: [app.ts](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/app.ts). |
-| [`backend/src/db/schema.ts`](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/schema.ts) | Declarative schema Drizzle aktif. |
-| [`backend/drizzle/`](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/drizzle) | Riwayat migration SQL; 5 migration `0000`–`0004`. Jangan rename migration historis. |
-| [`backend/src/db/seeds/`](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/seeds) | Fixture development dan E2E deterministik. |
-| [`e2e/`](file:///C:/Users/Michael/Documents/Marketplace-Loning/e2e) | Browser/API lifecycle tests dan browser diagnostic observer. |
-| [`scripts/`](file:///C:/Users/Michael/Documents/Marketplace-Loning/scripts) | Orkestrasi local DB, integration, E2E, seed determinism. |
-| [`compose.yaml`](file:///C:/Users/Michael/Documents/Marketplace-Loning/compose.yaml) | PostgreSQL lokal dan volume persisten lokal. |
-| [`README.md`](file:///C:/Users/Michael/Documents/Marketplace-Loning/README.md) | Setup/operator overview; bukan source of truth runtime. |
-| [`HANDOFF.md`](file:///C:/Users/Michael/Documents/Marketplace-Loning/HANDOFF.md) | Contract teknis dan operasional. |
-| [`DESIGN.md`](file:///C:/Users/Michael/Documents/Marketplace-Loning/DESIGN.md) | Visual system dan UX intent. |
-| [`metadata.json`](file:///C:/Users/Michael/Documents/Marketplace-Loning/metadata.json) | Metadata proyek eksternal; tidak dikonsumsi runtime frontend yang terdeteksi. |
+| [`frontend/`](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend) | SPA publik dan dashboard. Entry: [main.tsx](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/main.tsx); public composition: [App.tsx](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/App.tsx). |
+| [`backend/`](file:///C:/Users/Michael/Documents/LoningMarketplace/backend) | Fastify API, auth, repository, media, scripts. Entry: [index.ts](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/index.ts); bootstrap: [app.ts](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/app.ts). |
+| [`backend/src/db/schema.ts`](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/schema.ts) | Declarative schema Drizzle aktif. |
+| [`backend/drizzle/`](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/drizzle) | Riwayat migration SQL; 5 migration `0000`–`0004`. Jangan rename migration historis. |
+| [`backend/src/db/seeds/`](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/seeds) | Fixture development dan E2E deterministik. |
+| [`e2e/`](file:///C:/Users/Michael/Documents/LoningMarketplace/e2e) | Browser/API lifecycle tests dan browser diagnostic observer. |
+| [`scripts/`](file:///C:/Users/Michael/Documents/LoningMarketplace/scripts) | Orkestrasi local DB, integration, E2E, seed determinism. |
+| [`compose.yaml`](file:///C:/Users/Michael/Documents/LoningMarketplace/compose.yaml) | PostgreSQL lokal dan volume persisten lokal. |
+| [`README.md`](file:///C:/Users/Michael/Documents/LoningMarketplace/README.md) | Setup/operator overview; bukan source of truth runtime. |
+| [`HANDOFF.md`](file:///C:/Users/Michael/Documents/LoningMarketplace/HANDOFF.md) | Contract teknis dan operasional. |
+| [`DESIGN.md`](file:///C:/Users/Michael/Documents/LoningMarketplace/DESIGN.md) | Visual system dan UX intent. |
+| [`metadata.json`](file:///C:/Users/Michael/Documents/LoningMarketplace/metadata.json) | Metadata proyek eksternal; tidak dikonsumsi runtime frontend yang terdeteksi. |
 | `dist/`, `node_modules/`, `test-results/` | Generated/local output; dikecualikan dari source occurrence. |
 | `assets/.aistudio/`, `markers*.json` | Artefak tooling lokal; tidak terhubung ke runtime aktif yang terdeteksi. |
 | `supabase/snippets/` | Kosong; bukan deployment aktif. |
@@ -83,7 +83,7 @@
 ### Source of truth aktual
 
 - Brand: **belum tunggal**; tersebar di React copy, docs, metadata, package, dan log.
-- Environment: [backend/src/config/env.ts](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/config/env.ts), `backend/.env.example`, `frontend/.env.example`.
+- Environment: [backend/src/config/env.ts](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/config/env.ts), `backend/.env.example`, `frontend/.env.example`.
 - API contract: route Zod schemas + response mapping; tidak ada OpenAPI.
 - Permission model: guards, management routes, dan repository role scoping.
 - Fixture: seed module per environment dan setup E2E.
@@ -95,26 +95,26 @@
 
 | Existing | Lokasi utama | Klasifikasi |
 |---|---|---|
-| `Loning Digital` | [README.md:L1-L3](file:///C:/Users/Michael/Documents/Marketplace-Loning/README.md#L1-L3), [metadata.json:L2](file:///C:/Users/Michael/Documents/Marketplace-Loning/metadata.json#L2), [HANDOFF.md:L1-L3](file:///C:/Users/Michael/Documents/Marketplace-Loning/HANDOFF.md#L1-L3), [DESIGN.md:L1](file:///C:/Users/Michael/Documents/Marketplace-Loning/DESIGN.md#L1), [data.ts:L46](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/data.ts#L46), [Footer.tsx:L93](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/components/layout/Footer.tsx#L93), [AboutVillageSection.tsx:L55](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/components/home/AboutVillageSection.tsx#L55), [index.ts:L12](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/index.ts#L12) | Rename now |
-| Split wordmark `Loning` + `Digital` | [Navbar.tsx](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/components/layout/Navbar.tsx), [LoginPage.tsx:L11](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/pages/LoginPage.tsx#L11), dashboard shell | Rename now; scan JSX fragments, bukan exact string saja |
-| Generic browser title `My Google AI Studio App` | [index.html:L2-L6](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/index.html#L2-L6) | Replace immediately with Loning Maju metadata |
-| Generic root package `react-example` | [package.json:L2](file:///C:/Users/Michael/Documents/Marketplace-Loning/package.json#L2), root lockfile | Rename package metadata |
+| `Loning Digital` | [README.md:L1-L3](file:///C:/Users/Michael/Documents/LoningMarketplace/README.md#L1-L3), [metadata.json:L2](file:///C:/Users/Michael/Documents/LoningMarketplace/metadata.json#L2), [HANDOFF.md:L1-L3](file:///C:/Users/Michael/Documents/LoningMarketplace/HANDOFF.md#L1-L3), [DESIGN.md:L1](file:///C:/Users/Michael/Documents/LoningMarketplace/DESIGN.md#L1), [data.ts:L46](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/data.ts#L46), [Footer.tsx:L93](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/components/layout/Footer.tsx#L93), [AboutVillageSection.tsx:L55](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/components/home/AboutVillageSection.tsx#L55), [index.ts:L12](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/index.ts#L12) | Rename now |
+| Split wordmark `Loning` + `Digital` | [Navbar.tsx](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/components/layout/Navbar.tsx), [LoginPage.tsx:L11](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/pages/LoginPage.tsx#L11), dashboard shell | Rename now; scan JSX fragments, bukan exact string saja |
+| Generic browser title `My Google AI Studio App` | [index.html:L2-L6](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/index.html#L2-L6) | Replace immediately with Loning Maju metadata |
+| Generic root package `react-example` | [package.json:L2](file:///C:/Users/Michael/Documents/LoningMarketplace/package.json#L2), root lockfile | Rename package metadata |
 | Package `loning-digital-frontend/backend` | workspace manifests and root lockfile | Rename package metadata; regenerate one authoritative lockfile |
 
 ### D2. Geographic identity — jangan blind replace
 
-`Desa Loning`, `Loning`, `Petarukan`, dan `Pemalang` banyak digunakan sebagai lokasi, asal produk, alamat, atau nama fixture. Contoh: [HeroSection.tsx:L35-L45](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/components/home/HeroSection.tsx#L35-L45), [AboutVillageSection.tsx:L48-L55](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/components/home/AboutVillageSection.tsx#L48-L55), [WhatsAppInquiryDialog.tsx:L58-L59](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/components/shared/WhatsAppInquiryDialog.tsx#L58-L59), dan seed [umkms.ts:L10](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/seeds/development/umkms.ts#L10). Nilai tersebut bukan otomatis brand lama. Review copy diperlukan; nama wilayah dan nama usaha harus dipertahankan.
+`Desa Loning`, `Loning`, `Petarukan`, dan `Pemalang` banyak digunakan sebagai lokasi, asal produk, alamat, atau nama fixture. Contoh: [HeroSection.tsx:L35-L45](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/components/home/HeroSection.tsx#L35-L45), [AboutVillageSection.tsx:L48-L55](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/components/home/AboutVillageSection.tsx#L48-L55), [WhatsAppInquiryDialog.tsx:L58-L59](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/components/shared/WhatsAppInquiryDialog.tsx#L58-L59), dan seed [umkms.ts:L10](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/seeds/development/umkms.ts#L10). Nilai tersebut bukan otomatis brand lama. Review copy diperlukan; nama wilayah dan nama usaha harus dipertahankan.
 
 ### D3. Internal/local identifier — kompatibilitas
 
 | Identifier | Bukti | Keputusan audit |
 |---|---|---|
-| `marketplace-loning-local` | [package.json:L16-L21](file:///C:/Users/Michael/Documents/Marketplace-Loning/package.json#L16-L21), scripts local/E2E, reset guard | Local only. Rename terkoordinasi atau pertahankan; reset guard dan semua scripts harus atomik. |
-| `loning_digital` | [compose.yaml:L5-L13](file:///C:/Users/Michael/Documents/Marketplace-Loning/compose.yaml#L5-L13), env example, local scripts, docs | Database persisten. Keep by default; rename butuh dump/restore atau dual deployment. |
-| `loning_postgres_data` | [compose.yaml:L10-L19](file:///C:/Users/Michael/Documents/Marketplace-Loning/compose.yaml#L10-L19) | Persistent local volume. Jangan rename tanpa migrasi data. |
-| `loning_session` | [env.ts:L12](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/config/env.ts#L12), tests, examples | Keep through first public release or accept forced logout/session rotation. |
-| `media/{uuid}/...` | [media.ts:L29](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/routes/media.ts#L29) | Brand-neutral. Do not rename. |
-| API `/api/*` | [app.ts](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/app.ts) | Brand-neutral. Do not rename. |
+| `marketplace-loning-local` | [package.json:L16-L21](file:///C:/Users/Michael/Documents/LoningMarketplace/package.json#L16-L21), scripts local/E2E, reset guard | Local only. Rename terkoordinasi atau pertahankan; reset guard dan semua scripts harus atomik. |
+| `loning_digital` | [compose.yaml:L5-L13](file:///C:/Users/Michael/Documents/LoningMarketplace/compose.yaml#L5-L13), env example, local scripts, docs | Database persisten. Keep by default; rename butuh dump/restore atau dual deployment. |
+| `loning_postgres_data` | [compose.yaml:L10-L19](file:///C:/Users/Michael/Documents/LoningMarketplace/compose.yaml#L10-L19) | Persistent local volume. Jangan rename tanpa migrasi data. |
+| `loning_session` | [env.ts:L12](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/config/env.ts#L12), tests, examples | Keep through first public release or accept forced logout/session rotation. |
+| `media/{uuid}/...` | [media.ts:L29](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/routes/media.ts#L29) | Brand-neutral. Do not rename. |
+| API `/api/*` | [app.ts](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/app.ts) | Brand-neutral. Do not rename. |
 
 ### D4. Identity yang tidak ditemukan
 
@@ -127,7 +127,7 @@ Tidak ditemukan domain publik lama, social handle, email sender runtime, PWA man
 | Loning Digital | Loning Maju | Display name | UI/docs/log | Low | No | Rename now |
 | LoningDigital split wordmark | Loning Maju | Short name | Navbar/auth/dashboard | Low | No | Rename now |
 | Belum ada typed brand config | `brand = { name, shortName, description }` | Source of truth | Frontend shared module | Low | No | Add minimum config; no framework |
-| Marketplace-Loning | `loning-maju` | Repository slug | Git/hosting/local path | Medium | Remote/path update | Business decision; code imports unaffected |
+| LoningMarketplace | `loning-maju` | Repository slug | Git/hosting/local path | Medium | Remote/path update | Business decision; code imports unaffected |
 | react-example | `loning-maju` | Root package | npm workspace metadata | Low | Lockfile refresh | Rename now |
 | loning-digital-frontend | `loning-maju-frontend` | Package | npm workspace | Low | Lockfile refresh | Rename now |
 | loning-digital-backend | `loning-maju-backend` | Package | npm workspace | Low | Lockfile refresh | Rename now |
@@ -170,44 +170,44 @@ Tidak ditemukan domain publik lama, social handle, email sender runtime, PWA man
 
 ### F-03 — Medium — Repository layer memuat terlalu banyak domain
 
-- **Bukti:** [repository.ts:L23-L67](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/repository.ts#L23-L67) menggabungkan public catalog, sessions, auth counters, UMKM, products, users, audit, media lifecycle dalam 18 KB dan baris sangat padat.
+- **Bukti:** [repository.ts:L23-L67](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/repository.ts#L23-L67) menggabungkan public catalog, sessions, auth counters, UMKM, products, users, audit, media lifecycle dalam 18 KB dan baris sangat padat.
 - **Dampak:** coupling tinggi dan review perubahan berisiko.
 - **Rekomendasi:** jangan buat abstraction baru saat rebrand. Setelah baseline, pecah berdasarkan domain hanya bila file disentuh: catalog, auth, management, media.
 - **Verifikasi:** test repository/routes tetap lulus; API contract tidak berubah.
 
 ### F-04 — Medium — Management form terlalu besar
 
-- **Bukti:** [ManagementForms.tsx](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/pages/ManagementForms.tsx) 783 baris / 26.8 KB dan menangani UMKM, product, user, media upload, validation, lifecycle UI.
+- **Bukti:** [ManagementForms.tsx](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/pages/ManagementForms.tsx) 783 baris / 26.8 KB dan menangani UMKM, product, user, media upload, validation, lifecycle UI.
 - **Dampak:** regresi tinggi untuk perubahan auth/dashboard branding.
 - **Rekomendasi:** rebrand hanya wordmark/copy dahulu. Ekstraksi form dilakukan terpisah berdasarkan resource bila perubahan fungsional diperlukan.
 
 ### F-05 — Medium — Public page membuat request daftar ganda
 
-- **Bukti:** [App.tsx:L40-L47](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/App.tsx#L40-L47) mengambil filtered products/UMKM dan seluruh products/UMKM secara paralel.
+- **Bukti:** [App.tsx:L40-L47](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/App.tsx#L40-L47) mengambil filtered products/UMKM dan seluruh products/UMKM secara paralel.
 - **Dampak:** empat request awal; payload ganda; limit 100 membuat lookup dialog tidak lengkap pada skala lebih besar.
 - **Rekomendasi:** gunakan response/detail query yang sudah ada saat item dipilih, atau satu normalized query. Jangan refactor bersamaan dengan rename copy kecuali di fase internal.
 
 ### F-06 — Medium — List API dibatasi 100 tetapi tidak punya pagination contract
 
-- **Bukti:** route default/max 100 [products.ts:L5-L10](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/routes/products.ts#L5-L10); repository hard-cap [repository.ts:L26-L28](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/repository.ts#L26-L28); management juga max 100.
+- **Bukti:** route default/max 100 [products.ts:L5-L10](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/routes/products.ts#L5-L10); repository hard-cap [repository.ts:L26-L28](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/repository.ts#L26-L28); management juga max 100.
 - **Dampak:** data ke-101 hilang tanpa indikasi UI.
 - **Rekomendasi:** tambahkan cursor/offset dan metadata page ketika dataset mendekati 100. Bukan blocker rebrand saat data lokal 72 products/15 UMKM.
 
 ### F-07 — Medium — Category contract diduplikasi
 
-- **Bukti:** [schema.ts:L4](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/schema.ts#L4), [repository.ts:L6](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/repository.ts#L6), [ManagementForms.tsx:L39-L45](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/pages/ManagementForms.tsx#L39-L45), frontend types/data.
+- **Bukti:** [schema.ts:L4](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/schema.ts#L4), [repository.ts:L6](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/repository.ts#L6), [ManagementForms.tsx:L39-L45](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/pages/ManagementForms.tsx#L39-L45), frontend types/data.
 - **Dampak:** drift bila kategori berubah.
 - **Rekomendasi:** backend tetap authority; shared generated contract hanya bila kategori memang sering berubah. Untuk sekarang satu constant frontend dan satu backend cukup.
 
 ### F-08 — Low — Dense one-line modules menghambat review
 
-- **Bukti:** [ManagementLists.tsx:L14-L23](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/pages/ManagementLists.tsx#L14-L23), public route files, repository.
+- **Bukti:** [ManagementLists.tsx:L14-L23](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/pages/ManagementLists.tsx#L14-L23), public route files, repository.
 - **Dampak:** line-level review dan conflict resolution buruk.
 - **Rekomendasi:** format file yang disentuh saja; jangan mass-format dalam commit rebrand.
 
 ### F-09 — Low — Root clean script tidak portable ke Windows
 
-- **Bukti:** [package.json:L27](file:///C:/Users/Michael/Documents/Marketplace-Loning/package.json#L27) memakai `rm -rf` pada repository Windows.
+- **Bukti:** [package.json:L27](file:///C:/Users/Michael/Documents/LoningMarketplace/package.json#L27) memakai `rm -rf` pada repository Windows.
 - **Rekomendasi:** Node stdlib cleanup script atau `rimraf` hanya jika dependency sudah ada; bukan blocker rebrand.
 
 ### F-10 — Low — Tiga lockfile berpotensi drift
@@ -224,36 +224,36 @@ Tidak ditemukan domain publik lama, social handle, email sender runtime, PWA man
 
 ## G. Frontend Findings
 
-1. **Metadata/SEO salah (Medium):** [index.html:L2-L6](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/index.html#L2-L6) memakai `lang="en"` dan title template. Tidak ada description, canonical, Open Graph, Twitter Card, favicon, manifest, robots, sitemap, atau structured data.
+1. **Metadata/SEO salah (Medium):** [index.html:L2-L6](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/index.html#L2-L6) memakai `lang="en"` dan title template. Tidak ada description, canonical, Open Graph, Twitter Card, favicon, manifest, robots, sitemap, atau structured data.
 2. **Identitas tersebar (High, F-01):** navbar, login, footer, about, FAQ, dan dashboard memiliki string brand/marketplace langsung.
-3. **Arsitektur route sehat:** public, auth, password guard, dashboard, admin role guard, 404, lazy chunks, dan route error boundary terdefinisi pada [main.tsx:L41-L68](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/main.tsx#L41-L68).
-4. **State/auth contract sehat:** CSRF hanya dalam TanStack Query memory [auth.ts:L16-L28](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/lib/auth.ts#L16-L28); unauthorized response membersihkan private query cache [main.tsx:L31-L36](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/main.tsx#L31-L36).
-5. **Error/loading states ada:** public sections dan dashboard menggunakan pending/error/empty components; lazy chunk failure recoverable [main.tsx:L20-L25](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/main.tsx#L20-L25).
+3. **Arsitektur route sehat:** public, auth, password guard, dashboard, admin role guard, 404, lazy chunks, dan route error boundary terdefinisi pada [main.tsx:L41-L68](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/main.tsx#L41-L68).
+4. **State/auth contract sehat:** CSRF hanya dalam TanStack Query memory [auth.ts:L16-L28](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/lib/auth.ts#L16-L28); unauthorized response membersihkan private query cache [main.tsx:L31-L36](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/main.tsx#L31-L36).
+5. **Error/loading states ada:** public sections dan dashboard menggunakan pending/error/empty components; lazy chunk failure recoverable [main.tsx:L20-L25](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/main.tsx#L20-L25).
 6. **Accessibility positif:** semantic main, dialog roles, labels, focus classes, keyboard test dasar. Gambar produk memakai alt berbasis nama. Media mendukung alt text.
 7. **Accessibility belum terverifikasi penuh (Low):** tidak ada automated axe audit, 200% zoom test, contrast report, atau long-copy viewport test.
 8. **Responsive coverage ada namun terbatas:** Playwright menjalankan desktop dan mobile; tidak ada tablet, 320 px, atau zoom 200%.
 9. **Tidak ada PWA identity:** tidak ada manifest atau service worker. Jangan menambah PWA hanya demi rename.
-10. **Copy domain perlu konsistensi:** [DashboardHome.tsx:L12](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/pages/DashboardHome.tsx#L12) memakai “marketplace”, sementara contract produk menyatakan direktori/katalog, bukan e-commerce.
+10. **Copy domain perlu konsistensi:** [DashboardHome.tsx:L12](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/pages/DashboardHome.tsx#L12) memakai “marketplace”, sementara contract produk menyatakan direktori/katalog, bukan e-commerce.
 
 ## H. Backend and API Findings
 
 1. **Public API brand-neutral:** `/api/products`, `/api/umkms`, auth, management, health, media. Tidak perlu path migration untuk rebrand.
-2. **Error envelope konsisten:** `{ error: { message, code } }`; success mayoritas `{ data }` [api.ts:L39-L56](file:///C:/Users/Michael/Documents/Marketplace-Loning/frontend/src/lib/api.ts#L39-L56).
+2. **Error envelope konsisten:** `{ error: { message, code } }`; success mayoritas `{ data }` [api.ts:L39-L56](file:///C:/Users/Michael/Documents/LoningMarketplace/frontend/src/lib/api.ts#L39-L56).
 3. **Auth/security kuat untuk scope saat ini:** cookie HTTP-only, SameSite Lax, production secure flag, exact Origin + CSRF untuk mutation, Argon2id, hashed session tokens, account lockout, IP rate limit.
-4. **Authorization berlapis:** route guards dan repository scoping untuk owner/admin. Public visibility mensyaratkan product dan parent UMKM sama-sama published [repository.ts:L28-L29](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/repository.ts#L28-L29).
-5. **Media validation baik:** MIME allowlist, decoded image validation, declared/actual MIME match, limits, deterministic WebP variants, safe key validation [media.ts:L18-L34](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/routes/media.ts#L18-L34), [storage.ts:L15-L28](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/media/storage.ts#L15-L28).
-6. **Backend brand hit:** startup log [index.ts:L12](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/index.ts#L12). Aman diganti.
+4. **Authorization berlapis:** route guards dan repository scoping untuk owner/admin. Public visibility mensyaratkan product dan parent UMKM sama-sama published [repository.ts:L28-L29](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/repository.ts#L28-L29).
+5. **Media validation baik:** MIME allowlist, decoded image validation, declared/actual MIME match, limits, deterministic WebP variants, safe key validation [media.ts:L18-L34](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/routes/media.ts#L18-L34), [storage.ts:L15-L28](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/media/storage.ts#L15-L28).
+6. **Backend brand hit:** startup log [index.ts:L12](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/index.ts#L12). Aman diganti.
 7. **Cookie compatibility (High risk bila diubah):** nama cookie dikonfigurasi dan dites. Rename langsung memaksa logout; strategi ada di M.
 8. **No OpenAPI/API docs (Informational):** contract terdistribusi di Zod, types, tests. Rebrand tidak memerlukan OpenAPI.
 9. **Transaction boundary tersedia:** mutations dan audit umumnya dikelompokkan; storage object cleanup menangani kegagalan DB pada upload.
-10. **Unsafe cast terisolasi (Low):** transaction repository memakai `tx as unknown as PostgresJsDatabase` [repository.ts:L69-L70](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/repository.ts#L69-L70). Ini kompatibilitas typing Drizzle, bukan bukti runtime bug.
+10. **Unsafe cast terisolasi (Low):** transaction repository memakai `tx as unknown as PostgresJsDatabase` [repository.ts:L69-L70](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/repository.ts#L69-L70). Ini kompatibilitas typing Drizzle, bukan bukti runtime bug.
 
 ## I. Database Findings
 
-1. **Schema domain:** `users`, `sessions`, `audit_logs`, `umkms`, `products`, `media_assets`; enum category, user role, publication status [schema.ts](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/schema.ts).
+1. **Schema domain:** `users`, `sessions`, `audit_logs`, `umkms`, `products`, `media_assets`; enum category, user role, publication status [schema.ts](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/schema.ts).
 2. **Constraints/indexes memadai:** UUID PK/FK, nonnegative price/order/login counter, digit-only phone, unique email/token/storage key, common status/category/owner indexes.
 3. **Public relation integrity:** product cascade on UMKM delete; media/user references set null; publish status enforced in query.
-4. **Schema drift (Medium):** migration [0003_workable_captain_cross.sql:L42-L43](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/drizzle/0003_workable_captain_cross.sql#L42-L43) memiliki `products_image_source_check` dan `umkms_image_source_check`, tetapi [schema.ts:L32-L51](file:///C:/Users/Michael/Documents/Marketplace-Loning/backend/src/db/schema.ts#L32-L51) tidak mendeklarasikannya. Runtime DB terlindungi, tetapi schema generation bisa kehilangan contract pada migration berikutnya.
+4. **Schema drift (Medium):** migration [0003_workable_captain_cross.sql:L42-L43](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/drizzle/0003_workable_captain_cross.sql#L42-L43) memiliki `products_image_source_check` dan `umkms_image_source_check`, tetapi [schema.ts:L32-L51](file:///C:/Users/Michael/Documents/LoningMarketplace/backend/src/db/schema.ts#L32-L51) tidak mendeklarasikannya. Runtime DB terlindungi, tetapi schema generation bisa kehilangan contract pada migration berikutnya.
 5. **Database name bukan schema object:** `loning_digital` berada di Compose/env/scripts, bukan nama tabel/enum. Rename tidak memberi nilai domain.
 6. **Migration historis:** jangan edit/rename migration yang sudah diterapkan. Buat migration baru hanya untuk perubahan schema nyata.
 7. **Stored geographic copy:** seed memuat `Desa Loning` dan nama usaha; ini data domain, bukan global brand replacement.
@@ -265,7 +265,7 @@ Tidak ditemukan domain publik lama, social handle, email sender runtime, PWA man
 1. Compose hanya PostgreSQL lokal; tidak ada container frontend/backend, Dockerfile, network khusus, reverse proxy, TLS, CDN, atau production topology.
 2. `marketplace-loning-local`, `loning_digital`, DB role, dan named volume saling terikat pada Compose, wait script, E2E orchestration, reset guard, docs, dan env example. Rename harus atomik.
 3. Filesystem storage default lokal dan S3-compatible production driver tersedia. Bucket/endpoint production tidak ditetapkan di repository.
-4. `.env*` di-ignore kecuali examples [`.gitignore:L7-L12`](file:///C:/Users/Michael/Documents/Marketplace-Loning/.gitignore#L7-L12). Laporan tidak menyalin secret runtime.
+4. `.env*` di-ignore kecuali examples [`.gitignore:L7-L12`](file:///C:/Users/Michael/Documents/LoningMarketplace/.gitignore#L7-L12). Laporan tidak menyalin secret runtime.
 5. `supabase/snippets` kosong; tidak ada bukti Supabase aktif.
 6. Tidak ditemukan GitHub Actions atau CI provider config. Baseline checks belum otomatis pada pull request.
 7. Tidak ditemukan domain, DNS, redirect, hosting, monitoring, logging sink, analytics, atau error tracking production.
@@ -299,7 +299,7 @@ Tidak ditemukan domain publik lama, social handle, email sender runtime, PWA man
 | `npm run test:e2e` / local runner | tidak dijalankan | skipped by audit | — | Runner lokal mengorkestrasi/reset fixture database dan server; audit melarang write/reset. Existing dev server juga aktif saat audit. |
 | install verification | tidak dijalankan | skipped | — | Dependencies sudah terpasang dan build/tests berhasil; install dapat memodifikasi lockfile/node_modules. |
 
-Tidak ditemukan `.skip`, `.only`, `todo`, expected failure, atau `fixme` pada file test yang discan. Satu assertion mengandung “Loning” sebagai **nama fixture usaha** (`Warung Nasi Khas Loning`), bukan display brand [products.spec.ts:L247](file:///C:/Users/Michael/Documents/Marketplace-Loning/e2e/products.spec.ts#L247).
+Tidak ditemukan `.skip`, `.only`, `todo`, expected failure, atau `fixme` pada file test yang discan. Satu assertion mengandung “Loning” sebagai **nama fixture usaha** (`Warung Nasi Khas Loning`), bukan display brand [products.spec.ts:L247](file:///C:/Users/Michael/Documents/LoningMarketplace/e2e/products.spec.ts#L247).
 
 ## L. Documentation Findings
 

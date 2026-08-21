@@ -118,14 +118,14 @@ BE-001, BE-002, BE-003, BE-005, BE-006, BE-007, BE-008, BE-009, BE-010, BE-011, 
 
 ### Updated in this remediation pass
 
-- [docs/backend-final-audit/findings.json](file:///C:/Users/Michael/Documents/Marketplace-Loning/docs/backend-final-audit/findings.json) — *(needs update with BE-069 FIXED, BE-070 reclassified)*
-- [docs/backend-final-audit/evidence/remediation/](file:///C:/Users/Michael/Documents/Marketplace-Loning/docs/backend-final-audit/evidence/remediation/) — 16 new evidence files
+- [docs/backend-final-audit/findings.json](file:///C:/Users/Michael/Documents/LoningMarketplace/docs/backend-final-audit/findings.json) — *(needs update with BE-069 FIXED, BE-070 reclassified)*
+- [docs/backend-final-audit/evidence/remediation/](file:///C:/Users/Michael/Documents/LoningMarketplace/docs/backend-final-audit/evidence/remediation/) — 16 new evidence files
 
 ### From previous pass (still valid)
 
-- [docs/backend-final-audit/00-executive-summary.md](file:///C:/Users/Michael/Documents/Marketplace-Loning/docs/backend-final-audit/00-executive-summary.md) — *(needs update)*
-- [docs/backend-final-audit/15-production-readonly-check.md](file:///C:/Users/Michael/Documents/Marketplace-Loning/docs/backend-final-audit/15-production-readonly-check.md)
-- [docs/backend-final-audit/17-final-verdict.md](file:///C:/Users/Michael/Documents/Marketplace-Loning/docs/backend-final-audit/17-final-verdict.md) — *(needs update)*
+- [docs/backend-final-audit/00-executive-summary.md](file:///C:/Users/Michael/Documents/LoningMarketplace/docs/backend-final-audit/00-executive-summary.md) — *(needs update)*
+- [docs/backend-final-audit/15-production-readonly-check.md](file:///C:/Users/Michael/Documents/LoningMarketplace/docs/backend-final-audit/15-production-readonly-check.md)
+- [docs/backend-final-audit/17-final-verdict.md](file:///C:/Users/Michael/Documents/LoningMarketplace/docs/backend-final-audit/17-final-verdict.md) — *(needs update)*
 
 ## Git State
 

@@ -1,0 +1,48 @@
+%% Loning Maju — Architecture & Deployment Diagram
+%% Render: mermaid.live, VS Code Mermaid plugin, GitHub
+graph TB
+    subgraph Client["🌐 Browser"]
+        SPA["React 19 SPA<br/>(Vite dev :3000)"]
+        TQ["TanStack Query 5"]
+        RR["React Router 7"]
+    end
+
+    subgraph FE["📦 frontend/ (static SPA)"]
+        TW["Tailwind CSS 4"]
+        MOTION["Motion 12"]
+        SEO["lib/seo.ts — metadata/JSON-LD"]
+    end
+
+    subgraph BE["📦 backend/ (Fastify :3001)"]
+        APP["app.ts — Fastify factory"]
+        ROUTES["routes/* — handler"]
+        REPO["repository.ts — data access"]
+        AUTH["auth/* — policy + guards"]
+        MEDIA["media/* — storage + processor"]
+        DRIZZLE["Drizzle ORM"]
+    end
+
+    subgraph STORAGE["💾 Storage"]
+        PG[("PostgreSQL 16")]
+        S3[("S3-compatible<br/>(Cloudflare R2)")]
+        FS[("Local FS<br/>(dev only)")]
+    end
+
+    subgraph DEPLOY["🚀 Production"]
+        V["Vercel (frontend)"]
+        R["Render (backend)"]
+        AV[("Aiven PostgreSQL")]
+        R2[("Cloudflare R2")]
+    end
+
+    SPA --> TQ
+    TQ -->|"REST /api/*"| APP
+    APP --> ROUTES --> REPO --> DRIZZLE --> PG
+    APP --> AUTH
+    APP --> MEDIA --> S3
+    MEDIA -.->|dev fallback| FS
+    APP -->|"serve /media/*"| S3
+
+    V -->|"/api/* + /media/* rewrite"| R
+    R --> AV
+    R --> R2

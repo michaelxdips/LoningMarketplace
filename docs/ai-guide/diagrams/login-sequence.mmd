@@ -1,0 +1,33 @@
+%% Loning Maju — Login & Session Sequence
+%% Render: mermaid.live
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant F as Frontend (React)
+    participant A as Fastify API
+    participant DB as PostgreSQL
+
+    B->>F: buka /login
+    F->>B: render form login
+    B->>A: POST /api/auth/login {identifier, password}
+    Note over A: preHandler: guards.origin + rate-limit (10/mnt)
+    A->>DB: findUserByEmail / findUserByUsername
+    A->>A: argon2.verify (dummy hash bila user tak ada)
+    alt kredensial salah
+        A->>DB: increment failed_login_count + audit login_failed
+        A-->>B: 401 INVALID_CREDENTIALS
+    else terkunci (lockout)
+        A-->>B: 429 ACCOUNT_LOCKED
+    else berhasil
+        A->>A: buat sessionToken + csrfToken (random 32 byte)
+        A->>DB: simpan hash(token) + hash(csrf) + expiresAt
+        A->>DB: recordLoginSuccess + audit login_succeeded
+        A-->>B: Set-Cookie loning_session (HttpOnly) + {user, csrfToken}
+        F->>F: simpan csrfToken di TanStack Query memory
+    end
+
+    Note over B,DB: Session check berikutnya
+    B->>A: GET /api/auth/session
+    A->>A: authenticate (hash cookie token → cari session)
+    A->>DB: rotate CSRF (simpan hash baru)
+    A-->>B: { data: { user, csrfToken } }

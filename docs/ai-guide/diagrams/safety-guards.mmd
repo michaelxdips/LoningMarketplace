@@ -1,0 +1,34 @@
+%% Loning Maju — Data Safety Guards (fail-closed design)
+%% Render: mermaid.live
+graph TD
+    subgraph "Operasi berbahaya (fail-closed)"
+        SEED["db:seed (dev/test)"]
+        BOOT["db:bootstrap-admin"]
+        RESET["db:reset-safe"]
+        MIG["db:migrate"]
+        DISP["harness disposable"]
+    end
+
+    SEED --> TS["target-safety.ts<br/>assertSafeSeedTarget"]
+    BOOT --> BT["target-safety.ts<br/>assertSafeBootstrapTarget"]
+    RESET --> RG["db-reset-guard.ts<br/>validateResetSafety"]
+    MIG --> INT["public-integrity.ts<br/>+ location-integrity.ts<br/>+ backfill-slugs.ts"]
+    DISP --> DD["disposable-db-safety.mjs<br/>assertDisposableDatabase"]
+
+    TS -->|"ALLOW_SEED=1 + profile match + loopback + _dev/_test"| OK1[✅ Allow]
+    BT -->|"production markers + confirm + production host"| OK2[✅ Allow]
+    RG -->|"dev/test + --force + table whitelist + local compose"| OK3[✅ Allow]
+    INT -->|"no duplicate slug / invalid phone / location"| OK5[✅ Migrate commit]
+    DD -->|"test + loopback + _test/_e2e + non-5432"| OK4[✅ Allow]
+
+    TS -->|"gagal"| REF1[❌ SEED_TARGET_REFUSED]
+    BT -->|"gagal"| REF2[❌ BOOTSTRAP_TARGET_REFUSED]
+    RG -->|"gagal"| REF3[❌ Reset refused]
+    INT -->|"gagal"| REF5[❌ Migration refused]
+    DD -->|"gagal"| REF4[❌ DISPOSABLE_DB_REFUSED]
+
+    style REF1 fill:#C85C43,color:#fff
+    style REF2 fill:#C85C43,color:#fff
+    style REF3 fill:#C85C43,color:#fff
+    style REF4 fill:#C85C43,color:#fff
+    style REF5 fill:#C85C43,color:#fff

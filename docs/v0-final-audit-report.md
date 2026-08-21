@@ -1,7 +1,7 @@
 # V0 Final Freeze — Audit dan Hardening Loning Maju
 
 Tanggal: 22 Juli 2026  
-Repository: `C:/Users/Michael/Documents/Marketplace-Loning`  
+Repository: `C:/Users/Michael/Documents/LoningMarketplace`  
 Stack: React 19 + Vite 6, Fastify 5, Drizzle ORM, PostgreSQL 16
 
 ## Final verdict
@@ -203,7 +203,7 @@ No `waitForTimeout`, `shell: true`, remote Google Fonts request, debugger, `.onl
 
 ## Cloud readiness
 
-Provider-neutral requirements are documented in [v0-cloud-deployment-checklist.md](file:///C:/Users/Michael/Documents/Marketplace-Loning/docs/v0-cloud-deployment-checklist.md), including `HOST`, `PORT`, `NODE_ENV`, `DATABASE_URL`, PostgreSQL 16/TLS, pooling, migrations, backup/restore/rollback, exact `CORS_ORIGIN`, secure cookies, proxy trust/client IP, health/readiness, signals, logging, SPA fallback, S3 driver and variables, bucket policy, retention, and post-deploy smoke tests. No provider, domain, credential, bucket, or deployment claim is included.
+Provider-neutral requirements are documented in [v0-cloud-deployment-checklist.md](file:///C:/Users/Michael/Documents/LoningMarketplace/docs/v0-cloud-deployment-checklist.md), including `HOST`, `PORT`, `NODE_ENV`, `DATABASE_URL`, PostgreSQL 16/TLS, pooling, migrations, backup/restore/rollback, exact `CORS_ORIGIN`, secure cookies, proxy trust/client IP, health/readiness, signals, logging, SPA fallback, S3 driver and variables, bucket policy, retention, and post-deploy smoke tests. No provider, domain, credential, bucket, or deployment claim is included.
 
 ## Git proof and file classification
 

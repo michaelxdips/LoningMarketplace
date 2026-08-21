@@ -6,7 +6,7 @@
 * **Node**: `v26.4.0`
 * **npm**: `11.18.0`
 * **Git**: `2.55.0.windows.3`
-* **Working Directory**: `C:/Users/Michael/Documents/Marketplace-Loning`
+* **Working Directory**: `C:/Users/Michael/Documents/LoningMarketplace`
 
 ---
 

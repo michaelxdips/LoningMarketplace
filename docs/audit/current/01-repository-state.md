@@ -2,7 +2,7 @@
 
 ## 1. Environment Details
 
-* **Root Directory**: `C:/Users/Michael/Documents/Marketplace-Loning`
+* **Root Directory**: `C:/Users/Michael/Documents/LoningMarketplace`
 * **Node.js**: `v26.4.0`
 * **npm**: `11.18.0`
 * **Operating System**: Windows (PowerShell Shell)

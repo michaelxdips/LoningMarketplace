@@ -1,0 +1,27 @@
+%% Loning Maju — Frontend Route Tree
+%% Render: mermaid.live
+graph TD
+    ROOT["/ (App — homepage)"] 
+    FAQ["/faq"]
+    DESA["/tentang-desa"]
+    KAMI["/tentang-kami"]
+    VH["/version-history"]
+    PETA["/peta-umkm"]
+    PROD["/produk/:identifier"]
+    UMKM["/umkm/:identifier"]
+    LOGIN["/login — PublicOnlyGuard"]
+    CPW["/change-password — PasswordGuard"]
+    DASH["/dashboard — ProtectedGuard"]
+    DASH --> D_HOME["index (Ringkasan)"]
+    DASH --> BANTUAN["bantuan"]
+    DASH --> D_UMKM["umkms / umkms/:id / umkms/new / umkms/:id/location"]
+    DASH --> D_PROD["products / products/:id / products/new"]
+    DASH --> D_USER["users / users/:id / users/new"]
+    DASH --> D_AUDIT["audit — audit:view-global"]
+    DASH --> D_ANALYTICS["analytics — analytics:view-global"]
+    NOTFOUND["/404"]
+    CATCHALL["* → /404"]
+
+    style ROOT fill:#1C3F24,color:#fff
+    style DASH fill:#C85C43,color:#fff
+    style LOGIN fill:#DFE4E1,color:#1F2421

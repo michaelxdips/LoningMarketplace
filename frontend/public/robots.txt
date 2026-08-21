@@ -1,2 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /api/
+
+Sitemap: https://www.loningmaju.my.id/sitemap.xml

@@ -1,0 +1,22 @@
+%% Loning Maju — Publication State Machine
+%% Render: mermaid.live
+stateDiagram-v2
+    [*] --> draft
+    draft --> published : publish (admin/perangkat_desa)
+    draft --> archived : archive
+    published --> draft : unpublish
+    published --> archived : archive
+    archived --> draft : restore
+    archived --> [*] : delete permanen (hanya archived)
+
+    note right of published
+        Produk baru bisa published
+        hanya jika parent UMKM published.
+        UMKM wajib phone valid (format 628…).
+    end note
+
+    note right of archived
+        Hapus permanen (DELETE)
+        hanya untuk record archived.
+        Restore selalu kembali ke draft.
+    end note

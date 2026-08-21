@@ -1,0 +1,24 @@
+%% Loning Maju — Secure Mutation (CSRF + Origin + Capability)
+%% Render: mermaid.live
+sequenceDiagram
+    autonumber
+    participant F as Frontend
+    participant A as Fastify API
+    participant DB as PostgreSQL
+
+    F->>A: PATCH /api/manage/umkms/:id
+    Note over F: header: Cookie + X-CSRF-Token + Origin
+    A->>A: guards.secured = authenticate → origin → csrf
+    alt session invalid/expired
+        A-->>F: 401 UNAUTHENTICATED
+    else origin tidak diizinkan
+        A-->>F: 403 ORIGIN_INVALID
+    else CSRF hash tidak cocok
+        A-->>F: 403 CSRF_INVALID
+    else role tanpa capability
+        A-->>F: 403 FORBIDDEN
+    else lolos semua
+        A->>DB: repository.transaction (update + audit log)
+        DB-->>A: hasil
+        A-->>F: { data: ... }
+    end

@@ -3,7 +3,7 @@
 ## Project Overview
 
 * **Project Name**: Loning Maju — Marketplace UMKM Desa Loning
-* **Repository Path**: `C:/Users/Michael/Documents/Marketplace-Loning`
+* **Repository Path**: `C:/Users/Michael/Documents/LoningMarketplace`
 * **Audit Date**: `2026-08-01`
 * **Node Version**: `v26.4.0` | **npm Version**: `11.18.0`
 * **Active Branch**: `master` (`94bbe08`) | **Remote**: `origin/master` (Synchronized)

@@ -1,0 +1,27 @@
+%% Loning Maju — Media Pipeline
+%% Render: mermaid.live
+sequenceDiagram
+    autonumber
+    participant F as Frontend
+    participant A as Fastify /api/manage/media/images
+    participant P as processor.ts (Sharp)
+    participant S as storage.ts (S3/FS)
+    participant R as repository.ts
+    participant DB as media_assets
+
+    F->>A: POST multipart (file + altText) [guards.secured]
+    A->>A: validasi MIME (jpeg/png/webp) + ukuran
+    A->>P: processImage(buffer)
+    P->>P: sharp → metadata → autoOrient
+    P->>P: card (1280px, q82) + thumbnail (400px, q78) → WebP
+    P-->>A: {card, thumb, dims, checksum}
+    A->>S: putObject(media/{uuid}/card.webp + thumbnail.webp)
+    A->>R: createMediaAsset (transaction)
+    R->>DB: INSERT media_assets
+    A-->>F: { data: { id, imageUrl, thumbnailUrl, width, height } }
+
+    Note over F,DB: Serving
+    F->>A: GET /media/{uuid}/card.webp
+    A->>S: storage.stream(key)
+    S-->>A: stream + cache-control immutable
+    A-->>F: 200 WebP (streaming)

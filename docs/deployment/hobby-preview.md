@@ -2,7 +2,7 @@
 
 ## Phase 0 — Actual State Reconstruction
 
-- Repository root: `C:/Users/Michael/Documents/Marketplace-Loning`
+- Repository root: `C:/Users/Michael/Documents/LoningMarketplace`
 - Branch: `phase1-public-discovery`
 - HEAD: `1e0930685de1e0f2f8c5c396374b12ccf2be795c`
 - Worktree: clean (`git status --short` empty)

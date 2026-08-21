@@ -1,0 +1,120 @@
+%% Loning Maju — Entity-Relationship Diagram
+%% Render: mermaid.live
+erDiagram
+    users ||--o{ sessions : "has"
+    users ||--o{ audit_logs : "creates"
+    users ||--o{ media_assets : "uploads"
+    users ||--o{ umkms : "owns (owner_user_id)"
+    umkms ||--o{ products : "has"
+    umkms ||--o{ public_events : "tracked"
+    products ||--o{ public_events : "tracked"
+    media_assets ||--o| umkms : "primary image"
+    media_assets ||--o| products : "primary image"
+    media_assets ||--o{ product_images : "gallery"
+    products ||--o{ product_images : "has"
+
+    users {
+        uuid id PK
+        text email UK
+        text username UK
+        text password_hash
+        user_role role
+        boolean is_active
+        boolean must_change_password
+        int failed_login_count
+        timestamp locked_until
+        timestamp last_login_at
+    }
+
+    umkms {
+        uuid id PK
+        varchar slug UK
+        text name
+        text owner
+        text description
+        text phone
+        category category
+        uuid image_asset_id FK
+        text address
+        numeric latitude
+        numeric longitude
+        text working_hours
+        text opening_time
+        text closing_time
+        uuid owner_user_id FK
+        int display_order
+        publication_status publication_status
+    }
+
+    products {
+        uuid id PK
+        uuid umkm_id FK
+        varchar slug UK
+        text name
+        int price
+        text description
+        category category
+        uuid image_asset_id FK
+        boolean is_available
+        text unit
+        text phone
+        text seller_name
+        publication_status publication_status
+    }
+
+    product_images {
+        uuid id PK
+        uuid product_id FK
+        uuid media_asset_id FK
+        int display_order
+        text alt_text
+        boolean is_primary
+    }
+
+    media_assets {
+        uuid id PK
+        uuid created_by_user_id FK
+        text card_storage_key UK
+        text thumbnail_storage_key UK
+        text checksum_sha256
+        int card_width
+        int card_height
+        int card_byte_size
+        int thumbnail_width
+        int thumbnail_height
+        int thumbnail_byte_size
+        text alt_text
+        timestamp orphaned_at
+        timestamp deleted_at
+    }
+
+    sessions {
+        uuid id PK
+        uuid user_id FK
+        text token_hash UK
+        text csrf_token_hash
+        timestamp expires_at
+        timestamp revoked_at
+        text ip_address
+        text user_agent
+    }
+
+    audit_logs {
+        uuid id PK
+        uuid actor_user_id FK
+        text action
+        text entity_type
+        uuid entity_id
+        jsonb metadata
+    }
+
+    public_events {
+        uuid id PK
+        public_event_type event_type
+        uuid umkm_id FK
+        uuid product_id FK
+        text source
+        uuid anonymous_session_id
+        int event_version
+        timestamp dedupe_bucket
+    }
