@@ -37,10 +37,9 @@ export default function LoginPage() {
           <Link
             to="/"
             aria-label={`${brand.name} — beranda`}
-            className="focus-ring flex items-baseline gap-2 rounded font-serif text-2xl font-semibold tracking-tight text-charcoal transition-colors hover:text-forest"
+            className="focus-ring flex items-baseline rounded font-serif text-2xl font-semibold tracking-tight text-charcoal transition-colors hover:text-forest"
           >
-            <span>Loning</span>
-            <span className="font-light italic text-terracotta">Maju</span>
+            Loning<span className="font-light italic text-terracotta">Maju</span>
           </Link>
           <span className="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-warm-gray sm:block">
             Desa Loning &middot; Pemalang

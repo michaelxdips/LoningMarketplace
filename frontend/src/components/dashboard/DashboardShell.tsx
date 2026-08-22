@@ -75,9 +75,8 @@ export default function DashboardShell() {
       </a>
       {/* Mobile Drawer Trigger Header */}
       <div className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-sage-border bg-white px-4 shadow-2xs lg:hidden">
-        <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-center gap-2.5 font-serif text-lg font-semibold tracking-tight text-charcoal">
-          <span>Loning</span>
-          <span className="font-light italic text-terracotta">Maju</span>
+        <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-center font-serif text-lg font-semibold tracking-tight text-charcoal">
+          Loning<span className="font-light italic text-terracotta">Maju</span>
         </NavLink>
         <button
           ref={menuTriggerRef}
@@ -106,9 +105,8 @@ export default function DashboardShell() {
         aria-label="Navigasi Utama"
       >
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
-          <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-baseline gap-2 font-serif text-xl font-semibold tracking-tight text-white">
-            <span>Loning</span>
-            <span className="font-light italic text-terracotta-soft">Maju</span>
+          <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-baseline font-serif text-xl font-semibold tracking-tight text-white">
+            Loning<span className="font-light italic text-terracotta-soft">Maju</span>
           </NavLink>
           <button onClick={() => setOpen(false)} className="touch-target p-2.5 lg:hidden" aria-label="Tutup navigasi">
             <X className="h-5 w-5" />

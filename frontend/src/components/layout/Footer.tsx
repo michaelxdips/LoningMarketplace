@@ -28,10 +28,9 @@ export default function Footer() {
                 to="/"
                 onClick={scrollToTop}
                 aria-label={`${brand.name} — beranda`}
-                className="focus-ring inline-flex items-baseline gap-2 rounded font-serif text-3xl font-semibold tracking-tight text-white transition-colors hover:text-terracotta-soft"
+                className="focus-ring inline-block rounded font-serif text-3xl font-semibold tracking-tight text-white transition-colors hover:text-terracotta-soft"
               >
-                <span>Loning</span>
-                <span className="font-light italic text-terracotta">Maju</span>
+                Loning<span className="font-light italic text-terracotta">Maju</span>
               </Link>
 
               <p className="mt-6 max-w-md text-sm leading-7 text-cream-tint/70">
