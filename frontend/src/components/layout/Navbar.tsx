@@ -48,11 +48,11 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
           to="/"
           onClick={handleLogoClick}
           aria-label={`${brand.name} — kembali ke beranda`}
-          className="focus-ring flex min-w-0 items-center gap-3 rounded-lg px-1.5 py-1 text-forest transition-opacity hover:opacity-90"
+          className="focus-ring flex min-w-0 items-center gap-2.5 rounded-lg px-1.5 py-1 text-forest transition-opacity hover:opacity-90"
         >
-          <img src={brand.logoSvg} alt="" className="h-20 w-20 object-contain shrink-0" />
-          <span className="truncate text-base font-black uppercase tracking-wider md:text-lg">
-            LONING<span className="text-terracotta">MAJU</span>
+          <img src={brand.logoSvg} alt="" className="h-9 w-9 object-contain shrink-0" />
+          <span className="truncate font-serif text-lg font-semibold tracking-tight md:text-xl">
+            Loning<span className="font-light italic text-terracotta">Maju</span>
           </span>
         </Link>
 
@@ -105,7 +105,7 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
         <nav
           id="mobile-nav-menu"
           aria-label="Navigasi seluler"
-          className="border-t border-sage-border bg-cream-card px-4 py-4 shadow-lg md:hidden"
+          className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto border-t border-sage-border bg-cream-card px-4 py-4 shadow-lg md:hidden"
         >
           {navItems.map((item) =>
             item.href.startsWith('/#') ? (

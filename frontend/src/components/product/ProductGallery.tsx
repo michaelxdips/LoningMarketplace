@@ -29,8 +29,8 @@ export function ProductGallery({ images, className = '', aspectRatio = 'aspect-[
 
       <div className={`relative ${aspectRatio} overflow-hidden rounded-2xl border border-sage-border bg-cream-tint`}>
         <ProductImage src={current.url} alt={current.altText || `Gambar produk ${currentIndex + 1}`} className="h-full w-full object-cover" />
-        <button type="button" onClick={prev} aria-label="Gambar sebelumnya" className="focus-ring absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-charcoal/50 p-2 text-white hover:bg-charcoal/70 shadow-md"><ChevronLeft size={20} /></button>
-        <button type="button" onClick={next} aria-label="Gambar berikutnya" className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-charcoal/50 p-2 text-white hover:bg-charcoal/70 shadow-md"><ChevronRight size={20} /></button>
+        <button type="button" onClick={prev} aria-label="Gambar sebelumnya" className="focus-ring touch-target absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-charcoal/50 p-2.5 text-white hover:bg-charcoal/70 shadow-md"><ChevronLeft size={20} /></button>
+        <button type="button" onClick={next} aria-label="Gambar berikutnya" className="focus-ring touch-target absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-charcoal/50 p-2.5 text-white hover:bg-charcoal/70 shadow-md"><ChevronRight size={20} /></button>
         <span aria-hidden="true" className="absolute bottom-3 right-3 rounded-full bg-charcoal/70 px-2.5 py-0.5 text-[10px] font-bold text-white">{currentIndex + 1} / {images.length}</span>
       </div>
 

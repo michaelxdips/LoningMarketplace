@@ -290,21 +290,21 @@ export default function ResourceList<
         <EmptyPanel>Tidak ada {noun} yang cocok.</EmptyPanel>
       ) : (
         isDesktop ? (
-          <div className="hidden overflow-x-auto rounded-2xl border border-sage-border bg-white lg:block">
+          <div className="hidden overflow-x-auto lg:block">
             <table className="w-full table-fixed text-left text-sm">
-              <thead className="border-b border-sage-border bg-cream-tint text-xs uppercase text-warm-gray">
+              <thead className="border-b border-charcoal/25 text-xs uppercase tracking-wider text-warm-gray">
                 <tr>
                   {columns.map((c) => (
-                    <th key={c.label} className="px-5 py-4">
+                    <th key={c.label} className="px-5 py-3 font-bold">
                       {c.label}
                     </th>
                   ))}
-                  <th className="w-[25%] px-5 py-4 text-right">Aksi</th>
+                  <th className="w-[25%] px-5 py-3 text-right font-bold">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-sage-border">
+              <tbody className="divide-y divide-charcoal/10">
                 {items.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.id} className="transition-colors hover:bg-cream-tint/40">
                     {columns.map((c) => (
                       <td key={c.label} className="px-5 py-4 align-middle">
                         {c.render(item)}
@@ -317,11 +317,11 @@ export default function ResourceList<
             </table>
           </div>
         ) : (
-          <div className="grid gap-3 lg:hidden">
+          <div className="grid gap-0 lg:hidden">
             {items.map((item) => (
               <article
                 key={item.id}
-                className="min-w-0 rounded-2xl border border-sage-border bg-white p-4"
+                className="min-w-0 border-b border-charcoal/10 py-4"
               >
                 <div className="space-y-3">
                   {columns.map((c) => (
@@ -336,7 +336,7 @@ export default function ResourceList<
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 border-t border-sage-border pt-4">
+                <div className="mt-4 border-t border-charcoal/10 pt-4">
                   {actions(item)}
                 </div>
               </article>

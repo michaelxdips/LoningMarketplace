@@ -150,16 +150,14 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="relative w-full max-w-md bg-cream-card rounded-xl border border-sage-border shadow-xl flex flex-col overflow-hidden max-h-[90dvh] overscroll-contain"
+          className="relative w-full max-w-md bg-cream-card rounded-2xl border border-sage-border shadow-xl flex flex-col overflow-hidden max-h-[90dvh] overscroll-contain"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-sage-border bg-cream-bg">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-forest/5 text-forest rounded-lg">
-                <MessageSquare size={18} />
-              </div>
+          <div className="flex items-center justify-between p-5 border-b border-sage-border bg-cream-bg">
+            <div className="flex items-center gap-3">
+              <MessageSquare size={18} className="text-terracotta" />
               <div>
-                <h3 id="wa-dialog-title" className="text-sm font-semibold text-charcoal">
+                <h3 id="wa-dialog-title" className="font-serif text-base font-semibold text-charcoal">
                   Kirim Pertanyaan
                 </h3>
                 <p className="text-[11px] text-warm-gray font-medium mt-0.5">
@@ -180,14 +178,14 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
 
           {/* Form Content */}
           <div className="p-5 overflow-y-auto space-y-4">
-            <div className="p-3 bg-sage-light/60 border border-sage-border/80 rounded-lg text-xs text-warm-gray leading-relaxed">
+            <p className="text-xs text-warm-gray leading-relaxed">
               Silakan lengkapi pesan pertanyaan Anda di bawah ini. Anda akan diarahkan langsung ke aplikasi WhatsApp pelaku UMKM untuk melanjutkan obrolan secara pribadi.
-            </div>
+            </p>
 
             {/* Form Fields */}
-            <div className="space-y-3.5">
+            <div className="space-y-4">
               <div>
-                <label htmlFor="visitor-name" className="block text-[10px] font-semibold text-warm-gray uppercase tracking-widest mb-1.5">
+                <label htmlFor="visitor-name" className="block text-[11px] font-bold text-warm-gray uppercase tracking-wider mb-1.5">
                   Nama Anda (Opsional)
                 </label>
                 <input
@@ -196,12 +194,12 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
                   placeholder="Contoh: Budi Prasetyo"
                   value={visitorName}
                   onChange={(e) => setVisitorName(e.target.value)}
-                  className="w-full bg-cream-bg border border-sage-border rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:ring-1 focus:ring-forest focus:border-forest placeholder:text-warm-gray/40 focus-ring"
+                  className="w-full border-0 border-b border-charcoal/20 bg-transparent px-0 py-2 text-sm text-charcoal focus:border-terracotta focus:outline-none focus:ring-0 placeholder:text-warm-gray/50"
                 />
               </div>
 
               <div>
-                <label htmlFor="visitor-question" className="block text-[10px] font-semibold text-warm-gray uppercase tracking-widest mb-1.5">
+                <label htmlFor="visitor-question" className="block text-[11px] font-bold text-warm-gray uppercase tracking-wider mb-1.5">
                   Pertanyaan Khusus (Opsional)
                 </label>
                 <textarea
@@ -214,7 +212,7 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
                   }
                   value={visitorQuestion}
                   onChange={(e) => setVisitorQuestion(e.target.value)}
-                  className="w-full bg-cream-bg border border-sage-border rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:ring-1 focus:ring-forest focus:border-forest placeholder:text-warm-gray/40 resize-none focus-ring"
+                  className="w-full border-0 border-b border-charcoal/20 bg-transparent px-0 py-2 text-sm text-charcoal focus:border-terracotta focus:outline-none focus:ring-0 placeholder:text-warm-gray/50 resize-none"
                 />
               </div>
             </div>
@@ -222,7 +220,7 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
             {/* Dynamic Preview Box */}
             <div className="pt-2">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-semibold text-warm-gray uppercase tracking-widest">
+                <span className="text-[11px] font-bold text-warm-gray uppercase tracking-wider">
                   Pratinjau Pesan
                 </span>
                 <button
@@ -240,7 +238,7 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
                   )}
                 </button>
               </div>
-              <div className="p-3 bg-cream-bg rounded-lg border border-sage-border text-[11px] font-mono leading-relaxed text-warm-gray whitespace-pre-wrap max-h-32 overflow-y-auto">
+              <div className="p-3 bg-cream-bg rounded-xl border border-sage-border text-[11px] font-mono leading-relaxed text-warm-gray whitespace-pre-wrap max-h-32 overflow-y-auto">
                 {finalMessage}
               </div>
               {status.startsWith('Salin secara manual') && <p className="mt-2 text-xs text-warm-gray">Nomor WhatsApp: <span className="select-all font-mono text-charcoal">{phoneNumber}</span></p>}
@@ -250,11 +248,11 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center gap-2.5 p-4 border-t border-sage-border bg-cream-bg">
+          <div className="flex items-center gap-2.5 p-5 border-t border-sage-border bg-cream-bg">
             <button
               id="wa-dialog-cancel"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-cream-card border border-sage-border text-charcoal hover:bg-sage-light text-xs font-semibold rounded-lg transition-colors focus-ring"
+              className="flex-1 px-4 py-2.5 bg-cream-card border border-sage-border text-charcoal hover:bg-sage-light text-xs font-bold rounded-xl transition-colors focus-ring"
             >
               Batal
             </button>
@@ -263,7 +261,7 @@ export default function WhatsAppInquiryDialog({ isOpen, onClose, product, umkm, 
               disabled={!hasContact}
               title={!hasContact ? 'Nomor WhatsApp UMKM belum tersedia.' : undefined}
               onClick={handleSend}
-              className="flex-1 px-4 py-2.5 bg-forest hover:bg-forest-hover text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 shadow-sm hover:shadow active:scale-98 transition-all focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 bg-forest hover:bg-forest-hover text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send size={13} />
               <span>Kirim Pertanyaan</span>

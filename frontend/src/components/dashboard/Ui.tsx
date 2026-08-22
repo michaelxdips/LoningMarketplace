@@ -9,7 +9,7 @@ export const dangerButtonClass = 'focus-ring touch-target inline-flex items-cent
 const controlClass = 'focus-ring min-h-11 w-full rounded-xl border border-sage-border bg-white px-3.5 py-2.5 text-sm text-charcoal placeholder:text-warm-gray/70 disabled:bg-cream-tint';
 
 export function PageHeader({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
-  return <header className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-terracotta">Ruang pengelola</p><h1 className="text-3xl font-extrabold tracking-tight text-charcoal">{title}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-warm-gray">{description}</p></div>{action}</header>;
+  return <header className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="flex items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.2em] text-terracotta"><span className="h-px w-8 bg-terracotta/60" aria-hidden="true" />Ruang pengelola</p><h1 className="mt-3 font-serif text-3xl font-semibold tracking-tight text-charcoal">{title}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-warm-gray">{description}</p></div>{action}</header>;
 }
 
 export function Field({ label, error, children, hint }: { label: string; error?: string; children: ReactNode; hint?: string }) {

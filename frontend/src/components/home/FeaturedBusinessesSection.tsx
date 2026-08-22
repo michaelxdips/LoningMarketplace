@@ -41,10 +41,11 @@ export default function FeaturedBusinessesSection({ umkms, searchQuery, onSearch
         {/* Section Header */}
         <div className="mb-6 grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)] md:items-center">
           <div className="min-w-0">
-            <span className="editorial-label mb-1.5 block">
+            <p className="flex items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.2em] text-terracotta">
+              <span className="h-px w-8 bg-terracotta/60" aria-hidden="true" />
               Direktori Usaha Rakyat
-            </span>
-            <h2 id="featured-businesses-heading" className="text-2xl font-extrabold text-charcoal tracking-tight sm:text-3xl">
+            </p>
+            <h2 id="featured-businesses-heading" className="mt-4 font-serif text-3xl font-semibold tracking-tight text-charcoal sm:text-4xl">
               Profil Pelaku UMKM Desa
             </h2>
             <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-warm-gray sm:text-sm">
@@ -103,7 +104,7 @@ export default function FeaturedBusinessesSection({ umkms, searchQuery, onSearch
                 <button
                   type="button"
                   onClick={() => setShowAll((prev) => !prev)}
-                  className="focus-ring inline-flex items-center gap-2 rounded-2xl border border-sage-border bg-white px-6 py-3 text-sm font-extrabold text-forest hover:bg-cream-bg shadow-sm transition-all"
+                  className="focus-ring inline-flex items-center gap-2 rounded border-b border-terracotta px-1 py-2 text-sm font-bold text-forest transition-colors hover:text-terracotta"
                 >
                   {showAll ? (
                     <>

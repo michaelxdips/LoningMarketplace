@@ -3,29 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export const BENEFIT_CARDS = [
-  {
-    title: 'Produk Lokal Pilihan',
-    description: 'Menampilkan beraneka ragam karya kerajinan, kuliner khas, serta komoditas unggulan pertanian asli warga Loning.',
-    icon: 'storefront'
-  },
-  {
-    title: 'Pelaku Usaha Desa',
-    description: 'Mengenal lebih dekat pengrajin, petani, serta pegiat niaga mandiri yang menggerakkan ekonomi akar rumput.',
-    icon: 'groups'
-  },
-  {
-    title: 'Informasi Mudah Diakses',
-    description: 'Daftar alamat, jam buka, serta katalog penawaran terhimpun secara rapi dalam satu wadah ramah pengguna.',
-    icon: 'search'
-  },
-  {
-    title: 'Terhubung via WhatsApp',
-    description: 'Membuka komunikasi interaktif langsung dengan pelaku usaha tanpa sistem perantara ataupun biaya komisi tambahan.',
-    icon: 'whatsapp'
-  }
-];
-
 export interface FaqItem {
   question: string;
   answer: string;

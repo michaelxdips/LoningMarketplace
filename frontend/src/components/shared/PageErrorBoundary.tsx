@@ -27,7 +27,7 @@ export class PageErrorBoundary extends Component<{
     if (!this.state.error) return this.props.children;
     return (
       <section role="alert" className="mx-auto my-10 max-w-xl rounded-2xl border border-red-200 bg-white p-7 text-center shadow-sm">
-        <h1 className="text-2xl font-extrabold text-charcoal">Halaman tidak dapat ditampilkan</h1>
+        <h1 className="font-serif text-2xl font-semibold text-charcoal">Halaman tidak dapat ditampilkan</h1>
         <p className="mt-3 text-sm leading-6 text-warm-gray">Terjadi gangguan saat memuat halaman ini. Coba lagi atau kembali ke halaman sebelumnya.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button type="button" className="focus-ring rounded-xl bg-forest px-4 py-2.5 text-sm font-bold text-white" onClick={() => this.setState({ error: null })}>Coba lagi</button>

@@ -4,14 +4,12 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Search, BookOpen, MessageCircle, ArrowRight, ChevronDown, HelpCircle, X, ShieldCheck, Code2, Store, MapPin } from 'lucide-react';
+import { Search, ChevronDown, HelpCircle, X, ShieldCheck, Code2, Store, MapPin, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router';
 import PublicPageShell from '../components/layout/PublicPageShell';
 import { FAQS, GUIDE_STEPS } from '../data';
 import { usePageMetadata } from '../lib/seo';
 import DeveloperContactDialog from '../components/shared/DeveloperContactDialog';
-
-const stepIcons = [Search, BookOpen, MessageCircle];
 
 const categoryTabs = [
   { id: 'all', label: 'Semua FAQ', icon: <HelpCircle size={15} /> },
@@ -71,7 +69,7 @@ export default function FaqPage() {
       {/* Header Banner */}
       <header className="mx-auto max-w-3xl px-5 pb-10 pt-20 text-center sm:pt-28">
         <p className="editorial-label">Pusat Informasi & Panduan</p>
-        <h1 className="text-balance mt-4 break-words text-4xl font-extrabold tracking-[-0.035em] text-charcoal sm:text-5xl">
+        <h1 className="text-balance mt-4 break-words font-serif text-4xl font-semibold tracking-tight text-charcoal sm:text-5xl">
           Pertanyaan Umum & Cara Penggunaan Loning Maju
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-warm-gray sm:text-base">
@@ -107,18 +105,12 @@ export default function FaqPage() {
       <section aria-labelledby="steps-title" className="mx-auto max-w-6xl px-5 pb-16">
         <h2 id="steps-title" className="sr-only">Tiga langkah penggunaan</h2>
         <div className="grid gap-px overflow-hidden rounded-2xl border border-sage-border bg-sage-border md:grid-cols-3 shadow-xs">
-          {GUIDE_STEPS.map((step, index) => {
-            const Icon = stepIcons[index];
+          {GUIDE_STEPS.map((step) => {
             return (
               <article key={step.number} className="bg-cream-card p-7 sm:p-9">
-                <div className="flex items-center justify-between">
-                  <div className="p-2.5 rounded-xl bg-forest/10 text-forest">
-                    <Icon size={20} aria-hidden="true" />
-                  </div>
-                  <span className="font-mono text-xs font-bold text-terracotta">{step.number}</span>
-                </div>
-                <h3 className="mt-6 text-base font-bold text-charcoal sm:text-lg">{step.title}</h3>
-                <p className="mt-2 text-xs leading-6 text-warm-gray sm:text-sm">{step.description}</p>
+                <span className="font-serif text-4xl font-light text-terracotta/90">{step.number}</span>
+                <h3 className="mt-4 font-serif text-lg font-semibold text-charcoal">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-warm-gray">{step.description}</p>
               </article>
             );
           })}
@@ -131,7 +123,7 @@ export default function FaqPage() {
           
           <div className="mb-8 text-center">
             <p className="editorial-label">Hal Yang Sering Ditanyakan</p>
-            <h2 id="faq-title" className="mt-2 text-2xl font-extrabold tracking-tight text-charcoal sm:text-3xl">
+            <h2 id="faq-title" className="mt-2 font-serif text-2xl font-semibold tracking-tight text-charcoal sm:text-3xl">
               Temukan Jawaban Atas Pertanyaan Anda
             </h2>
           </div>
@@ -178,7 +170,7 @@ export default function FaqPage() {
                 {groupedFaqs.map(([groupLabel, items]) => (
                   <div key={groupLabel} className="space-y-3">
                     <div className="flex items-center gap-2 pb-1 border-b border-sage-border">
-                      <span className="text-xs font-extrabold uppercase tracking-widest text-forest">
+                      <span className="text-xs font-bold uppercase tracking-widest text-forest">
                         {groupLabel}
                       </span>
                       <span className="text-xs text-warm-gray/60 font-medium">({items.length})</span>
@@ -272,7 +264,7 @@ export default function FaqPage() {
               </div>
             )
           ) : (
-            <div className="rounded-2xl border border-sage-border bg-white p-12 text-center">
+            <div className="border-t border-charcoal/15 py-12 text-center">
               <HelpCircle size={40} className="mx-auto text-warm-gray/40 mb-3" />
               <h3 className="text-base font-bold text-charcoal">Tidak ada hasil pertanyaan yang cocok</h3>
               <p className="mt-1 text-xs text-warm-gray">
@@ -299,7 +291,7 @@ export default function FaqPage() {
         <div className="overflow-hidden rounded-3xl border border-sage-border bg-charcoal p-8 text-cream-tint sm:p-12 md:flex md:items-center md:justify-between gap-8 shadow-xl">
           <div className="space-y-3 max-w-xl">
             <span className="editorial-label text-terracotta">Bantuan & Layanan Developer</span>
-            <h2 className="text-2xl font-extrabold text-white sm:text-3xl">
+            <h2 className="font-serif text-2xl font-semibold text-white sm:text-3xl">
               Punya Pertanyaan Lain atau Menemukan Kendala?
             </h2>
             <p className="text-xs leading-relaxed text-cream-tint/75 sm:text-sm">

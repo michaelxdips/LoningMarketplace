@@ -58,6 +58,7 @@ function ToastViewport({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss: 
       aria-live="polite"
       aria-atomic="false"
       className="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full px-4 pointer-events-none sm:px-0"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {toasts.map((toast) => (
         <div

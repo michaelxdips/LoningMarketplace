@@ -7,7 +7,6 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   GitCommit,
   Tag,
-  Sparkles,
   Search,
   Filter,
   ShieldCheck,
@@ -60,10 +59,24 @@ interface GitHubTagResponse {
 
 const STATIC_RELEASES: ReleaseGroup[] = [
   {
+    version: 'v2.2.0',
+    title: 'Desain Ulang Editorial Heritage & Responsif Lintas Perangkat',
+    date: '22 Agustus 2026',
+    badge: 'Versi Terbaru (Active)',
+    commits: [
+      { hash: 'HEAD', date: '2026-08-22', type: 'style', scope: 'login', message: 'rombak halaman login menjadi tata letak editorial asimetris tanpa kartu' },
+      { hash: 'HEAD', date: '2026-08-22', type: 'style', scope: 'dashboard', message: 'ubah dashboard menjadi gaya ledger (angka serif pada garis tipis, tanpa kotak)' },
+      { hash: 'HEAD', date: '2026-08-22', type: 'style', scope: 'branding', message: 'samakan wordmark serif Loning Maju di navbar, sidebar, dan footer' },
+      { hash: 'HEAD', date: '2026-08-22', type: 'refactor', scope: 'forms', message: 'hapus kartu berbingkai generik pada form dan tabel kelola' },
+      { hash: 'HEAD', date: '2026-08-22', type: 'style', scope: 'responsive', message: 'perbaiki safe-area iOS, input zoom, touch-target 44px, dan unit dvh' },
+      { hash: 'HEAD', date: '2026-08-22', type: 'chore', scope: 'css', message: 'buang CSS mati dan samakan radius serta kontras teks' },
+    ],
+  },
+  {
     version: 'v2.1.0',
     title: 'Penyempurnaan Label Kategori, Tampilan Misi & Aset Hero Baru',
     date: '10 Agustus 2026',
-    badge: 'Versi Terbaru (Active)',
+    badge: 'Minor',
     commits: [
       { hash: 'HEAD', date: '2026-08-10', type: 'style', scope: 'category', message: 'rapikan label kategori ringkas tanpa text wrap pada badge dan kartu UMKM' },
       { hash: 'HEAD', date: '2026-08-10', type: 'refactor', scope: 'home', message: 'sederhanakan alur misi dan selaraskan gradien warna forest green' },
@@ -184,14 +197,14 @@ const STATIC_RELEASES: ReleaseGroup[] = [
   },
 ];
 
-const commitTypeStyles: Record<string, { label: string; bg: string; text: string }> = {
-  feat: { label: 'Feature', bg: 'bg-emerald-500/10 border-emerald-500/30', text: 'text-emerald-700 font-bold' },
-  fix: { label: 'Fix', bg: 'bg-amber-500/10 border-amber-500/30', text: 'text-amber-700 font-bold' },
-  style: { label: 'Style', bg: 'bg-purple-500/10 border-purple-500/30', text: 'text-purple-700 font-bold' },
-  docs: { label: 'Docs', bg: 'bg-blue-500/10 border-blue-500/30', text: 'text-blue-700 font-bold' },
-  test: { label: 'Test', bg: 'bg-teal-500/10 border-teal-500/30', text: 'text-teal-700 font-bold' },
-  chore: { label: 'Chore', bg: 'bg-gray-500/10 border-gray-500/30', text: 'text-gray-700 font-bold' },
-  refactor: { label: 'Refactor', bg: 'bg-indigo-500/10 border-indigo-500/30', text: 'text-indigo-700 font-bold' },
+const commitTypeStyles: Record<string, { label: string; text: string }> = {
+  feat: { label: 'Feature', text: 'text-forest' },
+  fix: { label: 'Fix', text: 'text-terracotta' },
+  style: { label: 'Style', text: 'text-warm-gray' },
+  docs: { label: 'Docs', text: 'text-warm-gray' },
+  test: { label: 'Test', text: 'text-warm-gray' },
+  chore: { label: 'Chore', text: 'text-warm-gray' },
+  refactor: { label: 'Refactor', text: 'text-warm-gray' },
 };
 
 function parseCommitMessage(rawMsg: string): { type: CommitItem['type']; scope?: string; message: string } {
@@ -253,6 +266,8 @@ export default function VersionHistoryPage() {
   // Map known tags/versions to curated titles for maximum clarity
   const VERSION_TITLES: Record<string, string> = useMemo(
     () => ({
+      'v2.2.0': 'Desain Ulang Editorial Heritage & Responsif Lintas Perangkat',
+      'v2.1.0': 'Penyempurnaan Label Kategori, Tampilan Misi & Aset Hero Baru',
       'v1.7.2': 'Fitur Hapus UMKM & Produk di Kelola, serta Perbaikan Media Upload',
       'v1.7.1': 'Pembaruan UI & Penyelarasan Komponen',
       'v1.7.0': 'Google Maps Integration & UI Optimization',
@@ -402,13 +417,9 @@ export default function VersionHistoryPage() {
   return (
     <PublicPageShell>
       {/* Header Banner - Sleek & Compact Editorial Style */}
-      <header className="mx-auto max-w-4xl px-4 pb-6 pt-8 sm:px-6 sm:pt-10">
+      <header className="mx-auto max-w-4xl px-4 pb-8 pt-16 sm:px-6 sm:pt-24">
         <div className="text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-sage-border bg-sage-light/60 px-3 py-1 text-[11px] font-extrabold uppercase tracking-widest text-forest shadow-2xs">
-            <Sparkles className="h-3 w-3 text-terracotta" />
-            <span>Changelog & System History</span>
-          </div>
-          <h1 className="mt-3 text-balance break-words text-3xl font-extrabold tracking-tight text-charcoal sm:text-4xl">
+          <h1 className="text-balance break-words font-serif text-3xl font-semibold tracking-tight text-charcoal sm:text-4xl">
             Riwayat Pembaruan & Commit Log
           </h1>
           <p className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-warm-gray sm:text-sm">
@@ -416,8 +427,8 @@ export default function VersionHistoryPage() {
           </p>
         </div>
 
-        {/* Compact Glassmorphic Stats & Live Status Bar */}
-        <div className="mt-6 flex flex-col gap-3 rounded-xl border border-sage-border bg-white/90 p-3 shadow-2xs sm:flex-row sm:items-center sm:justify-between sm:px-4">
+        {/* Compact Stats & Live Status Bar */}
+        <div className="mt-6 flex flex-col gap-3 border-t border-charcoal/15 pt-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
             {/* Version */}
             <div className="flex items-center gap-1.5">
@@ -442,18 +453,17 @@ export default function VersionHistoryPage() {
             {/* Live Sync Status */}
             <div className="flex items-center gap-1.5">
               {isLive ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-forest">
                   <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-forest"></span>
                   </span>
-                  <Wifi className="h-3.5 w-3.5 text-emerald-600" />
+                  <Wifi className="h-3.5 w-3.5 text-forest" />
                   <span>GitHub Live</span>
                   {lastFetchedAt && <span className="text-[11px] font-normal text-warm-gray">({lastFetchedAt})</span>}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
-                  <WifiOff className="h-3.5 w-3.5 text-amber-600" />
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-warm-gray">
+                  <WifiOff className="h-3.5 w-3.5 text-warm-gray" />
                   <span>Data Lokal</span>
                 </span>
               )}
@@ -466,7 +476,7 @@ export default function VersionHistoryPage() {
               type="button"
               onClick={fetchGitHubData}
               disabled={isLoading}
-              className="inline-flex items-center gap-1 rounded-md border border-sage-border bg-cream-tint px-2.5 py-1 text-xs font-bold text-charcoal transition-colors hover:bg-sage-light hover:text-forest disabled:opacity-50"
+              className="inline-flex min-h-11 items-center gap-1 rounded-md border border-sage-border bg-cream-tint px-3 py-2 text-xs font-bold text-charcoal transition-colors hover:bg-sage-light hover:text-forest disabled:opacity-50"
               title="Segarkan commit langsung dari GitHub API"
             >
               <RotateCw className={`h-3 w-3 text-forest ${isLoading ? 'animate-spin' : ''}`} />
@@ -478,9 +488,9 @@ export default function VersionHistoryPage() {
               href="https://github.com/michaelxdips/LoningMarketplace"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 rounded-md bg-purple-50 border border-purple-200/80 px-2.5 py-1 text-xs font-bold font-mono text-purple-700 hover:bg-purple-100 transition-colors"
+              className="inline-flex min-h-11 items-center gap-1 rounded-md border border-sage-border bg-cream-tint px-3 py-2 text-xs font-bold font-mono text-charcoal hover:bg-sage-light hover:text-forest transition-colors"
             >
-              <Terminal className="h-3 w-3 text-purple-600" />
+              <Terminal className="h-3 w-3 text-forest" />
               <span>Repo</span>
               <ExternalLink className="h-3 w-3 shrink-0" />
             </a>
@@ -515,7 +525,7 @@ export default function VersionHistoryPage() {
               type="button"
               onClick={() => setSelectedType('feat')}
               className={`rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-colors ${
-                selectedType === 'feat' ? 'bg-emerald-700 text-white' : 'border border-sage-border bg-white text-emerald-700 hover:bg-emerald-50'
+                selectedType === 'feat' ? 'bg-forest text-white' : 'border border-sage-border bg-white text-charcoal hover:text-forest'
               }`}
             >
               Feature (feat)
@@ -524,7 +534,7 @@ export default function VersionHistoryPage() {
               type="button"
               onClick={() => setSelectedType('fix')}
               className={`rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-colors ${
-                selectedType === 'fix' ? 'bg-amber-700 text-white' : 'border border-sage-border bg-white text-amber-700 hover:bg-amber-50'
+                selectedType === 'fix' ? 'bg-forest text-white' : 'border border-sage-border bg-white text-charcoal hover:text-forest'
               }`}
             >
               Fix (bug)
@@ -533,7 +543,7 @@ export default function VersionHistoryPage() {
               type="button"
               onClick={() => setSelectedType('style')}
               className={`rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-colors ${
-                selectedType === 'style' ? 'bg-purple-700 text-white' : 'border border-sage-border bg-white text-purple-700 hover:bg-purple-50'
+                selectedType === 'style' ? 'bg-forest text-white' : 'border border-sage-border bg-white text-charcoal hover:text-forest'
               }`}
             >
               Style & UI
@@ -574,7 +584,7 @@ export default function VersionHistoryPage() {
                     {/* Right side Metadata */}
                     <div className="flex shrink-0 items-center gap-2">
                       {isNewest && (
-                        <span className="hidden rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-emerald-800 sm:inline">
+                        <span className="hidden rounded-md bg-terracotta/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-terracotta sm:inline">
                           Terbaru
                         </span>
                       )}
@@ -617,7 +627,7 @@ export default function VersionHistoryPage() {
                               </a>
 
                               {/* Type Badge */}
-                              <span className={`shrink-0 rounded px-1.5 py-px text-[9px] uppercase font-bold tracking-wider border ${badgeMeta.bg} ${badgeMeta.text}`}>
+                              <span className={`shrink-0 text-[9px] uppercase font-bold tracking-wider ${badgeMeta.text}`}>
                                 {badgeMeta.label}
                               </span>
 
@@ -646,7 +656,7 @@ export default function VersionHistoryPage() {
             })}
           </div>
         ) : (
-          <div className="rounded-2xl border border-sage-border bg-white p-8 text-center">
+          <div className="border-t border-charcoal/15 pt-8 text-center">
             <GitCommit size={36} className="mx-auto text-warm-gray/40 mb-2" />
             <h3 className="text-sm font-bold text-charcoal">Tidak ada commit yang cocok</h3>
             <p className="mt-1 text-xs text-warm-gray">

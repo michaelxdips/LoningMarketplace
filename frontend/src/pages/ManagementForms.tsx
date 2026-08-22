@@ -130,7 +130,7 @@ function FormActions({
   onDelete?: () => void;
 }) {
   return (
-    <div className="flex flex-col-reverse gap-3 border-t border-sage-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col-reverse gap-3 border-t border-charcoal/15 pt-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
         {editing && onDelete && (
           <button
@@ -298,9 +298,9 @@ export function UMKMFormPage() {
         description="Perubahan data disimpan sebagai data kelola; gunakan aksi publikasi secara terpisah."
       />
       {editing && value && (
-        <section className="mb-5 flex flex-col gap-3 rounded-2xl border border-sage-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
+        <section className="mb-5 flex flex-col gap-3 border-l-2 border-terracotta pl-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-extrabold text-charcoal">{contactStatus(value)}</p>
+            <p className="text-sm font-bold text-charcoal">{contactStatus(value)}</p>
             <p className="mt-1 text-xs text-warm-gray">
               {value.contactVerifiedAt
                 ? `Terakhir diverifikasi pada ${new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(new Date(value.contactVerifiedAt))}.`
@@ -326,7 +326,7 @@ export function UMKMFormPage() {
       )}
       {verify.isError && <div className="mb-5"><ErrorNotice error={verify.error} /></div>}
       <form
-        className="space-y-6 rounded-2xl border border-sage-border bg-white p-5 sm:p-7"
+        className="space-y-6"
         onChange={unsaved.markDirty}
         onInput={unsaved.markDirty}
         onSubmit={submit}
@@ -653,7 +653,7 @@ export function ProductFormPage() {
         description="Informasi produk dan ketersediaan dapat diperbarui sebelum dipublikasikan."
       />
       <form
-        className="space-y-6 rounded-2xl border border-sage-border bg-white p-5 sm:p-7"
+        className="space-y-6"
         onChange={unsaved.markDirty}
         onInput={unsaved.markDirty}
         onSubmit={submit}
@@ -940,7 +940,7 @@ export function UserFormPage() {
         description="Atur identitas dan hak akses akun dashboard."
       />
       <form
-        className="space-y-6 rounded-2xl border border-sage-border bg-white p-5 sm:p-7"
+        className="space-y-6"
         onChange={unsaved.markDirty}
         onInput={unsaved.markDirty}
         onSubmit={submit}

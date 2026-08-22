@@ -5,15 +5,9 @@
 
 import {
   ArrowRight,
-  BookOpen,
-  HeartHandshake,
   MapPin,
-  Compass,
-  Users,
   Wheat,
-  ShoppingBag,
   ShieldCheck,
-  Sparkles,
   Map
 } from 'lucide-react';
 import { Link } from 'react-router';
@@ -58,8 +52,8 @@ export default function AboutVillagePage() {
             <div className="grid min-w-0 gap-10 lg:grid-cols-12 lg:items-center">
 
               <div className="min-w-0 space-y-6 lg:col-span-7">
-                <h1 className="text-balance text-4xl font-extrabold tracking-tight text-charcoal sm:text-5xl lg:text-6xl leading-tight">
-                  Karya & Potensi Lokal dari <span className="editorial-serif font-normal italic text-forest">Jantung Petarukan</span>
+                <h1 className="text-balance font-serif text-4xl font-semibold leading-tight tracking-tight text-charcoal sm:text-5xl lg:text-6xl">
+                  Karya & Potensi Lokal dari <span className="font-light italic text-forest">Jantung Petarukan</span>
                 </h1>
 
                 <p className="max-w-2xl text-base md:text-lg leading-relaxed text-warm-gray">
@@ -118,8 +112,11 @@ export default function AboutVillagePage() {
         <section aria-label="Potret usaha Desa Loning" className="mx-auto max-w-7xl px-5 pt-16 pb-12">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
             <div>
-              <p className="editorial-label">Potret Kegiatan Usaha</p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-charcoal tracking-tight">Etalase Kehidupan & Karya Warga</h2>
+              <p className="flex items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.2em] text-terracotta">
+                <span className="h-px w-8 bg-terracotta/60" aria-hidden="true" />
+                Potret Kegiatan Usaha
+              </p>
+              <h2 className="mt-4 font-serif text-2xl font-semibold tracking-tight text-charcoal sm:text-3xl">Etalase Kehidupan & Karya Warga</h2>
             </div>
             <p className="text-xs text-warm-gray max-w-md">
               Dokumentasi nyata kegiatan UMKM, pembuatan produk olahan dari masyarakat Desa Loning.
@@ -158,46 +155,36 @@ export default function AboutVillagePage() {
 
         {/* Sektor Potensi Ekonomi Desa Loning */}
         <section className="mx-auto max-w-7xl px-5 py-12">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-            <p className="editorial-label">Kekayaan Potensi Desa</p>
-            <h2 className="text-3xl font-extrabold text-charcoal tracking-tight">Sektor Utama UMKM Desa Loning</h2>
-            <p className="text-sm text-warm-gray">
+          <div className="max-w-2xl mx-auto mb-12 text-left">
+            <p className="flex items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.2em] text-terracotta">
+              <span className="h-px w-8 bg-terracotta/60" aria-hidden="true" />
+              Kekayaan Potensi Desa
+            </p>
+            <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-charcoal sm:text-4xl">Sektor Utama UMKM Desa Loning</h2>
+            <p className="mt-3 text-sm leading-7 text-warm-gray">
               Berbagai bidang usaha yang menggerakkan roda perekonomian dan kesejahteraan warga lokal.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-            <div className="rounded-2xl border border-sage-border bg-cream-card p-6 space-y-3 transition-shadow hover:shadow-md">
-              <div className="w-10 h-10 rounded-xl bg-forest/10 flex items-center justify-center text-forest">
-                <Wheat size={22} />
-              </div>
-              <h3 className="text-base font-bold text-charcoal">Pertanian & Hasil Bumi</h3>
-              <p className="text-xs leading-relaxed text-warm-gray">
+          <div className="grid gap-px overflow-hidden rounded-2xl border border-sage-border bg-sage-border sm:grid-cols-3">
+            <div className="bg-cream-card p-8">
+              <h3 className="font-serif text-2xl font-semibold text-charcoal">Pertanian & Hasil Bumi</h3>
+              <p className="mt-3 text-sm leading-7 text-warm-gray">
                 Beras pilihan, jagung, sayur mayur segar, serta komoditas perkebunan yang dipanen langsung dari tanah Loning.
               </p>
             </div>
-
-            <div className="rounded-2xl border border-sage-border bg-cream-card p-6 space-y-3 transition-shadow hover:shadow-md">
-              <div className="w-10 h-10 rounded-xl bg-forest/10 flex items-center justify-center text-forest">
-                <ShoppingBag size={22} />
-              </div>
-              <h3 className="text-base font-bold text-charcoal">Kuliner & Snack Olahan</h3>
-              <p className="text-xs leading-relaxed text-warm-gray">
+            <div className="bg-cream-card p-8">
+              <h3 className="font-serif text-2xl font-semibold text-charcoal">Kuliner & Snack Olahan</h3>
+              <p className="mt-3 text-sm leading-7 text-warm-gray">
                 Jajanan tradisional, camilan kering renyah, dan olahan makanan khas rumahan racikan ibu-ibu warga desa.
               </p>
             </div>
-
-            <div className="rounded-2xl border border-sage-border bg-cream-card p-6 space-y-3 transition-shadow hover:shadow-md">
-              <div className="w-10 h-10 rounded-xl bg-terracotta/10 flex items-center justify-center text-terracotta">
-                <Users size={22} />
-              </div>
-              <h3 className="text-base font-bold text-charcoal">Jasa & Perdagangan Usaha</h3>
-              <p className="text-xs leading-relaxed text-warm-gray">
+            <div className="bg-cream-card p-8">
+              <h3 className="font-serif text-2xl font-semibold text-charcoal">Jasa & Perdagangan Usaha</h3>
+              <p className="mt-3 text-sm leading-7 text-warm-gray">
                 Layanan perbengkelan, penjahit pakaian, warung sembako, dan jasa kebutuhan harian yang ramah dan tepercaya.
               </p>
             </div>
-
           </div>
         </section>
 
@@ -206,30 +193,30 @@ export default function AboutVillagePage() {
           <div className="mx-auto max-w-7xl px-5">
             <div className="max-w-2xl mb-10">
               <span className="text-xs font-bold uppercase tracking-widest text-terracotta">Niat & Tujuan Platform</span>
-              <h2 className="text-3xl font-extrabold text-white tracking-tight mt-2">Prinsip Kerja Direktori Loning Maju</h2>
+              <h2 className="mt-3 font-serif text-3xl font-semibold tracking-tight text-white sm:text-4xl">Prinsip Kerja Direktori Loning Maju</h2>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="space-y-3 border-l-2 border-terracotta pl-6">
-                <BookOpen className="text-terracotta" size={24} />
-                <h3 className="text-lg font-bold text-white">1. Informasi Terpusat & Akurat</h3>
-                <p className="text-xs leading-relaxed text-cream-tint/70">
+            <div className="grid gap-10 md:grid-cols-3 md:gap-12">
+              <div className="space-y-3">
+                <span className="font-serif text-5xl font-light text-terracotta/90">1</span>
+                <h3 className="font-serif text-xl font-semibold text-white">Informasi Terpusat & Akurat</h3>
+                <p className="text-sm leading-7 text-cream-tint/70">
                   Seluruh profil usaha, katalog produk, alamat lokasi, dan kontak pemilik dikumpulkan secara rapi dan mudah diakses siapa saja.
                 </p>
               </div>
 
-              <div className="space-y-3 border-l-2 border-terracotta pl-6">
-                <HeartHandshake className="text-terracotta" size={24} />
-                <h3 className="text-lg font-bold text-white">2. Interaksi Langsung Tanpa Perantara</h3>
-                <p className="text-xs leading-relaxed text-cream-tint/70">
+              <div className="space-y-3">
+                <span className="font-serif text-5xl font-light text-terracotta/90">2</span>
+                <h3 className="font-serif text-xl font-semibold text-white">Interaksi Langsung Tanpa Perantara</h3>
+                <p className="text-sm leading-7 text-cream-tint/70">
                   Pengunjung berinteraksi dan bertransaksi langsung via WhatsApp tanpa ada potongan komisi atau biaya transaksi pihak ketiga.
                 </p>
               </div>
 
-              <div className="space-y-3 border-l-2 border-terracotta pl-6">
-                <Sparkles className="text-terracotta" size={24} />
-                <h3 className="text-lg font-bold text-white">3. Murni untuk Pemberdayaan Warga</h3>
-                <p className="text-xs leading-relaxed text-cream-tint/70">
+              <div className="space-y-3">
+                <span className="font-serif text-5xl font-light text-terracotta/90">3</span>
+                <h3 className="font-serif text-xl font-semibold text-white">Murni untuk Pemberdayaan Warga</h3>
+                <p className="text-sm leading-7 text-cream-tint/70">
                   Dikembangkan khusus untuk mendukung pertumbuhan usaha mikro warga Desa Loning agar semakin dikenal dan berdaya saing.
                 </p>
               </div>
@@ -247,7 +234,7 @@ export default function AboutVillagePage() {
                   <Map size={16} />
                   <span>Jelajahi Desa Loning</span>
                 </div>
-                <h2 className="text-2xl md:text-4xl font-extrabold text-charcoal tracking-tight">
+                <h2 className="mt-4 font-serif text-2xl font-semibold tracking-tight text-charcoal md:text-4xl">
                   Temukan Lokasi & Produk Usaha Warga Sekarang
                 </h2>
                 <p className="text-xs md:text-sm text-warm-gray leading-relaxed">

@@ -9,7 +9,7 @@ export default function RelatedProducts({ products, isLoading = false }: { produ
         <div className="mb-5 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
           <div>
             <p className="editorial-label text-terracotta">Rekomendasi</p>
-            <h2 id="related-products-title" className="mt-1 text-2xl font-extrabold tracking-tight text-charcoal sm:text-3xl">
+            <h2 id="related-products-title" className="mt-1 font-serif text-2xl font-semibold tracking-tight text-charcoal sm:text-3xl">
               Produk terkait
             </h2>
           </div>

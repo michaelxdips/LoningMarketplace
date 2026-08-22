@@ -11,15 +11,18 @@ We transitioned from the generic dark-mode gold theme to an organic, welcoming, 
 
 | Token Name | Tailwind Hex / Variable | CSS Variable | Purpose & Semantic Role |
 | :--- | :--- | :--- | :--- |
-| **Forest Primary** | `#1C3F24` | `--color-forest` | Main brand identity, high-importance accents, active tabs, buttons, and borders. |
-| **Forest Hover** | `#142F1B` | `--color-forest-hover` | Interactive state for primary actions. |
-| **Terracotta Accent** | `#C85C43` | `--color-terracotta` | Visual cues (tags, icons, subheadings) suggesting organic earthware. |
-| **Charcoal Text** | `#1F2421` | `--color-charcoal` | Primary readable typography color, maximizing WCAG readability. |
-| **Warm Gray** | `#606662` | `--color-warm-gray` | Secondary body text, captions, and muted descriptions. |
-| **Cream Background** | `#FAF9F6` | `--color-cream-bg` | Page base canvas (safe for eyes, warmer than pure white). |
+| **Forest Primary** | `#123E25` | `--color-forest` | Main brand identity, high-importance accents, active tabs, buttons, and borders. |
+| **Forest Hover** | `#1E5C39` | `--color-forest-hover` | Interactive state for primary actions. |
+| **Terracotta Accent** | `#C85C32` | `--color-terracotta` | Visual cues (tags, icons, subheadings) suggesting organic earthware. |
+| **Terracotta Hover** | `#B04B23` | `--color-terracotta-hover` | Interactive state for terracotta actions. |
+| **Terracotta Soft** | `#E9AD91` | `--color-terracotta-soft` | Terracotta tint for accents on dark forest surfaces (wordmark, login panel). |
+| **Charcoal Text** | `#1C2421` | `--color-charcoal` | Primary readable typography color, maximizing WCAG readability. |
+| **Warm Gray** | `#5F6E65` | `--color-warm-gray` | Secondary body text, captions, and muted descriptions. |
+| **Cream Background** | `#FCFAF7` | `--color-cream-bg` | Page base canvas (safe for eyes, warmer than pure white). |
 | **Cream Card** | `#FFFFFF` | `--color-cream-card` | Surface level of components, cards, and modal dialogs. |
-| **Cream Tint** | `#F5F2EA` | `--color-cream-tint` | Hero backdrop overlays, skeletons, and badge backgrounds. |
-| **Sage Border** | `#DFE4E1` | `--color-sage-border` | Subtle dividing lines, inputs, and container borders. |
+| **Cream Tint** | `#F6F3ED` | `--color-cream-tint` | Hero backdrop overlays, skeletons, and badge backgrounds. |
+| **Sage Light** | `#EBF0EC` | `--color-sage-light` | Soft sage surface for tags and hover states. |
+| **Sage Border** | `#E1E8E3` | `--color-sage-border` | Subtle dividing lines, inputs, and container borders. |
 
 ---
 

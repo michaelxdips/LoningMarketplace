@@ -86,7 +86,7 @@ export default function UMKMDetailDialog({ isOpen, onClose, umkm, products, onIn
               ref={closeButtonRef}
               onClick={onClose}
               aria-label="Tutup detail UMKM"
-              className="absolute top-4 right-4 p-2 bg-cream-card/90 hover:bg-cream-card text-charcoal border border-sage-border rounded-full transition-colors focus-ring"
+              className="focus-ring touch-target absolute top-4 right-4 p-2.5 bg-cream-card/90 hover:bg-cream-card text-charcoal border border-sage-border rounded-full transition-colors"
             >
               <X size={16} />
             </button>

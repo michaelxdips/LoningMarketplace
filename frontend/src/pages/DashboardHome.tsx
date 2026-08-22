@@ -1,9 +1,8 @@
-import { AlertCircle, ArrowRight, ClipboardList, ExternalLink, Eye, MessageSquare, Package, Plus, Store, TrendingUp, Users } from 'lucide-react';
+import { AlertCircle, ArrowRight, ClipboardList, Plus, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from '../hooks/useAuth';
-import { useManagedList } from '../hooks/useManagement';
-import { managementApi, pageItems } from '../lib/management';
+import { managementApi } from '../lib/management';
 import { LoadingPanel, PageHeader } from '../components/dashboard/Ui';
 import { hasCapability } from '../lib/auth';
 
@@ -17,6 +16,8 @@ export default function DashboardHome() {
 
   const canViewUsers = hasCapability(user, 'users:view');
   const canViewAnalytics = hasCapability(user, 'analytics:view-global');
+  const canCreateUmkm = hasCapability(user, 'umkms:create');
+  const canCreateProduct = hasCapability(user, 'products:create');
 
   const analyticsQuery = useQuery({
     queryKey: ['admin', 'analytics', 'dashboard-home-30d'],
@@ -60,191 +61,127 @@ export default function DashboardHome() {
         }
       />
 
-      {/* Quick Action Shortcuts */}
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        {hasCapability(user, 'umkms:create') && (
-          <Link
-            to="/dashboard/umkms/new"
-            className="focus-ring inline-flex items-center gap-2 rounded-xl bg-forest px-4 py-2.5 text-xs font-bold text-white hover:bg-forest/90"
-          >
-            <Plus className="h-4 w-4" />
-            Tambah UMKM
-          </Link>
-        )}
+      {/* Command strip — primary actions, flat not pill-stacked */}
+      {(canCreateUmkm || canCreateProduct || canViewAnalytics) && (
+        <nav aria-label="Aksi cepat" className="mb-10 flex flex-wrap items-center gap-x-7 gap-y-2">
+          {canCreateUmkm && (
+            <Link to="/dashboard/umkms/new" className="focus-ring group inline-flex items-center gap-2 text-sm font-bold text-charcoal transition-colors hover:text-forest">
+              <Plus className="h-4 w-4 text-terracotta" />
+              Tambah UMKM
+            </Link>
+          )}
+          {canCreateProduct && (
+            <Link to="/dashboard/products/new" className="focus-ring group inline-flex items-center gap-2 text-sm font-bold text-charcoal transition-colors hover:text-forest">
+              <Plus className="h-4 w-4 text-terracotta" />
+              Tambah Produk
+            </Link>
+          )}
+          {canViewAnalytics && (
+            <Link to="/dashboard/analytics" className="focus-ring group inline-flex items-center gap-2 text-sm font-bold text-charcoal transition-colors hover:text-forest">
+              <ClipboardList className="h-4 w-4 text-terracotta" />
+              Insight inquiry
+            </Link>
+          )}
+        </nav>
+      )}
 
-        {hasCapability(user, 'products:create') && (
-          <Link
-            to="/dashboard/products/new"
-            className="focus-ring inline-flex items-center gap-2 rounded-xl border border-sage-border bg-white px-4 py-2.5 text-xs font-bold text-charcoal hover:bg-cream-bg"
-          >
-            <Plus className="h-4 w-4" />
-            Tambah Produk
+      {/* Ledger — catalogue totals on hairline rules, not boxes */}
+      <section aria-label="Ringkasan katalog" className="mb-12 border-t border-charcoal/15">
+        <div className="grid grid-cols-1 sm:grid-cols-3">
+          <Link to="/dashboard/umkms" className="focus-ring group border-b border-charcoal/15 py-6 pr-6 transition-colors hover:bg-cream-tint/50 sm:border-b-0">
+            <p className="font-serif text-5xl font-light text-forest">{stats?.umkms.total ?? 0}</p>
+            <p className="mt-2 text-sm font-bold text-charcoal">Profil UMKM</p>
+            <p className="mt-1 text-xs text-warm-gray">{stats?.umkms.published ?? 0} terbit &middot; {stats?.umkms.draft ?? 0} draf</p>
           </Link>
-        )}
-
-        {canViewAnalytics && (
-          <Link
-            to="/dashboard/analytics"
-            className="focus-ring inline-flex items-center gap-2 rounded-xl border border-sage-border bg-white px-4 py-2.5 text-xs font-bold text-charcoal hover:bg-cream-bg"
-          >
-            <ClipboardList className="h-4 w-4 text-forest" />
-            Lihat Insight Inquiry
+          <Link to="/dashboard/products" className="focus-ring group border-b border-charcoal/15 py-6 pr-6 transition-colors hover:bg-cream-tint/50 sm:border-b-0">
+            <p className="font-serif text-5xl font-light text-forest">{stats?.products.total ?? 0}</p>
+            <p className="mt-2 text-sm font-bold text-charcoal">Katalog Produk</p>
+            <p className="mt-1 text-xs text-warm-gray">{stats?.products.published ?? 0} terbit &middot; {stats?.products.draft ?? 0} draf</p>
           </Link>
-        )}
-      </div>
+          {canViewUsers ? (
+            <Link to="/dashboard/users" className="focus-ring group py-6 pr-6 transition-colors hover:bg-cream-tint/50">
+              <p className="font-serif text-5xl font-light text-forest">{stats?.users.total ?? 0}</p>
+              <p className="mt-2 text-sm font-bold text-charcoal">Pengguna</p>
+              <p className="mt-1 text-xs text-warm-gray">{stats?.users.active ?? 0} aktif</p>
+            </Link>
+          ) : (
+            <div className="py-6">
+              <p className="font-serif text-5xl font-light text-forest">{stats?.products.published ?? 0}</p>
+              <p className="mt-2 text-sm font-bold text-charcoal">Terbit publik</p>
+              <p className="mt-1 text-xs text-warm-gray">Produk tampil di katalog</p>
+            </div>
+          )}
+        </div>
+      </section>
 
-      {/* Perlu Perhatian Alert Banner */}
+      {/* Perlu perhatian — quiet inline note, not a banner */}
       {needsAttention.length > 0 && (
-        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5 shadow-xs">
-          <div className="flex items-center gap-2 text-amber-900 font-extrabold text-sm mb-2">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-            Perlu Perhatian ({needsAttention.length})
-          </div>
-          <ul className="space-y-1.5 pl-7 text-xs font-semibold text-amber-900 list-disc">
+        <section aria-label="Perlu perhatian" className="mb-12 border-l-2 border-terracotta pl-5">
+          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-terracotta">
+            <AlertCircle className="h-4 w-4" />
+            Perlu perhatian
+          </p>
+          <ul className="mt-3 space-y-2">
             {needsAttention.map((item, idx) => (
               <li key={idx}>
-                <Link to={item.to} className="hover:underline">
+                <Link to={item.to} className="focus-ring text-sm font-medium text-charcoal hover:text-forest hover:underline">
                   {item.text}
+                  <ArrowRight className="ml-1.5 inline h-3.5 w-3.5 text-warm-gray" />
                 </Link>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       )}
 
-      {/* Real Metric KPI Cards */}
-      <section className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Link
-          to="/dashboard/umkms"
-          className="focus-ring transition-card rounded-2xl border border-sage-border bg-white p-5 shadow-xs hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <div className="flex items-center justify-between">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-forest/10 text-forest">
-              <Store className="h-5 w-5" />
-            </span>
-            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-              {stats?.umkms.published ?? 0} Terbit
-            </span>
-          </div>
-          <p className="mt-4 text-3xl font-extrabold text-forest">{stats?.umkms.total ?? 0}</p>
-          <h2 className="mt-1 font-extrabold text-charcoal">Profil UMKM</h2>
-          <p className="mt-1.5 text-xs leading-5 text-warm-gray">Total usaha terdaftar di katalog desa.</p>
-        </Link>
-
-        <Link
-          to="/dashboard/products"
-          className="focus-ring transition-card rounded-2xl border border-sage-border bg-white p-5 shadow-xs hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <div className="flex items-center justify-between">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-forest/10 text-forest">
-              <Package className="h-5 w-5" />
-            </span>
-            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-              {stats?.products.published ?? 0} Terbit
-            </span>
-          </div>
-          <p className="mt-4 text-3xl font-extrabold text-forest">{stats?.products.total ?? 0}</p>
-          <h2 className="mt-1 font-extrabold text-charcoal">Katalog Produk</h2>
-          <p className="mt-1.5 text-xs leading-5 text-warm-gray">Total produk terdaftar di katalog desa.</p>
-        </Link>
-
-        {canViewUsers && (
-          <Link
-            to="/dashboard/users"
-            className="focus-ring transition-card rounded-2xl border border-sage-border bg-white p-5 shadow-xs hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <div className="flex items-center justify-between">
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-forest/10 text-forest">
-                <Users className="h-5 w-5" />
-              </span>
-              <span className="text-xs font-bold text-forest bg-cream-bg px-2.5 py-1 rounded-full border border-sage-border">
-                {stats?.users.active ?? 0} Aktif
-              </span>
-            </div>
-            <p className="mt-4 text-3xl font-extrabold text-forest">{stats?.users.total ?? 0}</p>
-            <h2 className="mt-1 font-extrabold text-charcoal">Pengguna Dashboard</h2>
-            <p className="mt-1.5 text-xs leading-5 text-warm-gray">Akun pengelola dan pemilik usaha.</p>
-          </Link>
-        )}
-      </section>
-
-      {/* Mini Analytics & Performa (30 Hari Terakhir) */}
+      {/* Performa — compact line, only for analytics viewers */}
       {canViewAnalytics && (
-        <section className="rounded-2xl border border-sage-border bg-white p-6 shadow-xs">
-          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="flex items-center gap-2 text-base font-extrabold text-charcoal">
-                <TrendingUp className="h-5 w-5 text-forest" />
-                Performa Katalog & Inquiry (30 Hari Terakhir)
-              </h3>
-              <p className="text-xs text-warm-gray">Ringkasan aktivitas pengunjung dan minat pembeli di katalog desa.</p>
-            </div>
-            <Link to="/dashboard/analytics" className="focus-ring mt-2 inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline sm:mt-0">
-              Lihat detail insight
+        <section aria-label="Performa katalog" className="border-t border-charcoal/15 pt-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="flex items-center gap-2 font-serif text-lg font-semibold text-charcoal">
+              <TrendingUp className="h-5 w-5 text-forest" />
+              Performa 30 hari terakhir
+            </h2>
+            <Link to="/dashboard/analytics" className="focus-ring inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline">
+              Lihat detail
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
           {analyticsQuery.isPending ? (
-            <div className="py-6 text-center text-xs text-warm-gray">Memuat data insight...</div>
+            <p className="mt-4 text-xs text-warm-gray">Memuat data insight...</p>
           ) : analyticsQuery.isError ? (
-            <div className="py-4 text-xs text-amber-700">Gagal memuat data insight.</div>
+            <p className="mt-4 text-xs text-amber-700">Gagal memuat data insight.</p>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-xl border border-sage-border bg-cream-bg/50 p-4">
-                <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
-                  <Eye className="h-4 w-4 text-forest" />
-                  Total Tampilan Katalog
-                </div>
-                <p className="mt-2 text-2xl font-extrabold text-forest">
+            <dl className="mt-6 grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
+              <div>
+                <dd className="font-serif text-3xl font-light text-charcoal">
                   {(analyticsQuery.data?.totals?.umkm_view ?? 0) + (analyticsQuery.data?.totals?.product_view ?? 0)}
-                </p>
-                <p className="mt-1 text-[11px] text-warm-gray">
-                  {analyticsQuery.data?.totals?.product_view ?? 0} produk & {analyticsQuery.data?.totals?.umkm_view ?? 0} UMKM
-                </p>
+                </dd>
+                <dt className="mt-1 text-xs text-warm-gray">Tampilan katalog</dt>
               </div>
-
-              <div className="rounded-xl border border-sage-border bg-cream-bg/50 p-4">
-                <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
-                  <MessageSquare className="h-4 w-4 text-emerald-600" />
-                  Dialog Inquiry Dibuka
-                </div>
-                <p className="mt-2 text-2xl font-extrabold text-charcoal">
-                  {analyticsQuery.data?.totals?.inquiry_started ?? 0}
-                </p>
-                <p className="mt-1 text-[11px] text-warm-gray">Pengunjung membuka dialog tanya</p>
+              <div>
+                <dd className="font-serif text-3xl font-light text-charcoal">{analyticsQuery.data?.totals?.inquiry_started ?? 0}</dd>
+                <dt className="mt-1 text-xs text-warm-gray">Dialog inquiry dibuka</dt>
               </div>
-
-              <div className="rounded-xl border border-sage-border bg-cream-bg/50 p-4">
-                <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
-                  <ExternalLink className="h-4 w-4 text-blue-600" />
-                  Klik Menghubungi WA
-                </div>
-                <p className="mt-2 text-2xl font-extrabold text-charcoal">
-                  {analyticsQuery.data?.totals?.whatsapp_opened ?? 0}
-                </p>
-                <p className="mt-1 text-[11px] text-warm-gray">Upaya pesan ke WhatsApp seller</p>
+              <div>
+                <dd className="font-serif text-3xl font-light text-charcoal">{analyticsQuery.data?.totals?.whatsapp_opened ?? 0}</dd>
+                <dt className="mt-1 text-xs text-warm-gray">Klik menghubungi WA</dt>
               </div>
-
-              <div className="rounded-xl border border-sage-border bg-cream-bg/50 p-4">
-                <div className="flex items-center gap-2 text-xs font-bold text-warm-gray">
-                  <TrendingUp className="h-4 w-4 text-amber-600" />
-                  Tingkat Minat (Intent Rate)
-                </div>
-                <p className="mt-2 text-2xl font-extrabold text-forest">
+              <div>
+                <dd className="font-serif text-3xl font-light text-forest">
                   {(() => {
                     const totalViews = (analyticsQuery.data?.totals?.umkm_view ?? 0) + (analyticsQuery.data?.totals?.product_view ?? 0);
                     const started = analyticsQuery.data?.totals?.inquiry_started ?? 0;
                     return totalViews > 0 ? ((started / totalViews) * 100).toFixed(1) + '%' : '0.0%';
                   })()}
-                </p>
-                <p className="mt-1 text-[11px] text-warm-gray">Rasio pengunjung vs yang berminat</p>
+                </dd>
+                <dt className="mt-1 text-xs text-warm-gray">Tingkat minat</dt>
               </div>
-            </div>
+            </dl>
           )}
         </section>
       )}
     </>
   );
 }
-

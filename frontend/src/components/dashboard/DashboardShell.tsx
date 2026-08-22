@@ -75,13 +75,13 @@ export default function DashboardShell() {
       </a>
       {/* Mobile Drawer Trigger Header */}
       <div className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-sage-border bg-white px-4 shadow-2xs lg:hidden">
-        <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-center gap-2.5 text-lg font-black uppercase tracking-wider text-forest">
-          <img src={brand.logoSvg} alt="" className="h-12 w-12 object-contain shrink-0" />
-          <span>LONING<span className="text-[#D97706]">MAJU</span></span>
+        <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-center gap-2.5 font-serif text-lg font-semibold tracking-tight text-charcoal">
+          <span>Loning</span>
+          <span className="font-light italic text-terracotta">Maju</span>
         </NavLink>
         <button
           ref={menuTriggerRef}
-          className="focus-ring rounded-xl border border-sage-border bg-cream-bg p-2 text-charcoal shadow-2xs"
+          className="focus-ring touch-target rounded-xl border border-sage-border bg-cream-bg p-2.5 text-charcoal shadow-2xs"
           onClick={() => setOpen(true)}
           aria-label="Buka navigasi"
         >
@@ -100,17 +100,17 @@ export default function DashboardShell() {
 
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-white/10 bg-forest text-white transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-white/10 bg-forest text-white transition-transform lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-label="Navigasi Utama"
       >
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
-          <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-center gap-3 text-lg font-black uppercase tracking-wider">
-            <img src={brand.logoSvg} alt="" className="h-12 w-12 object-contain shrink-0" />
-            <span>LONING<span className="text-[#E9AD91]">MAJU</span></span>
+          <NavLink to="/" aria-label={`${brand.name} — beranda`} className="flex items-baseline gap-2 font-serif text-xl font-semibold tracking-tight text-white">
+            <span>Loning</span>
+            <span className="font-light italic text-terracotta-soft">Maju</span>
           </NavLink>
-          <button onClick={() => setOpen(false)} className="p-2 lg:hidden" aria-label="Tutup navigasi">
+          <button onClick={() => setOpen(false)} className="touch-target p-2.5 lg:hidden" aria-label="Tutup navigasi">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -123,13 +123,19 @@ export default function DashboardShell() {
               end={to === '/dashboard'}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
-                `focus-ring flex min-h-11 items-center gap-3 rounded-xl px-3.5 text-sm font-semibold transition-colors ${
-                  isActive ? 'bg-white text-forest shadow-xs' : 'text-white/80 hover:bg-white/10 hover:text-white'
+                `focus-ring flex min-h-11 items-center gap-3 rounded-lg px-3.5 text-sm transition-colors ${
+                  isActive
+                    ? 'border-l-2 border-terracotta bg-white/5 font-semibold text-white'
+                    : 'font-medium text-white/70 hover:bg-white/10 hover:text-white'
                 }`
               }
             >
-              <Icon className="h-5 w-5" />
-              {label}
+              {({ isActive }) => (
+                <>
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-terracotta' : ''}`} />
+                  {label}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>

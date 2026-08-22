@@ -55,10 +55,11 @@ export default function CategorySection({ selectedCategory, hasFilters = false, 
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <span className="editorial-label mb-2 block">
+            <p className="flex items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.2em] text-terracotta">
+              <span className="h-px w-8 bg-terracotta/60" aria-hidden="true" />
               Mulai Jelajah
-            </span>
-            <h2 className="text-3xl font-extrabold tracking-tight text-charcoal sm:text-4xl">
+            </p>
+            <h2 className="mt-4 font-serif text-3xl font-semibold tracking-tight text-charcoal sm:text-4xl">
               Pilih Kategori Usaha
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-warm-gray md:text-base">

@@ -21,35 +21,36 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
   return (
     <article
       id={`business-card-${umkm.id}`}
-      className="bg-cream-card border border-sage-border rounded-xl overflow-hidden flex flex-col justify-between h-full transition-card hover:border-forest/30 hover:shadow-md group"
+      className="group flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-sage-border bg-cream-card transition-all duration-300 hover:-translate-y-0.5 hover:border-forest/30 hover:shadow-md"
     >
       {/* Cover Image Stage */}
-      <div className="h-44 w-full overflow-hidden bg-cream-tint relative shrink-0">
+      <div className="relative h-52 w-full shrink-0 overflow-hidden bg-cream-tint">
         <UMKMImage
           src={umkm.imageUrl}
           alt={umkm.altText || umkm.name}
           name={umkm.name}
           category={umkm.category}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/25 via-transparent to-transparent" />
         <span
           title={umkm.category}
-          className="absolute top-3 left-3 z-20 bg-forest text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-md uppercase shadow-xs whitespace-nowrap max-w-[85%] truncate"
+          className="absolute left-3 top-3 z-20 max-w-[85%] truncate whitespace-nowrap rounded-md bg-forest px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-xs"
         >
           {getCategoryShortLabel(umkm.category)}
         </span>
       </div>
 
       {/* Information Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between gap-3">
-        <div className="space-y-1.5">
+      <div className="flex flex-1 flex-col justify-between gap-3 p-5">
+        <div className="space-y-2">
           {/* Owner metadata */}
-          <span className="block text-[10px] font-semibold uppercase tracking-wider text-warm-gray">
+          <span className="block text-[11px] font-semibold uppercase tracking-wider text-warm-gray">
             <span className="font-bold text-terracotta">Pengelola:</span> {umkm.owner}
           </span>
-          
+
           {/* Business Name */}
-          <h3 className="line-clamp-1 text-base font-extrabold text-charcoal transition-colors group-hover:text-forest">
+          <h3 className="line-clamp-1 font-serif text-lg font-semibold text-charcoal transition-colors group-hover:text-forest">
             {umkm.name}
           </h3>
 
@@ -60,7 +61,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
           </div>
 
           {/* Business description */}
-          <p className="text-xs text-warm-gray/90 line-clamp-2 leading-relaxed pt-1">
+          <p className="line-clamp-2 text-[13px] leading-relaxed text-warm-gray/90">
             {umkm.description}
           </p>
           <p className={`pt-1 text-xs font-bold ${openStatus.kind === 'open' ? 'text-emerald-700' : 'text-warm-gray'}`}>{openStatus.label}</p>
@@ -68,7 +69,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
         </div>
 
         {/* Footer Action */}
-        <div className="flex items-center gap-2 pt-3 border-t border-sage-border/80 mt-auto">
+        <div className="mt-auto flex items-center gap-2 border-t border-sage-border/80 pt-4">
           <button
             type="button"
             onClick={() => onViewDetails(umkm)}
@@ -81,7 +82,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ umkm, onViewDetails }) => {
           <Link
             id={`business-cta-${umkm.id}`}
             to={`/umkm/${encodeURIComponent(umkm.slug)}`}
-            className="focus-ring touch-target flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-sage-border bg-cream-bg px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-forest transition-colors hover:border-forest/30 hover:bg-sage-light hover:text-forest-hover"
+            className="focus-ring touch-target flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-sage-border bg-cream-bg px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-forest transition-colors hover:border-forest/30 hover:bg-sage-light hover:text-forest-hover"
           >
             <Store size={14} aria-hidden="true" />
             <span className="truncate">Kunjungi Profil</span>

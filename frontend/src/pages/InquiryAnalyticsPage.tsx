@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, RefreshCw, Eye, MessageSquare, Copy, ExternalLink, TrendingUp, AlertCircle } from 'lucide-react';
+import { Calendar, RefreshCw, TrendingUp, AlertCircle } from 'lucide-react';
 import { managementApi } from '../lib/management';
 import { ErrorNotice, EmptyPanel, LoadingPanel, PageHeader } from '../components/dashboard/Ui';
 
@@ -72,7 +72,7 @@ export default function InquiryAnalyticsPage() {
         </p>
       </div>
 
-      <section className="mb-6 rounded-2xl border border-sage-border bg-white p-5 shadow-sm" aria-label="Filter tanggal">
+      <section className="mb-6 border-t border-charcoal/15 pt-5" aria-label="Filter tanggal">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-forest" />
@@ -140,56 +140,38 @@ export default function InquiryAnalyticsPage() {
         <EmptyPanel>Pilih rentang tanggal untuk melihat insight.</EmptyPanel>
       ) : (
         <>
-          <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <article className="rounded-2xl border border-sage-border bg-white p-5 shadow-sm transition-all hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-warm-gray">Tampilan Produk & UMKM</p>
-                <div className="grid h-9 w-9 place-items-center rounded-xl bg-forest/10 text-forest">
-                  <Eye className="h-4 w-4" />
-                </div>
+          <section className="mb-8 border-t border-charcoal/15 pt-6">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-8 lg:grid-cols-4">
+              <div>
+                <p className="font-serif text-5xl font-light text-forest">{totalViews}</p>
+                <h3 className="mt-2 text-sm font-bold text-charcoal">Tampilan Produk & UMKM</h3>
+                <p className="mt-1 text-xs text-warm-gray">{productViews} produk + {umkmViews} UMKM</p>
               </div>
-              <p className="mt-3 text-3xl font-extrabold text-forest">{totalViews}</p>
-              <p className="mt-1 text-xs text-warm-gray">{productViews} produk + {umkmViews} UMKM</p>
-            </article>
 
-            <article className="rounded-2xl border border-sage-border bg-white p-5 shadow-sm transition-all hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-warm-gray">Dialog Inquiry Dibuka</p>
-                <div className="grid h-9 w-9 place-items-center rounded-xl bg-forest/10 text-forest">
-                  <MessageSquare className="h-4 w-4" />
-                </div>
+              <div>
+                <p className="font-serif text-5xl font-light text-forest">{inquiryStarted}</p>
+                <h3 className="mt-2 text-sm font-bold text-charcoal">Dialog Inquiry Dibuka</h3>
+                <p className="mt-1 text-xs text-warm-gray">Pengunjung membuka modal WA</p>
               </div>
-              <p className="mt-3 text-3xl font-extrabold text-forest">{inquiryStarted}</p>
-              <p className="mt-1 text-xs text-warm-gray">Pengunjung membuka modal WA</p>
-            </article>
 
-            <article className="rounded-2xl border border-sage-border bg-white p-5 shadow-sm transition-all hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-warm-gray">Nomor WA Disalin</p>
-                <div className="grid h-9 w-9 place-items-center rounded-xl bg-forest/10 text-forest">
-                  <Copy className="h-4 w-4" />
-                </div>
+              <div>
+                <p className="font-serif text-5xl font-light text-forest">{messageCopied}</p>
+                <h3 className="mt-2 text-sm font-bold text-charcoal">Nomor WA Disalin</h3>
+                <p className="mt-1 text-xs text-warm-gray">Pengunjung menyalin nomor kontak</p>
               </div>
-              <p className="mt-3 text-3xl font-extrabold text-forest">{messageCopied}</p>
-              <p className="mt-1 text-xs text-warm-gray">Pengunjung menyalin nomor kontak</p>
-            </article>
 
-            <article className="rounded-2xl border border-sage-border bg-white p-5 shadow-sm transition-all hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-warm-gray">Upaya Buka WA</p>
-                <div className="grid h-9 w-9 place-items-center rounded-xl bg-forest/10 text-forest">
-                  <ExternalLink className="h-4 w-4" />
-                </div>
+              <div>
+                <p className="font-serif text-5xl font-light text-forest">{whatsappOpened}</p>
+                <h3 className="mt-2 text-sm font-bold text-charcoal">Upaya Buka WA</h3>
+                <p className="mt-1 text-xs text-warm-gray">Pengunjung mengklik tombol WA</p>
               </div>
-              <p className="mt-3 text-3xl font-extrabold text-forest">{whatsappOpened}</p>
-              <p className="mt-1 text-xs text-warm-gray">Pengunjung mengklik tombol WA</p>
-            </article>
+            </div>
           </section>
 
-          <section className="mb-6 rounded-2xl border border-sage-border bg-white p-6 shadow-sm">
+          <section className="mb-8 border-t border-charcoal/15 pt-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="flex items-center gap-2 text-base font-extrabold text-charcoal">
+                <h3 className="flex items-center gap-2 font-serif text-lg font-semibold text-charcoal">
                   <TrendingUp className="h-5 w-5 text-forest" />
                   Alur Minat Pengunjung (Inquiry Intent Rate)
                 </h3>
@@ -197,68 +179,68 @@ export default function InquiryAnalyticsPage() {
                   Visualisasi konversi alur dari melihat katalog hingga upaya komunikasi WhatsApp.
                 </p>
               </div>
-              <div className="self-start rounded-xl border border-forest/20 bg-forest/10 px-4 py-2 text-right">
+              <div className="self-start text-right">
                 <p className="text-xs font-bold text-warm-gray">Tingkat Minat (Intent Rate)</p>
-                <p className="text-xl font-extrabold text-forest">{intentRate}%</p>
+                <p className="font-serif text-2xl font-light text-forest">{intentRate}%</p>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-4">
-              <div className="relative rounded-2xl border border-sage-border bg-cream-bg/60 p-4">
+            <div className="mt-6 grid gap-6 sm:grid-cols-4">
+              <div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-warm-gray">1. Lihat Katalog</span>
                   <span className="text-xs font-extrabold text-charcoal">100%</span>
                 </div>
-                <p className="mt-2 text-2xl font-extrabold text-charcoal">{totalViews}</p>
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-sage-border/40">
+                <p className="mt-2 font-serif text-3xl font-light text-charcoal">{totalViews}</p>
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-charcoal/10">
                   <div className="h-full rounded-full bg-forest" style={{ width: '100%' }} />
                 </div>
               </div>
 
-              <div className="relative rounded-2xl border border-sage-border bg-cream-bg/60 p-4">
+              <div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-warm-gray">2. Buka Dialog</span>
                   <span className="text-xs font-extrabold text-forest">{intentRate}%</span>
                 </div>
-                <p className="mt-2 text-2xl font-extrabold text-charcoal">{inquiryStarted}</p>
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-sage-border/40">
+                <p className="mt-2 font-serif text-3xl font-light text-charcoal">{inquiryStarted}</p>
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-charcoal/10">
                   <div className="h-full rounded-full bg-forest" style={{ width: `${Math.min(100, Math.max(0, Number(intentRate)))}%` }} />
                 </div>
               </div>
 
-              <div className="relative rounded-2xl border border-sage-border bg-cream-bg/60 p-4">
+              <div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-warm-gray">3. Salin Kontak</span>
                   <span className="text-xs font-extrabold text-forest">{inquiryStarted ? ((messageCopied / inquiryStarted) * 100).toFixed(1) : '0.0'}%</span>
                 </div>
-                <p className="mt-2 text-2xl font-extrabold text-charcoal">{messageCopied}</p>
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-sage-border/40">
+                <p className="mt-2 font-serif text-3xl font-light text-charcoal">{messageCopied}</p>
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-charcoal/10">
                   <div className="h-full rounded-full bg-forest" style={{ width: `${inquiryStarted ? Math.min(100, (messageCopied / inquiryStarted) * 100) : 0}%` }} />
                 </div>
               </div>
 
-              <div className="relative rounded-2xl border border-sage-border bg-cream-bg/60 p-4">
+              <div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-warm-gray">4. Klik WhatsApp</span>
                   <span className="text-xs font-extrabold text-forest">{inquiryStarted ? ((whatsappOpened / inquiryStarted) * 100).toFixed(1) : '0.0'}%</span>
                 </div>
-                <p className="mt-2 text-2xl font-extrabold text-charcoal">{whatsappOpened}</p>
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-sage-border/40">
+                <p className="mt-2 font-serif text-3xl font-light text-charcoal">{whatsappOpened}</p>
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-charcoal/10">
                   <div className="h-full rounded-full bg-forest" style={{ width: `${inquiryStarted ? Math.min(100, (whatsappOpened / inquiryStarted) * 100) : 0}%` }} />
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-sage-border bg-white shadow-sm">
-            <div className="border-b border-sage-border p-5">
-              <h3 className="text-base font-extrabold text-charcoal">Rincian Aktivitas per Target</h3>
+          <section className="overflow-x-auto">
+            <div className="border-b border-charcoal/25 pb-4">
+              <h3 className="font-serif text-lg font-semibold text-charcoal">Rincian Aktivitas per Target</h3>
               <p className="mt-1 text-xs text-warm-gray">Daftar produk dan UMKM dengan aktivitas terbanyak pada periode ini.</p>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="border-b border-sage-border bg-cream-bg text-xs font-bold text-warm-gray">
+                <thead className="border-b border-charcoal/15 text-xs font-bold uppercase tracking-wider text-warm-gray">
                   <tr>
                     <th className="p-4 w-12 text-center">Peringkat</th>
                     <th className="p-4">UMKM</th>
@@ -267,14 +249,14 @@ export default function InquiryAnalyticsPage() {
                     <th className="p-4 text-right">Jumlah</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-sage-border">
+                <tbody className="divide-y divide-charcoal/10">
                   {data.breakdown.map((row, index) => (
-                    <tr key={`${row.umkmId}-${row.productId}-${row.eventType}-${index}`} className="hover:bg-cream-bg/40 transition-colors">
+                    <tr key={`${row.umkmId}-${row.productId}-${row.eventType}-${index}`} className="transition-colors hover:bg-cream-tint/40">
                       <td className="p-4 text-center font-extrabold text-xs">
-                        <span className={`inline-grid h-6 w-6 place-items-center rounded-full text-xs ${
-                          index === 0 ? 'bg-amber-100 text-amber-800 font-black' :
-                          index === 1 ? 'bg-slate-100 text-slate-700 font-bold' :
-                          index === 2 ? 'bg-amber-800/10 text-amber-900 font-bold' :
+                        <span className={`inline-grid h-6 w-6 place-items-center rounded-full text-xs font-bold ${
+                          index === 0 ? 'bg-terracotta text-white' :
+                          index === 1 ? 'bg-forest/15 text-forest' :
+                          index === 2 ? 'bg-forest/10 text-forest' :
                           'text-warm-gray'
                         }`}>
                           #{index + 1}

@@ -42,7 +42,7 @@ export default function ProductDetailDialog({ isOpen, product, onClose, onInquir
             <ProductImage src={product.imageUrl} alt={product.altText || product.name} className="h-full w-full object-cover" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-transparent to-transparent pointer-events-none" />
-          <button id="product-dialog-close" ref={closeButtonRef} type="button" onClick={onClose} aria-label="Tutup detail produk" className="focus-ring absolute right-4 top-4 rounded-full border border-sage-border bg-cream-card/90 p-2 text-charcoal hover:bg-cream-card"><X size={17} /></button>
+          <button id="product-dialog-close" ref={closeButtonRef} type="button" onClick={onClose} aria-label="Tutup detail produk" className="focus-ring touch-target absolute right-4 top-4 rounded-full border border-sage-border bg-cream-card/90 p-2.5 text-charcoal hover:bg-cream-card"><X size={18} /></button>
           <div className="absolute bottom-4 left-5 right-5 text-white pointer-events-none">
             <span className="mb-1.5 inline-block rounded bg-terracotta px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest">{product.category}</span>
             <h2 id="product-dialog-title" className="text-xl font-semibold tracking-tight sm:text-2xl">{product.name}</h2>

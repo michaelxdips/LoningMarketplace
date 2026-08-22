@@ -75,7 +75,11 @@ export default function PetaUMKMPage() {
 
         {/* Page Hero Header */}
         <header className="mb-8 max-w-3xl">
-          <h1 className="text-3xl font-extrabold tracking-tight text-charcoal sm:text-4xl">
+          <p className="flex items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.2em] text-terracotta">
+            <span className="h-px w-8 bg-terracotta/60" aria-hidden="true" />
+            Jelajahi Sebaran Usaha
+          </p>
+          <h1 className="mt-4 font-serif text-3xl font-semibold tracking-tight text-charcoal sm:text-4xl">
             Peta Lokasi UMKM Desa Loning
           </h1>
           <p className="mt-3 text-sm leading-6 text-warm-gray sm:text-base">

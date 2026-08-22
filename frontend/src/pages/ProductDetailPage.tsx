@@ -76,7 +76,7 @@ export default function ProductDetailPage() {
               {detail.isAvailable ? 'Tersedia' : 'Belum tersedia'}
             </span>
           </div>
-          <h1 className="text-balance mt-3 text-3xl font-extrabold tracking-[-0.035em] text-charcoal sm:text-4xl">{detail.name}</h1>
+          <h1 className="text-balance mt-3 font-serif text-3xl font-semibold leading-tight tracking-tight text-charcoal sm:text-4xl">{detail.name}</h1>
           {detail.umkm.slug ? (
             <Link to={`/umkm/${encodeURIComponent(detail.umkm.slug)}`} className="focus-ring mt-2 flex w-fit items-center gap-2 rounded text-sm font-bold text-forest hover:text-terracotta">Oleh {detail.umkm.name}<ArrowRight size={14}/></Link>
           ) : (
@@ -84,8 +84,8 @@ export default function ProductDetailPage() {
           )}
           <p className="mt-4 whitespace-pre-line text-sm leading-6 text-warm-gray">{detail.description}</p>
           <div className="mt-5 border-y border-sage-border py-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-warm-gray">Informasi harga</p>
-            <p className="mt-1 text-2xl font-extrabold text-forest">{formatPrice(detail.price, 'Hubungi penjual')}{detail.unit && <span className="ml-2 text-sm font-medium text-warm-gray">/ {detail.unit}</span>}</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-warm-gray">Informasi harga</p>
+            <p className="mt-1 font-serif text-3xl font-semibold text-forest">{formatPrice(detail.price, 'Hubungi penjual')}{detail.unit && <span className="ml-2 text-sm font-medium text-warm-gray">/ {detail.unit}</span>}</p>
             <p className="mt-1.5 text-xs leading-5 text-warm-gray">Harga merupakan informasi awal. Konfirmasi harga akhir dan ketersediaan langsung kepada penjual.</p>
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
