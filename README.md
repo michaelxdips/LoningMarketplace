@@ -22,6 +22,7 @@ melalui WhatsApp — tanpa keranjang, checkout, atau pembayaran online.
 
 - [Tentang Proyek](#-tentang-proyek)
 - [Arsitektur](#-arsitektur)
+- [Design System](#-design-system)
 - [Tech Stack](#-tech-stack)
 - [Fitur](#-fitur)
 - [Prasyarat](#-prasyarat)
@@ -103,6 +104,20 @@ Brand publik adalah **Loning Maju**. Identifier internal seperti `marketplace-lo
 
 ---
 
+## 🎨 Design System
+
+Panduan visual lengkap (token warna, tipografi, pola aksesibilitas, dan struktur UX) ada di [`DESIGN.md`](DESIGN.md). Inti sistemnya:
+
+- **Palet organik**: Forest `#123E25` (identitas utama), Terracotta `#C85C32` (aksen), Cream `#FCFAF7` (canvas), Charcoal `#1C2421` (teks), Warm Gray `#5F6E65` (teks sekunder).
+- **Tipografi**: Fraunces (serif display untuk heading & angka) + Inter (sans untuk body). Dimuat via Google Fonts.
+- **Arah visual**: editorial "heritage" — heading serif, hairline eyebrow terracotta, angka serif light untuk statistik, tanpa kartu berbayang generik di permukaan dashboard. Token didefinisikan di `frontend/src/index.css` (`@theme`).
+- **Konvensi UI**: konten bahasa Indonesia, kode/identifier bahasa Inggris.
+
+> [!TIP]
+> Saat mengubah tampilan, jaga konsistensi token (bukan hardcode hex). Lihat `frontend/src/config/brand.ts` untuk nama brand, logo, dan metadata.
+
+---
+
 ## 🛠 Tech Stack
 
 <details>
@@ -134,7 +149,7 @@ Brand publik adalah **Loning Maju**. Identifier internal seperti `marketplace-lo
 | Zod | 4 | Request validation |
 | @aws-sdk/client-s3 | 3 | S3-compatible media storage |
 
-**Plugins Fastify:** `@fastify/cors`, `@fastify/cookie`, `@fastify/helmet`, `@fastify/rate-limit`, `@fastify/multipart`, `@fastify/static`
+**Plugins Fastify:** `@fastify/cors`, `@fastify/cookie`, `@fastify/helmet`, `@fastify/rate-limit`, `@fastify/multipart`, `@fastify/static`, `@fastify/compress`
 
 </details>
 
@@ -302,11 +317,15 @@ npm run dev:all
 ### Environment Variables
 
 <details>
-<summary><strong>Root <code>.env</code> (Frontend)</strong></summary>
+<summary><strong><code>frontend/.env</code> (Frontend)</strong></summary>
 
 ```dotenv
 VITE_API_URL=http://localhost:3001/api
+VITE_PUBLIC_SITE_URL=https://your-app.vercel.app
 ```
+
+> [!NOTE]
+> `VITE_API_URL` boleh diisi `/api` saat frontend dan backend dilayani dari origin yang sama (mis. Vercel + rewrite proxy). File env frontend ada di `frontend/.env` (bukan root), sesuai working directory workspace Vite.
 
 </details>
 
@@ -425,17 +444,17 @@ LoningMarketplace/
 ├── frontend/                      # React SPA workspace
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── business/          # BusinessCard
+│   │   │   ├── business/          # BusinessCard, UMKMImage
 │   │   │   ├── dashboard/         # DashboardShell, Guards, ResourceList, UI
 │   │   │   ├── discovery/         # DiscoverySearchForm
-│   │   │   ├── home/              # Hero, Category, Featured, Mission, FAQ, CTA
-│   │   │   ├── layout/            # Navbar, Footer
-│   │   │   ├── product/           # ProductCard, ProductImage
-│   │   │   └── shared/            # Dialogs, RelatedProducts, EmptyState
+│   │   │   ├── home/              # Hero, Category, Featured, Mission, EditorialTeasers
+│   │   │   ├── layout/            # Navbar, Footer, PublicPageShell
+│   │   │   ├── product/           # ProductCard, ProductImage, ProductGallery
+│   │   │   └── shared/            # Dialogs, RelatedProducts, EmptyState, Toast
 │   │   ├── config/                # Brand configuration
-│   │   ├── hooks/                 # useAuth, useProducts, useUMKMs, discovery
-│   │   ├── lib/                   # API client, analytics, SEO, location, price
-│   │   ├── pages/                 # Route page components (20 files)
+│   │   ├── hooks/                 # useAuth, useProducts, useUMKMs, useManagement, discovery
+│   │   ├── lib/                   # API client, analytics, SEO, location, price, auth
+│   │   ├── pages/                 # Route page components (16 pages)
 │   │   ├── App.tsx                # Homepage root
 │   │   ├── main.tsx               # Router & providers
 │   │   ├── types.ts               # Shared TypeScript interfaces
@@ -450,20 +469,20 @@ LoningMarketplace/
 │   │   ├── errors/                # Domain error types
 │   │   ├── lib/                   # Shared utilities
 │   │   ├── media/                 # Media storage & processing
-│   │   ├── routes/                # API route handlers (11 files)
+│   │   ├── routes/                # API route handlers (11 route files + types/validation)
 │   │   ├── scripts/               # Admin, cleanup, audit scripts
 │   │   ├── app.ts                 # Fastify app factory
 │   │   └── index.ts               # Server entry point
-│   ├── drizzle/                   # SQL migration files (17 migrations, 0000–0016, idempotent)
+│   ├── drizzle/                   # SQL migration files (18 migrations, 0000–0017, idempotent)
 │   └── package.json
-├── e2e/                           # Playwright E2E tests (8 spec files)
+├── e2e/                           # Playwright E2E tests (9 spec files)
 ├── scripts/                       # Build, test, and dev scripts
 ├── assets/                        # Seed source images
 ├── docs/                          # Technical documentation
 ├── compose.yaml                   # Docker Compose (PostgreSQL)
 ├── playwright.config.ts           # E2E config (Desktop + Mobile)
 ├── render.yaml                    # Render deployment config
-├── vercel.json                    # Vercel deployment config
+├── vercel.json                    # Vercel deployment config (SPA rewrite + API proxy)
 └── package.json                   # Root workspace config
 ```
 
@@ -570,7 +589,7 @@ erDiagram
 
 ### Migrations
 
-17 migration files di `backend/drizzle/`, dikelola oleh Drizzle Kit. Semua migration idempotent — aman dijalankan berkali-kali, termasuk di Render deploy. Jalankan migrasi:
+18 migration files di `backend/drizzle/`, dikelola oleh Drizzle Kit. Semua migration idempotent — aman dijalankan berkali-kali, termasuk di Render deploy. Jalankan migrasi:
 
 ```bash
 npm --prefix backend run db:migrate
@@ -607,6 +626,7 @@ Remove-Item Env:ALLOW_SEED
 | `GET` | `/api/products` | List published products |
 | `GET` | `/api/products/:id` | Detail product (published + published parent) |
 | `POST` | `/api/events` | Public analytics event |
+| `GET` | `/api/media/*` | Serve public media (streaming) |
 | `GET` | `/sitemap.xml` | Dynamic XML Sitemap |
 | `GET` | `/robots.txt` | Directives crawling mesin pencari |
 
@@ -640,6 +660,12 @@ Remove-Item Env:ALLOW_SEED
 | `POST` | `/api/manage/products` | Create product |
 | `PATCH` | `/api/manage/products/:id` | Update product |
 | `DELETE` | `/api/manage/products/:id` | Archive product |
+| `GET` | `/api/manage/products/:id/images` | List product gallery images |
+| `POST` | `/api/manage/products/:id/images` | Add product gallery image |
+| `DELETE` | `/api/manage/products/:id/images/:imageId` | Remove product gallery image |
+| `POST` | `/api/manage/products/:id/images/:imageId/primary` | Set gallery cover image |
+| `POST` | `/api/manage/products/:id/images/reorder` | Reorder gallery images |
+| `GET` | `/api/manage/stats` | Dashboard summary statistics |
 
 </details>
 
@@ -651,8 +677,11 @@ Remove-Item Env:ALLOW_SEED
 | `GET` | `/api/admin/users` | List users |
 | `POST` | `/api/admin/users` | Create user |
 | `PATCH` | `/api/admin/users/:id` | Update user |
+| `POST` | `/api/admin/users/:id/reset-password` | Reset password sementara |
+| `POST` | `/api/admin/users/:id/revoke-sessions` | Cabut semua sesi user |
+| `DELETE` | `/api/admin/users/:id` | Hapus user |
 | `GET` | `/api/admin/audit-logs` | List audit logs |
-| `GET` | `/api/admin/analytics/*` | Inquiry analytics |
+| `GET` | `/api/admin/inquiry-analytics` | Inquiry analytics (`from` & `to` date query) |
 
 </details>
 
@@ -722,9 +751,9 @@ sequenceDiagram
 
 | Layer | Tool | Files | Command |
 |---|---|---|---|
-| Unit / Component | Vitest + Testing Library | 30 test files | `npm run test:frontend` |
+| Unit / Component | Vitest + Testing Library | 31 test files | `npm run test:frontend` |
 | Backend Unit | Vitest | 21 test files | `npm run test:backend` |
-| E2E Desktop + Mobile | Playwright | 8 spec files | `npm run test:e2e` |
+| E2E Desktop + Mobile | Playwright | 9 spec files | `npm run test:e2e` |
 | Integration Smoke | Custom harness | 1 script | `npm run test:integration` |
 
 ### Quick Test Commands
@@ -801,8 +830,7 @@ graph LR
 | Platform | Config File | Keterangan |
 |---|---|---|
 | Render | `render.yaml` | Backend web service |
-| Vercel | `vercel.json` | Frontend SPA + backend routing |
-| Netlify | `frontend/public/_redirects` | SPA fallback |
+| Vercel | `vercel.json` + `frontend/vercel.json` | Frontend SPA + backend routing (SPA fallback + API/media proxy) |
 
 ### Checklist Deployment
 
