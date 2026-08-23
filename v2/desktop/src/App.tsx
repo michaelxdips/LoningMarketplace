@@ -8,6 +8,10 @@ import CatalogPage from './pages/CatalogPage';
 import DirectoryPage from './pages/DirectoryPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import UMKMDetailPage from './pages/UMKMDetailPage';
+import PetaUMKMPage from './pages/PetaUMKMPage';
+import FaqPage from './pages/FaqPage';
+import AboutVillagePage from './pages/AboutVillagePage';
+import AboutTeamPage from './pages/AboutTeamPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -42,6 +46,10 @@ export default function V2DesktopApp() {
           <Route path="produk/:identifier" element={<ProductDetailPage />} />
           <Route path="umkm" element={<DirectoryPage />} />
           <Route path="umkm/:identifier" element={<UMKMDetailPage />} />
+          <Route path="peta-umkm" element={<PetaUMKMPage />} />
+          <Route path="faq" element={<FaqPage />} />
+          <Route path="tentang-desa" element={<AboutVillagePage />} />
+          <Route path="tentang-kami" element={<AboutTeamPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
