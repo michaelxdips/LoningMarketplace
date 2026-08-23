@@ -85,7 +85,7 @@ export const getProduct = (id: string, signal?: AbortSignal) => get<ProductDetai
 export const getRelatedProducts = (id: string, params: GetRelatedProductsParams = {}, signal?: AbortSignal) => get<Product[]>(`/products/${encodeURIComponent(id)}/related`, params, signal);
 
 export interface MediaAsset { id: string; imageUrl: string; thumbnailUrl: string; width: number; height: number; byteSize: number; altText: string | null }
-export function uploadMedia(file: File, altText: string, csrf: string | undefined, onProgress?: (percent: number) => void) {
+export function uploadMedia(file: File, altText: string | null, csrf: string | undefined, onProgress?: (percent: number) => void) {
   return new Promise<MediaAsset>((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open('POST', `${getBaseUrl()}/manage/media/images`);
@@ -111,7 +111,7 @@ export function uploadMedia(file: File, altText: string, csrf: string | undefine
       resolve(body.data);
     };
     
-    const form = new FormData(); form.append('file', file); form.append('altText', altText); request.send(form);
+    const form = new FormData(); form.append('file', file); form.append('altText', altText ?? ''); request.send(form);
   });
 }
 export const updateMediaAltText = (id: string, altText: string | null, csrf?: string) => apiRequest<MediaAsset>(`/manage/media/images/${id}`, { method: 'PATCH', headers: { 'X-CSRF-Token': csrf ?? '' }, body: JSON.stringify({ altText }) });
