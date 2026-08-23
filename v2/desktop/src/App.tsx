@@ -6,6 +6,8 @@ import Footer from './layout/Footer';
 import HomePage from './pages/HomePage';
 import CatalogPage from './pages/CatalogPage';
 import DirectoryPage from './pages/DirectoryPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import UMKMDetailPage from './pages/UMKMDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -37,7 +39,9 @@ export default function V2DesktopApp() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="produk" element={<CatalogPage />} />
+          <Route path="produk/:identifier" element={<ProductDetailPage />} />
           <Route path="umkm" element={<DirectoryPage />} />
+          <Route path="umkm/:identifier" element={<UMKMDetailPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
