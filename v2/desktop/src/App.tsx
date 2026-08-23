@@ -12,6 +12,7 @@ import PetaUMKMPage from './pages/PetaUMKMPage';
 import FaqPage from './pages/FaqPage';
 import AboutVillagePage from './pages/AboutVillagePage';
 import AboutTeamPage from './pages/AboutTeamPage';
+import VersionHistoryPage from './pages/VersionHistoryPage';
 import NotFoundPage from './pages/NotFoundPage';
 import V2DashboardRoutes from './dashboard/DashboardRoutes';
 
@@ -50,6 +51,7 @@ export default function V2DesktopApp() {
           <Route path="faq" element={<FaqPage />} />
           <Route path="tentang-desa" element={<AboutVillagePage />} />
           <Route path="tentang-kami" element={<AboutTeamPage />} />
+          <Route path="version-history" element={<VersionHistoryPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
