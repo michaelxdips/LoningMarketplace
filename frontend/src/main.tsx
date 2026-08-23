@@ -30,6 +30,8 @@ const UserFormPage = lazy(() => import('./pages/ManagementForms.tsx').then((modu
 // UI V2 (Minimalist Editorial). Codebase terpisah di v2/desktop, di-lazy-load
 // supaya tidak menambah beban bundle awal UI lama sama sekali.
 const V2DesktopApp = lazy(() => import('@v2-desktop/entry'));
+// UI V2 mobile web — codebase independen di v2/mobile.
+const V2MobileApp = lazy(() => import('@v2-mobile/entry'));
 import NotFoundPage from './pages/NotFoundPage.tsx';
 import { ToastProvider } from './components/shared/Toast.tsx';
 import { RouteErrorBoundary } from './components/shared/PageErrorBoundary.tsx';
@@ -209,6 +211,7 @@ createRoot(document.getElementById('root')!).render(
                     Path-prefix dipilih agar SPA fallback di vercel.json yang
                     sudah ada langsung melayaninya tanpa konfigurasi deploy baru. */}
                 <Route path="/v2/*" element={<RouteErrorBoundary><V2DesktopApp /></RouteErrorBoundary>} />
+                <Route path="/m/*" element={<RouteErrorBoundary><V2MobileApp /></RouteErrorBoundary>} />
                 <Route path="/404" element={<NotFoundPage />} />
                 <Route path="*" element={<Navigate to="/404" replace />} />
               </Routes>
