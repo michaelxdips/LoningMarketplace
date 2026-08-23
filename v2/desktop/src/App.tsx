@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Route, Routes } from 'react-router';
+import { Outlet, Route, Routes } from 'react-router';
 import { useTheme } from '@v2-shared/lib/useTheme';
 import Navbar from './layout/Navbar';
 import Footer from './layout/Footer';
@@ -13,6 +13,7 @@ import FaqPage from './pages/FaqPage';
 import AboutVillagePage from './pages/AboutVillagePage';
 import AboutTeamPage from './pages/AboutTeamPage';
 import NotFoundPage from './pages/NotFoundPage';
+import V2DashboardRoutes from './dashboard/DashboardRoutes';
 
 /**
  * Shell V2 desktop.
@@ -23,6 +24,10 @@ import NotFoundPage from './pages/NotFoundPage';
  *
  * Route ditulis relatif karena shell ini dipasang di bawah `/v2/*` pada router
  * utama, sehingga tidak ada pengulangan prefiks di tiap definisi route.
+ *
+ * Dua layout berbeda:
+ *   - Publik: Navbar + <main> + Footer.
+ *   - Dashboard & login: TANPA chrome publik (sidebar sendiri, full-screen).
  */
 export default function V2DesktopApp() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -30,17 +35,12 @@ export default function V2DesktopApp() {
 
   return (
     <div ref={rootRef} data-ui="v2" className="flex min-h-dvh flex-col bg-canvas text-ink antialiased">
-      <a
-        href="#v2-main"
-        className="focus-ring-v2 sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-brand focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-on-brand"
-      >
-        Lewati ke konten utama
-      </a>
+      <Routes>
+        {/* Dashboard & login — layout mandiri, tanpa navbar/footer publik. */}
+        <V2DashboardRoutes />
 
-      <Navbar preference={preference} onCycleTheme={cycle} />
-
-      <main id="v2-main" tabIndex={-1} className="flex-1">
-        <Routes>
+        {/* Publik — dibungkus chrome editorial. */}
+        <Route element={<PublicLayout preference={preference} onCycleTheme={cycle} />}>
           <Route path="/" element={<HomePage />} />
           <Route path="produk" element={<CatalogPage />} />
           <Route path="produk/:identifier" element={<ProductDetailPage />} />
@@ -51,10 +51,32 @@ export default function V2DesktopApp() {
           <Route path="tentang-desa" element={<AboutVillagePage />} />
           <Route path="tentang-kami" element={<AboutTeamPage />} />
           <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </main>
-
-      <Footer />
+        </Route>
+      </Routes>
     </div>
+  );
+}
+
+function PublicLayout({
+  preference,
+  onCycleTheme,
+}: {
+  preference: ReturnType<typeof useTheme>['preference'];
+  onCycleTheme: () => void;
+}) {
+  return (
+    <>
+      <a
+        href="#v2-main"
+        className="focus-ring-v2 sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-brand focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-on-brand"
+      >
+        Lewati ke konten utama
+      </a>
+      <Navbar preference={preference} onCycleTheme={onCycleTheme} />
+      <main id="v2-main" tabIndex={-1} className="flex-1">
+        <Outlet />
+      </main>
+      <Footer />
+    </>
   );
 }
