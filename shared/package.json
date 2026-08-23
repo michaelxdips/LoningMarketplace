@@ -1,0 +1,20 @@
+{
+  "name": "@loning/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Logika non-UI bersama (types, api client, hooks data, brand) untuk UI lama dan V2.",
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.101.2",
+    "react": "^19.0.1",
+    "react-router": "^7.18.1"
+  }
+}

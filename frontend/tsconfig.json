@@ -18,6 +18,24 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@loning/shared": [
+        "../shared/src/index.ts"
+      ],
+      "@loning/shared/*": [
+        "../shared/src/*.ts"
+      ],
+      "@v2-desktop/*": [
+        "../v2/desktop/src/*"
+      ],
+      "@v2-mobile/*": [
+        "../v2/mobile/src/*"
+      ],
+      "@v2-shared/*": [
+        "../v2/shared/*"
+      ],
+      "@loning/assets/*": [
+        "./src/assets/*"
       ]
     },
     "allowImportingTsExtensions": true,

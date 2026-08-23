@@ -1,3 +1,3 @@
-export function shouldFocusMain(previousPathname: string | null, pathname: string, hash: string) {
-  return !hash && (previousPathname === null || previousPathname !== pathname);
-}
+// Shim kompatibilitas Phase 0: sumber asli kini di @loning/shared.
+// Dipertahankan agar impor lama di frontend/ dan target vi.mock() tetap valid.
+export * from '@loning/shared/lib/navigation-focus';

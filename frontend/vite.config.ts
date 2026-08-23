@@ -37,6 +37,19 @@ export default defineConfig(({ command, mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        // Phase 0: logika non-UI bersama (dipakai UI lama lewat shim + V2 langsung).
+        '@loning/shared': path.resolve(__dirname, '../shared/src'),
+        // Phase 1: entry UI V2 (codebase terpisah, ikut build yang sama).
+        '@v2-desktop': path.resolve(__dirname, '../v2/desktop/src'),
+        '@v2-mobile': path.resolve(__dirname, '../v2/mobile/src'),
+        // Primitif & token bersama V2. WAJIB ada di sini, bukan hanya di
+        // v2/tsconfig.json: tanpa alias Vite, tsc lolos tapi build gagal
+        // resolve saat frontend me-lazy-load entry V2.
+        '@v2-shared': path.resolve(__dirname, '../v2/shared'),
+        // Aset brand (foto hero, logo) masih tinggal di frontend/src/assets.
+        // ponytail: saat UI lama dipensiunkan, pindahkan folder itu ke v2/shared/assets
+        // dan alias ini cukup diarahkan ulang — pemakai di v2/ tidak perlu diubah.
+        '@loning/assets': path.resolve(__dirname, './src/assets'),
       },
     },
     build: {

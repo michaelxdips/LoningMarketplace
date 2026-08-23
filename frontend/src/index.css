@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+/* Token V2 (Minimalist Editorial). Scoped ke [data-ui="v2"], jadi mengimpornya
+   di sini TIDAK mengubah tampilan UI lama — hanya menambah custom property.
+   Rasio kontrasnya dijaga gate: node scripts/v2-contrast-check.mjs */
+@import "../../v2/shared/styles/tokens.css";
+
+/* Auto-source-detection Tailwind v4 berhenti di root package (frontend/), jadi
+   codebase V2 di luar folder ini WAJIB didaftarkan eksplisit. Tanpa ini, semua
+   utility milik V2 tidak digenerate dan V2 render tanpa style.
+   Terbukti lewat probe build Phase 1a. */
+@source "../../v2/desktop/src/**/*.{ts,tsx}";
+@source "../../v2/mobile/src/**/*.{ts,tsx}";
+/* v2/shared WAJIB ikut: seluruh primitif (Button, Field, Badge, ...) tinggal di
+   sana. Tanpa baris ini utility-nya tidak digenerate dan primitif render polos —
+   bug nyata yang sempat lolos karena dua baris di atas terlihat "sudah cukup". */
+@source "../../v2/shared/**/*.{ts,tsx}";
+
 @theme {
   --font-sans: Inter, "Segoe UI", system-ui, sans-serif;
   --font-serif: Fraunces, Georgia, "Times New Roman", serif;

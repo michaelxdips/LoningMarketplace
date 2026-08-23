@@ -84,6 +84,14 @@ export default function Footer() {
               &copy; {new Date().getFullYear()} {brand.name}. KKN Reguler Tim II UNDIP 2026, Desa Loning.
             </p>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              {/* Saklar ke UI V2. Tautan biasa (bukan tombol) supaya bisa
+                  dibuka di tab baru dan di-bookmark selama masa transisi. */}
+              <Link
+                to="/v2"
+                className="focus-ring rounded text-terracotta transition-colors hover:text-white"
+              >
+                Coba tampilan baru &rarr;
+              </Link>
               <button
                 type="button"
                 onClick={scrollToTop}

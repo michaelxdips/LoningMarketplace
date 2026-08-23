@@ -1,0 +1,22 @@
+{
+  "name": "@loning/v2",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "UI V2 (Minimalist Editorial) — desktop & mobile web, codebase terpisah dari UI lama.",
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "lucide-react": "^1.25.0",
+    "motion": "^12.23.24",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "react-router": "^7.18.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4"
+  }
+}

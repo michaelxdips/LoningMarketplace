@@ -4,7 +4,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useProducts } from '../useProducts';
 import { useUMKMs } from '../useUMKMs';
 
-vi.mock('../../lib/api', () => ({
+// useProducts/useUMKMs kini tinggal di @loning/shared dan mengonsumsi
+// modul api milik shared, bukan shim di frontend/src/lib/api.
+// Mock harus menyasar modul yang benar-benar dikonsumsi, kalau tidak mock jadi mati
+// dan test diam-diam menembak network.
+vi.mock('@loning/shared/lib/api', () => ({
   getProducts: vi.fn().mockResolvedValue([]),
   getUMKMs: vi.fn().mockResolvedValue([]),
 }));

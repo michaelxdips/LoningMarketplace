@@ -1,0 +1,55 @@
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { authApi, csrfKey, rememberSession, sessionKey } from '../lib/auth';
+import { ApiError } from '../lib/api';
+
+export function useSession() {
+  const client = useQueryClient();
+  return useQuery({
+    queryKey: sessionKey,
+    queryFn: async () => {
+      try { const session = await authApi.session(); client.setQueryData(csrfKey, session.csrfToken); return session; }
+      catch (error) { if (error instanceof ApiError && error.status === 401) return null; throw error; }
+    },
+    retry: (failureCount, error) => error instanceof ApiError && error.status >= 500 && failureCount < 1,
+    staleTime: 60_000,
+  });
+}
+
+export function useCsrfToken() {
+  const client = useQueryClient();
+  return useQuery({ queryKey: csrfKey, queryFn: () => client.getQueryData<string | null>(csrfKey) ?? null, staleTime: Infinity }).data ?? undefined;
+}
+
+export async function getFreshCsrfToken(client: QueryClient): Promise<string | undefined> {
+  let csrf = client.getQueryData<string | null>(csrfKey);
+  if (!csrf) {
+    try {
+      const session = await authApi.session();
+      rememberSession(client, session);
+      csrf = session.csrfToken;
+    } catch {
+      /* fallback */
+    }
+  }
+  return csrf ?? undefined;
+}
+
+export function useLogin() {
+  const client = useQueryClient();
+  return useMutation({ mutationFn: authApi.login, onSuccess: (session) => { rememberSession(client, session); client.invalidateQueries({ queryKey: csrfKey, refetchType: 'none' }); } });
+}
+
+export function useLogout() {
+  const client = useQueryClient();
+  const csrf = useCsrfToken();
+  return useMutation({
+    mutationFn: async () => {
+      await Promise.all([client.cancelQueries({ queryKey: ['auth'] }), client.cancelQueries({ queryKey: ['manage'] }), client.cancelQueries({ queryKey: ['admin'] })]);
+      return authApi.logout(csrf);
+    },
+    onSettled: () => {
+      client.removeQueries({ queryKey: ['manage'] }); client.removeQueries({ queryKey: ['admin'] });
+      rememberSession(client, null);
+    },
+  });
+}

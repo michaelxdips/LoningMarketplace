@@ -1,12 +1,3 @@
-import { useEffect, useState } from 'react';
-
-export function useDebouncedValue<T>(value: T, delay = 300) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => setDebouncedValue(value), delay);
-    return () => window.clearTimeout(timeout);
-  }, [value, delay]);
-
-  return debouncedValue;
-}
+// Shim kompatibilitas Phase 0: sumber asli kini di @loning/shared.
+// Dipertahankan agar impor lama di frontend/ dan target vi.mock() tetap valid.
+export * from '@loning/shared/hooks/useDebouncedValue';

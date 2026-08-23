@@ -27,6 +27,9 @@ const AdminHelpPage = lazy(() => import('./pages/AdminHelpPage.tsx'));
 const UMKMFormPage = lazy(() => import('./pages/ManagementForms.tsx').then((module) => ({ default: module.UMKMFormPage })));
 const ProductFormPage = lazy(() => import('./pages/ManagementForms.tsx').then((module) => ({ default: module.ProductFormPage })));
 const UserFormPage = lazy(() => import('./pages/ManagementForms.tsx').then((module) => ({ default: module.UserFormPage })));
+// UI V2 (Minimalist Editorial). Codebase terpisah di v2/desktop, di-lazy-load
+// supaya tidak menambah beban bundle awal UI lama sama sekali.
+const V2DesktopApp = lazy(() => import('@v2-desktop/entry'));
 import NotFoundPage from './pages/NotFoundPage.tsx';
 import { ToastProvider } from './components/shared/Toast.tsx';
 import { RouteErrorBoundary } from './components/shared/PageErrorBoundary.tsx';
@@ -202,6 +205,10 @@ createRoot(document.getElementById('root')!).render(
                     </Route>
                   </Route>
                 </Route>
+                {/* UI V2 — seluruh sub-route ditangani router internal V2.
+                    Path-prefix dipilih agar SPA fallback di vercel.json yang
+                    sudah ada langsung melayaninya tanpa konfigurasi deploy baru. */}
+                <Route path="/v2/*" element={<RouteErrorBoundary><V2DesktopApp /></RouteErrorBoundary>} />
                 <Route path="/404" element={<NotFoundPage />} />
                 <Route path="*" element={<Navigate to="/404" replace />} />
               </Routes>

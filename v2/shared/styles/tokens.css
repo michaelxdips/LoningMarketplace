@@ -1,0 +1,253 @@
+/* ==========================================================================
+   Loning Maju V2 — Design Tokens (Minimalist Editorial)
+   ==========================================================================
+   Dipakai bersama oleh v2/desktop dan v2/mobile.
+
+   STRATEGI DARK MODE
+   Utility Tailwind v4 mereferensikan var(--color-*), jadi dark mode dilakukan
+   dengan MENUKAR NILAI variabel di dalam scope [data-ui="v2"] — bukan dengan
+   menaburkan `dark:` di setiap komponen. Konsekuensinya:
+     - komponen V2 cukup menulis `bg-surface text-ink` satu kali
+     - UI lama (di luar [data-ui="v2"]) TIDAK PERNAH ikut gelap
+   Terverifikasi: UI lama punya 0 penggunaan `dark:` / prefers-color-scheme.
+
+   NILAI DARK DITULIS SEKALI (blok --v2-dark-* di :root), lalu hanya DIPETAKAN
+   di dua selector (toggle manual + preferensi sistem). Duplikasi nilai =
+   sumber drift; duplikasi pemetaan aman dan mudah diperiksa.
+
+   SEMUA rasio kontras di file ini diverifikasi oleh:
+     node scripts/v2-contrast-check.mjs
+   Jangan ubah nilai warna tanpa menjalankan gate itu.
+   ========================================================================== */
+
+@theme {
+  /* -- Tipografi -------------------------------------------------------- */
+  /* Fraunces + Inter dipertahankan (kontinuitas brand, sudah dimuat lewat
+     <link> di frontend/index.html). Mono memakai stack sistem supaya tidak
+     menambah request font hanya demi angka tabular.
+     ponytail: kalau butuh mono berkarakter (JetBrains Mono), tambahkan ke
+     <link> Google Fonts lalu ganti nilai --font-numeric di bawah. */
+  --font-display: Fraunces, Georgia, "Times New Roman", serif;
+  --font-body: Inter, "Segoe UI", system-ui, sans-serif;
+  --font-numeric: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* -- Permukaan: LIGHT (nilai default) --------------------------------- */
+  --color-canvas: #fcfaf7;
+  --color-surface: #ffffff;
+  --color-sunken: #f6f3ed;
+
+  /* -- Teks ------------------------------------------------------------- */
+  /* ink-subtle digelapkan dari #6b7a71 (4.34:1, GAGAL) -> 4.7:1 LOLOS. */
+  --color-ink: #1c2421;
+  --color-ink-muted: #55645b;
+  --color-ink-subtle: #66756c;
+
+  /* -- Garis: DUA PERAN BERBEDA (jangan dicampur) ----------------------- */
+  /* line / line-strong = pemisah STRUKTURAL & dekoratif (hairline editorial,
+     divide-y, aturan section). WCAG 1.4.11 tidak menuntut 3:1 untuk elemen
+     dekoratif yang tidak menandai batas kontrol, jadi nilainya memang lembut.
+     JANGAN pakai keduanya sebagai border input/tombol. */
+  --color-line: #e1e8e3;
+  --color-line-strong: #c4d1c9;
+
+  /* control-border = batas KONTROL interaktif (input, select, tombol
+     outline). Ini yang wajib >= 3:1 per WCAG 1.4.11. Token terpisah dibuat
+     setelah gate kontras membuktikan line-strong gagal di peran ini. */
+  --color-control-border: #7d8d83;
+
+  /* -- Brand ------------------------------------------------------------ */
+  --color-brand: #123e25;
+  --color-brand-hover: #1e5c39;
+  --color-on-brand: #ffffff;
+
+  /* -- Accent (terracotta) — satu-satunya warna "pop" ------------------- */
+  /* Terracotta brand #c85c32 DIPERTAHANKAN, tapi perannya dipisah karena
+     teks putih di atasnya hanya 4.17:1 (GAGAL untuk teks normal):
+       accent       -> non-teks saja (focus ring, mark, garis aksen) >= 3:1
+       accent-ink   -> warna TEKS aksen di atas canvas/surface     >= 4.5:1
+       accent-fill  -> latar solid saat ada label putih di atasnya  5.4:1
+     Ini menjaga identitas brand tanpa mengorbankan aksesibilitas. */
+  --color-accent: #c85c32;
+  --color-accent-ink: #8f4526;
+  --color-accent-fill: #b04b23;
+  --color-accent-fill-hover: #97401d;
+  --color-on-accent-fill: #ffffff;
+
+  /* -- Status (bukan aksen dekoratif) ----------------------------------- */
+  --color-danger: #b3261e;
+  --color-danger-ink: #8c1d18;
+  --color-on-danger: #ffffff;
+  --color-success: #2e7d32;
+  --color-success-ink: #1f5c23;
+  --color-warning: #b97f1e;
+  --color-warning-ink: #8a5e15;
+
+  /* -- Radius: SATU skala (shape consistency lock) ---------------------- */
+  /* Editorial = tajam (0). Kontrol interaktif = pill. Tidak ada nilai lain. */
+  --radius-none: 0px;
+  --radius-control: 999px;
+
+  /* -- Lain-lain -------------------------------------------------------- */
+  --spacing-hairline: 1px;
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================================
+   PALET DARK — sumber nilai tunggal.
+   ========================================================================== */
+
+:root {
+  --v2-dark-canvas: #0f1612;
+  --v2-dark-surface: #16211b;
+  --v2-dark-sunken: #101a15;
+
+  --v2-dark-ink: #e7ece9;
+  --v2-dark-ink-muted: #a8b5ac;
+  --v2-dark-ink-subtle: #8d9a92;
+
+  --v2-dark-line: #2a3a30;
+  --v2-dark-line-strong: #3d5145;
+  --v2-dark-control-border: #6f8177;
+
+  /* forest asli terlalu gelap di atas canvas gelap; dinaikkan luminansinya.
+     #4f9268 sebelumnya hanya 4.45:1 di atas surface (GAGAL) -> kini 4.87:1. */
+  --v2-dark-brand: #55996e;
+  --v2-dark-brand-hover: #67ab80;
+  --v2-dark-on-brand: #0f1612;
+
+  /* Di dark, fill accent justru terang dan teksnya gelap, jadi accent-fill
+     boleh sama dengan accent (sudah 6.37:1). */
+  --v2-dark-accent: #e07b4e;
+  --v2-dark-accent-ink: #f0a06a;
+  --v2-dark-accent-fill: #e07b4e;
+  --v2-dark-accent-fill-hover: #ee8d60;
+  --v2-dark-on-accent-fill: #1a0f08;
+
+  --v2-dark-danger: #f2b8b5;
+  --v2-dark-danger-ink: #f2b8b5;
+  --v2-dark-on-danger: #601410;
+  --v2-dark-success: #7fd68a;
+  --v2-dark-success-ink: #7fd68a;
+  --v2-dark-warning: #e8c07a;
+  --v2-dark-warning-ink: #e8c07a;
+}
+
+/* Pemetaan dark (nilai diambil dari blok tunggal di atas). */
+[data-ui="v2"][data-theme="dark"] {
+  --color-canvas: var(--v2-dark-canvas);
+  --color-surface: var(--v2-dark-surface);
+  --color-sunken: var(--v2-dark-sunken);
+  --color-ink: var(--v2-dark-ink);
+  --color-ink-muted: var(--v2-dark-ink-muted);
+  --color-ink-subtle: var(--v2-dark-ink-subtle);
+  --color-line: var(--v2-dark-line);
+  --color-line-strong: var(--v2-dark-line-strong);
+  --color-control-border: var(--v2-dark-control-border);
+  --color-brand: var(--v2-dark-brand);
+  --color-brand-hover: var(--v2-dark-brand-hover);
+  --color-on-brand: var(--v2-dark-on-brand);
+  --color-accent: var(--v2-dark-accent);
+  --color-accent-ink: var(--v2-dark-accent-ink);
+  --color-accent-fill: var(--v2-dark-accent-fill);
+  --color-accent-fill-hover: var(--v2-dark-accent-fill-hover);
+  --color-on-accent-fill: var(--v2-dark-on-accent-fill);
+  --color-danger: var(--v2-dark-danger);
+  --color-danger-ink: var(--v2-dark-danger-ink);
+  --color-on-danger: var(--v2-dark-on-danger);
+  --color-success: var(--v2-dark-success);
+  --color-success-ink: var(--v2-dark-success-ink);
+  --color-warning: var(--v2-dark-warning);
+  --color-warning-ink: var(--v2-dark-warning-ink);
+}
+
+/* Jalur preferensi sistem (tetap bekerja tanpa JS). Pemetaan sama, nilai sama. */
+@media (prefers-color-scheme: dark) {
+  [data-ui="v2"]:not([data-theme="light"]) {
+    --color-canvas: var(--v2-dark-canvas);
+    --color-surface: var(--v2-dark-surface);
+    --color-sunken: var(--v2-dark-sunken);
+    --color-ink: var(--v2-dark-ink);
+    --color-ink-muted: var(--v2-dark-ink-muted);
+    --color-ink-subtle: var(--v2-dark-ink-subtle);
+    --color-line: var(--v2-dark-line);
+    --color-line-strong: var(--v2-dark-line-strong);
+    --color-control-border: var(--v2-dark-control-border);
+    --color-brand: var(--v2-dark-brand);
+    --color-brand-hover: var(--v2-dark-brand-hover);
+    --color-on-brand: var(--v2-dark-on-brand);
+    --color-accent: var(--v2-dark-accent);
+    --color-accent-ink: var(--v2-dark-accent-ink);
+    --color-accent-fill: var(--v2-dark-accent-fill);
+    --color-accent-fill-hover: var(--v2-dark-accent-fill-hover);
+    --color-on-accent-fill: var(--v2-dark-on-accent-fill);
+    --color-danger: var(--v2-dark-danger);
+    --color-danger-ink: var(--v2-dark-danger-ink);
+    --color-on-danger: var(--v2-dark-on-danger);
+    --color-success: var(--v2-dark-success);
+    --color-success-ink: var(--v2-dark-success-ink);
+    --color-warning: var(--v2-dark-warning);
+    --color-warning-ink: var(--v2-dark-warning-ink);
+  }
+}
+
+/* ==========================================================================
+   Dasar surface V2
+   ========================================================================== */
+
+/* PENTING soal cascade layer:
+   - Definisi/override TOKEN di atas sengaja UNLAYERED supaya menang atas
+     `:root` milik @theme (yang berada di layer `theme`, layer paling bawah).
+   - Sebaliknya, aturan base & helper di bawah HARUS berada di dalam layer,
+     kalau tidak ia unlayered dan mengalahkan `@layer utilities` — akibatnya
+     utility seperti `bg-surface` tidak bisa menimpa apa pun di sini. */
+
+@layer base {
+  /* UI lama menetapkan latar krem di <body>. Saat V2 aktif (khususnya dark
+     mode), area overscroll/rubber-band masih akan menampilkan krem itu. Satu
+     baris ini menyelaraskannya tanpa menyentuh CSS UI lama sama sekali. */
+  body:has([data-ui="v2"]) {
+    background-color: var(--color-canvas);
+  }
+
+  [data-ui="v2"] {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    color-scheme: light dark;
+  }
+
+  [data-ui="v2"][data-theme="light"] { color-scheme: light; }
+  [data-ui="v2"][data-theme="dark"] { color-scheme: dark; }
+}
+
+@layer components {
+  /* Angka selalu tabular supaya kolom harga/statistik tidak "goyang". */
+  [data-ui="v2"] .numeric {
+    font-family: var(--font-numeric);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Focus ring V2: satu definisi untuk semua kontrol (accent >= 3:1, terverifikasi). */
+  [data-ui="v2"] .focus-ring-v2:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Target sentuh minimum 44px (WCAG 2.5.8 / pedoman touch). */
+  [data-ui="v2"] .touch-44 {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Motion dimatikan total saat pengguna memintanya. */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="v2"] *,
+  [data-ui="v2"] *::before,
+  [data-ui="v2"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

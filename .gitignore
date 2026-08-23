@@ -23,3 +23,4 @@ backend/audit-media-temp-*.webp
 *.backup
 *.bak
 *.sql.gz
+.hermes/
