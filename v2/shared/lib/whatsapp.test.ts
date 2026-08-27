@@ -59,6 +59,17 @@ describe('buildInquiryMessage', () => {
     expect(message).toContain('usaha *Warung Nasi Khas Loning*');
     expect(message).not.toContain('produk *');
   });
+
+  it('templateType: mendukung varian template pertanyaan instan', () => {
+    const msgAvailability = buildInquiryMessage({ product, visitorName: '', visitorQuestion: '', templateType: 'availability' });
+    expect(msgAvailability).toContain('ready atau perlu preorder');
+
+    const msgPrice = buildInquiryMessage({ product, visitorName: '', visitorQuestion: '', templateType: 'price' });
+    expect(msgPrice).toContain('rincian harga');
+
+    const msgCustom = buildInquiryMessage({ product, visitorName: '', visitorQuestion: '', templateType: 'custom' });
+    expect(msgCustom).toContain('custom order');
+  });
 });
 
 describe('buildWhatsAppUrl', () => {

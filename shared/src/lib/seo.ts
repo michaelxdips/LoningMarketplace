@@ -4,7 +4,7 @@ import { buildSiteUrl } from './siteUrl';
 import { normalizeCoordinates } from './location';
 import type { UMKM } from '../types';
 
-export type PageMetadata = { title: string; description: string; image?: string; type?: 'website' | 'product'; jsonLd?: Record<string, unknown> | Array<Record<string, unknown>> };
+export type PageMetadata = { title: string; description: string; image?: string; type?: 'website' | 'product'; canonicalPath?: string; jsonLd?: Record<string, unknown> | Array<Record<string, unknown>> };
 const OWNED_SELECTOR = '[data-route-owned="true"]';
 const upsertMeta = (selector: string, attributes: Record<string, string>) => { let element = document.head.querySelector<HTMLMetaElement>(selector); if (!element) { element = document.createElement('meta'); document.head.appendChild(element); } Object.entries(attributes).forEach(([key, value]) => element!.setAttribute(key, value)); element.setAttribute('data-route-owned', 'true'); return element; };
 
@@ -18,7 +18,11 @@ export function applyPageMetadata(metadata: PageMetadata) {
   upsertMeta('meta[name="twitter:card"]', { name: 'twitter:card', content: metadata.image ? 'summary_large_image' : 'summary' });
   upsertMeta('meta[name="twitter:title"]', { name: 'twitter:title', content: metadata.title });
   upsertMeta('meta[name="twitter:description"]', { name: 'twitter:description', content: metadata.description });
-  const canonicalUrl = buildSiteUrl(window.location.pathname);
+  
+  // Normalisasikan canonical path: rute V2 (/v2/... atau /m/...) diarahkan ke canonical root V1
+  const rawPath = metadata.canonicalPath ?? window.location.pathname;
+  const normalizedPath = rawPath.replace(/^\/(?:v2|m)(?=\/|$)/, '') || '/';
+  const canonicalUrl = buildSiteUrl(normalizedPath);
   if (canonicalUrl) {
     upsertMeta('meta[property="og:url"]', { property: 'og:url', content: canonicalUrl });
     const canonical = document.createElement('link');

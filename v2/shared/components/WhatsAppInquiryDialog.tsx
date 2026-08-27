@@ -32,6 +32,7 @@ export default function WhatsAppInquiryDialog({
 }) {
   const [visitorName, setVisitorName] = useState('');
   const [visitorQuestion, setVisitorQuestion] = useState('');
+  const [templateType, setTemplateType] = useState<'general' | 'availability' | 'price' | 'custom'>('general');
   const [status, setStatus] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const [fallbackUrl, setFallbackUrl] = useState('');
@@ -44,7 +45,7 @@ export default function WhatsAppInquiryDialog({
   const phoneNumber = umkm?.phone;
   const hasContact = Boolean(phoneNumber && umkm?.isContactValid !== false);
 
-  const message = buildInquiryMessage({ product, umkm, visitorName, visitorQuestion });
+  const message = buildInquiryMessage({ product, umkm, visitorName, visitorQuestion, templateType });
   const whatsappUrl = phoneNumber ? buildWhatsAppUrl(phoneNumber, message) : '';
 
   const track = (event: Parameters<typeof trackPublicEvent>[0]) => {
@@ -212,9 +213,36 @@ export default function WhatsAppInquiryDialog({
             onChange={(event) => setVisitorName(event.target.value)}
           />
 
+          <div>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-subtle">
+              Pilihan topik cepat
+            </span>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {[
+                { id: 'general', label: 'Tanya Ketersediaan' },
+                { id: 'availability', label: 'Stok / Preorder' },
+                { id: 'price', label: 'Rincian Harga & Ongkir' },
+                { id: 'custom', label: 'Pesanan Khusus' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTemplateType(t.id as typeof templateType)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    templateType === t.id
+                      ? 'bg-brand text-on-brand'
+                      : 'border border-control-border bg-surface text-ink-muted hover:bg-sunken'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <TextAreaField
             label="Pertanyaan khusus"
-            helperText="Opsional"
+            helperText="Opsional (akan menimpa topik cepat jika diisi)"
             rows={3}
             placeholder={
               product

@@ -53,8 +53,18 @@ export default function CatalogFilter({
               maxLength={CATALOG_QUERY_MAX_LENGTH}
               onChange={(event) => onDraftChange(event.target.value)}
               placeholder={placeholder}
-              className="focus-ring-v2 min-h-12 w-full rounded-control border border-control-border bg-surface pl-10 pr-4 text-base text-ink placeholder:text-ink-subtle"
+              className="focus-ring-v2 min-h-12 w-full rounded-control border border-control-border bg-surface pl-10 pr-10 text-base text-ink placeholder:text-ink-subtle"
             />
+            {draftQuery ? (
+              <button
+                type="button"
+                onClick={() => onDraftChange('')}
+                aria-label="Bersihkan pencarian"
+                className="focus-ring-v2 touch-44 absolute right-1 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-control text-ink-muted hover:text-ink"
+              >
+                <X size={16} strokeWidth={1.5} aria-hidden="true" />
+              </button>
+            ) : null}
           </div>
           <button
             type="submit"

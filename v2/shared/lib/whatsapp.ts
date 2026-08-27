@@ -16,8 +16,9 @@ export function buildInquiryMessage(input: {
   umkm?: UMKM | null;
   visitorName: string;
   visitorQuestion: string;
+  templateType?: 'general' | 'availability' | 'price' | 'custom';
 }): string {
-  const { product, umkm, visitorName, visitorQuestion } = input;
+  const { product, umkm, visitorName, visitorQuestion, templateType = 'general' } = input;
   const merchantName = product ? product.umkmName : umkm ? umkm.name : 'Nama UMKM';
   const ownerName = umkm ? umkm.owner : product ? 'Penjual' : 'Pelaku UMKM';
 
@@ -29,9 +30,18 @@ export function buildInquiryMessage(input: {
     ? `\n\nPerkenalkan, nama saya *${visitorName.trim()}*.`
     : '';
 
+  let defaultQuestion = 'Apakah produk/layanan ini saat ini tersedia untuk dipesan?';
+  if (templateType === 'availability') {
+    defaultQuestion = 'Apakah stok / pesanan untuk saat ini ready atau perlu preorder?';
+  } else if (templateType === 'price') {
+    defaultQuestion = 'Bisa minta rincian harga, varian ukuran/rasa, atau ongkir ke alamat saya?';
+  } else if (templateType === 'custom') {
+    defaultQuestion = 'Apakah melayani pemesanan khusus / custom order dalam jumlah tertentu?';
+  }
+
   const questionPart = visitorQuestion.trim()
     ? `\n\nPertanyaan saya:\n"${visitorQuestion.trim()}"`
-    : `\n\nApakah produk/layanan ini saat ini tersedia untuk dipesan?`;
+    : `\n\n${defaultQuestion}`;
 
   return `${introPart}${senderPart}${questionPart}\n\nTerima kasih!`;
 }
