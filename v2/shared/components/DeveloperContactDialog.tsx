@@ -125,7 +125,7 @@ export default function DeveloperContactDialog({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" aria-hidden="true" />
+      <div className="absolute inset-0 bg-ink/50" aria-hidden="true" />
 
       <div
         ref={panelRef}
@@ -133,7 +133,7 @@ export default function DeveloperContactDialog({
         aria-modal="true"
         aria-labelledby="v2-dev-dialog-title"
         tabIndex={-1}
-        className="relative flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden bg-surface text-ink shadow-[0_24px_64px_rgba(16,22,18,0.35)]"
+        className="relative flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden border border-line bg-surface text-ink shadow-sm"
       >
         <div className="flex items-start justify-between gap-3 border-b border-line p-5">
           <div className="flex items-start gap-3">

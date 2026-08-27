@@ -1,7 +1,9 @@
 import { Link } from 'react-router';
-import { MapPin } from 'lucide-react';
+import { Clock3, MapPin } from 'lucide-react';
 import { getCategoryShortLabel, type UMKM } from '@loning/shared';
 import { MediaImage } from '@v2-shared/ui/MediaImage';
+import { Badge } from '@v2-shared/ui/Badge';
+import { isOpenNow } from '@v2-shared/lib/businessHours';
 import FavoriteButton from '@v2-shared/components/FavoriteButton';
 
 /**
@@ -13,6 +15,9 @@ import FavoriteButton from '@v2-shared/components/FavoriteButton';
  * UMKM harus terbaca sebagai dua hal.
  */
 export default function BusinessCard({ umkm }: { umkm: UMKM }) {
+  const status = isOpenNow(umkm.openingTime, umkm.closingTime, umkm.workingHours);
+  const hasHours = Boolean(umkm.openingTime && umkm.closingTime) || Boolean(umkm.workingHours);
+
   return (
     <article className="group relative flex gap-5 py-6">
       <div className="relative shrink-0">
@@ -26,9 +31,19 @@ export default function BusinessCard({ umkm }: { umkm: UMKM }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] uppercase tracking-wider text-ink-subtle">
-          {getCategoryShortLabel(umkm.category)}
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-[11px] uppercase tracking-wider text-ink-subtle">
+            {getCategoryShortLabel(umkm.category)}
+          </p>
+          {hasHours ? (
+            <Badge
+              variant={status.isOpen ? 'success' : 'neutral'}
+              icon={<Clock3 size={11} strokeWidth={1.5} />}
+            >
+              {status.isOpen ? 'Buka Sekarang' : 'Tutup'}
+            </Badge>
+          ) : null}
+        </div>
 
         <h3 className="mt-1 font-display text-lg font-semibold leading-snug tracking-tight text-ink">
           <Link

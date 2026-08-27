@@ -24,6 +24,7 @@ import {
 import { trackPublicEvent } from '@loning/shared/lib/analytics';
 import { Button } from '@v2-shared/ui/Button';
 import { ButtonLink } from '@v2-shared/ui/ButtonLink';
+import { Badge } from '@v2-shared/ui/Badge';
 import { EmptyState, ErrorState } from '@v2-shared/ui/EmptyState';
 import { Eyebrow } from '@v2-shared/ui/Eyebrow';
 import { MediaImage } from '@v2-shared/ui/MediaImage';
@@ -144,7 +145,17 @@ export default function UMKMDetailPage() {
             <MediaImage src={umkm.imageUrl} alt={umkm.altText ?? umkm.name} ratio="aspect-[4/3]" />
           </div>
           <div className="lg:col-span-6">
-            <Eyebrow>{`${getCategoryShortLabel(umkm.category)} · Profil Usaha`}</Eyebrow>
+            <div className="flex flex-wrap items-center gap-3">
+              <Eyebrow>{`${getCategoryShortLabel(umkm.category)} · Profil Usaha`}</Eyebrow>
+              {hoursLabel ? (
+                <Badge
+                  variant={openStatus.kind === 'open' ? 'success' : 'neutral'}
+                  icon={<Clock3 size={12} strokeWidth={1.5} />}
+                >
+                  {openStatus.kind === 'open' ? 'Buka Sekarang' : 'Tutup'}
+                </Badge>
+              ) : null}
+            </div>
             <h1 className="mt-5 font-display text-3xl font-semibold leading-tight tracking-tight text-ink text-balance sm:text-5xl">
               {umkm.name}
             </h1>

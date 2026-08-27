@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ExternalLink, MapPin, MessageSquare, Navigation, Store } from 'lucide-react';
+import { ExternalLink, Locate, MapPin, MessageSquare, Navigation, Store } from 'lucide-react';
 import { Link } from 'react-router';
 import { getCategoryShortLabel, type UMKM } from '@loning/shared';
 import { useUMKMs } from '@loning/shared/hooks/useUMKMs';
@@ -10,6 +10,8 @@ import {
   normalizeCoordinates,
 } from '@loning/shared/lib/location';
 import { usePageMetadata } from '@loning/shared/lib/seo';
+import { calculateDistanceKm, formatDistance } from '@v2-shared/lib/distance';
+import { Badge } from '@v2-shared/ui/Badge';
 import { Button } from '@v2-shared/ui/Button';
 import { ButtonLink } from '@v2-shared/ui/ButtonLink';
 import { ErrorState } from '@v2-shared/ui/EmptyState';
@@ -29,6 +31,9 @@ import WhatsAppInquiryDialog from '@v2-shared/components/WhatsAppInquiryDialog';
 export default function PetaUMKMPage() {
   const [selectedUMKMId, setSelectedUMKMId] = useState<string | null>(null);
   const [inquiryUMKM, setInquiryUMKM] = useState<UMKM | null>(null);
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   const description =
     'Peta interaktif sebaran lokasi UMKM Desa Loning. Temukan titik lokasi usaha warga, lihat profil, dan hubungi pengelola secara langsung.';
@@ -46,22 +51,61 @@ export default function PetaUMKMPage() {
 
   const { data: umkms, isPending, isError, refetch } = useUMKMs();
 
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolokasi tidak didukung oleh browser Anda.');
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setIsLocating(false);
+        setUserCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        setIsLocating(false);
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationError('Izin akses lokasi ditolak.');
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          setLocationError('Informasi lokasi tidak tersedia.');
+        } else {
+          setLocationError('Gagal memperoleh lokasi Anda.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
   const { verifiedUMKMs, unmappedUMKMs } = useMemo(() => {
     if (!umkms) return { verifiedUMKMs: [], unmappedUMKMs: [] as UMKM[] };
-    const verified: Array<{ umkm: UMKM; lat: number; lng: number }> = [];
+    const verified: Array<{ umkm: UMKM; lat: number; lng: number; distanceKm?: number }> = [];
     const unmapped: UMKM[] = [];
     for (const u of umkms) {
       if (typeof u.latitude === 'number' && typeof u.longitude === 'number') {
         const coords = normalizeCoordinates(u.latitude, u.longitude);
         if (coords) {
-          verified.push({ umkm: u, lat: coords.latitude, lng: coords.longitude });
+          const distanceKm = userCoords
+            ? calculateDistanceKm(userCoords.latitude, userCoords.longitude, coords.latitude, coords.longitude)
+            : undefined;
+          verified.push({ umkm: u, lat: coords.latitude, lng: coords.longitude, distanceKm });
           continue;
         }
       }
       unmapped.push(u);
     }
+
+    if (userCoords) {
+      verified.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
+    }
+
     return { verifiedUMKMs: verified, unmappedUMKMs: unmapped };
-  }, [umkms]);
+  }, [umkms, userCoords]);
 
   const activeVerified = useMemo(() => {
     if (!verifiedUMKMs.length) return null;
@@ -109,9 +153,16 @@ export default function PetaUMKMPage() {
               ) : activeVerified ? (
                 <div className="border border-line">
                   <div className="flex items-center justify-between gap-3 border-b border-line bg-sunken px-4 py-3">
-                    <span className="truncate text-sm font-medium text-ink">
-                      {activeUMKM ? activeUMKM.name : 'Peta Sebaran Desa Loning'}
-                    </span>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="truncate text-sm font-medium text-ink">
+                        {activeUMKM ? activeUMKM.name : 'Peta Sebaran Desa Loning'}
+                      </span>
+                      {activeVerified.distanceKm !== undefined ? (
+                        <Badge variant="accent" icon={<MapPin size={12} strokeWidth={1.5} />}>
+                          {formatDistance(activeVerified.distanceKm)} dari Anda
+                        </Badge>
+                      ) : null}
+                    </div>
                     <span className="shrink-0 text-sm text-ink-subtle">
                       <span className="numeric">{verifiedUMKMs.length}</span> lokasi terverifikasi
                     </span>
@@ -172,6 +223,11 @@ export default function PetaUMKMPage() {
                         <span className="text-xs font-medium text-accent-ink">
                           {getCategoryShortLabel(activeUMKM.category)}
                         </span>
+                        {activeVerified?.distanceKm !== undefined ? (
+                          <Badge variant="accent" icon={<MapPin size={12} strokeWidth={1.5} />}>
+                            {formatDistance(activeVerified.distanceKm)} dari Anda
+                          </Badge>
+                        ) : null}
                         {activeUMKM.openingTime && activeUMKM.closingTime ? (
                           <span className="text-xs text-ink-subtle">
                             {activeUMKM.openingTime} – {activeUMKM.closingTime} WIB
@@ -216,10 +272,32 @@ export default function PetaUMKMPage() {
 
             {/* Selektor lokasi */}
             <aside aria-labelledby="directory-list-heading" className="lg:col-span-4">
-              <h2 id="directory-list-heading" className="font-display text-lg font-semibold tracking-tight text-ink">
-                Pilih lokasi usaha
-              </h2>
-              <p className="mt-1 text-sm text-ink-muted">Klik nama usaha untuk menampilkan posisi di peta.</p>
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="directory-list-heading" className="font-display text-lg font-semibold tracking-tight text-ink">
+                  Pilih lokasi usaha
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leadingIcon={<Locate size={14} strokeWidth={1.5} />}
+                  isLoading={isLocating}
+                  loadingLabel="Mencari lokasi"
+                  onClick={handleGetLocation}
+                >
+                  {userCoords ? 'Perbarui Lokasi' : 'Cari Terdekat'}
+                </Button>
+              </div>
+              <p className="mt-1 text-sm text-ink-muted">
+                {userCoords
+                  ? 'Daftar diurutkan berdasarkan jarak terdekat dari lokasi Anda.'
+                  : 'Klik nama usaha atau cari UMKM terdekat dari posisi Anda.'}
+              </p>
+
+              {locationError ? (
+                <p className="mt-2 text-xs text-danger" role="alert">
+                  {locationError}
+                </p>
+              ) : null}
 
               {isPending ? (
                 <div className="mt-5 space-y-3">
@@ -233,7 +311,7 @@ export default function PetaUMKMPage() {
                 </p>
               ) : (
                 <div className="mt-4 max-h-[480px] overflow-y-auto border-t border-line">
-                  {verifiedUMKMs.map(({ umkm }) => {
+                  {verifiedUMKMs.map(({ umkm, distanceKm }) => {
                     const isSelected = activeUMKM?.id === umkm.id;
                     return (
                       <button
@@ -248,9 +326,16 @@ export default function PetaUMKMPage() {
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="truncate text-sm font-medium text-ink">{umkm.name}</span>
-                          <span className="shrink-0 text-xs text-ink-subtle">
-                            {getCategoryShortLabel(umkm.category)}
-                          </span>
+                          <div className="flex shrink-0 items-center gap-1.5">
+                            {distanceKm !== undefined ? (
+                              <span className="text-xs font-medium text-accent-ink">
+                                {formatDistance(distanceKm)}
+                              </span>
+                            ) : null}
+                            <span className="text-xs text-ink-subtle">
+                              {getCategoryShortLabel(umkm.category)}
+                            </span>
+                          </div>
                         </div>
                         <p className="mt-0.5 truncate text-xs text-ink-muted">{umkm.address}</p>
                       </button>

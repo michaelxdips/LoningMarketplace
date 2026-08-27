@@ -72,7 +72,17 @@ export default function UMKMDetailPage() {
         </nav>
 
         <div className="mt-4">
-          <Eyebrow>{`${getCategoryShortLabel(umkm.category)} · Profil Usaha`}</Eyebrow>
+          <div className="flex flex-wrap items-center gap-2">
+            <Eyebrow>{`${getCategoryShortLabel(umkm.category)} · Profil Usaha`}</Eyebrow>
+            {hoursLabel ? (
+              <Badge
+                variant={openStatus.kind === 'open' ? 'success' : 'neutral'}
+                icon={<Clock3 size={11} strokeWidth={1.5} />}
+              >
+                {openStatus.kind === 'open' ? 'Buka Sekarang' : 'Tutup'}
+              </Badge>
+            ) : null}
+          </div>
           <h1 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight text-ink text-balance">{umkm.name}</h1>
           <p className="mt-2 text-sm font-medium text-accent-ink">Dikelola oleh {umkm.owner}</p>
           <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-ink-muted">{umkm.description}</p>
