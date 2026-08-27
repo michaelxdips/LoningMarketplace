@@ -61,12 +61,12 @@ melalui WhatsApp — tanpa keranjang, checkout, atau pembayaran online.
 
 ## 🏗 Arsitektur
 
-Proyek ini menggunakan arsitektur **npm workspaces monorepo** dengan dua workspace: `frontend/` dan `backend/`.
+Proyek ini menggunakan arsitektur **npm workspaces monorepo** dengan empat workspace: `frontend/`, `backend/`, `shared/` (`@loning/shared`), dan `v2/` (`@loning/v2`).
 
 ```mermaid
 graph TB
     subgraph Client["🌐 Browser"]
-        SPA["React 19 SPA"]
+        SPA["React 19 SPA (V1, V2 Desktop, V2 Mobile)"]
     end
 
     subgraph Frontend["📦 frontend/"]
@@ -74,6 +74,11 @@ graph TB
         TQ["TanStack Query"]
         RR["React Router"]
         TW["Tailwind CSS v4"]
+    end
+
+    subgraph V2Workspace["📦 v2/ & shared/"]
+        SharedPkg["@loning/shared (API, Auth, SEO, Hooks)"]
+        V2Desktop["@loning/v2 (Desktop & Mobile Codebase)"]
     end
 
     subgraph Backend["📦 backend/"]
@@ -90,7 +95,9 @@ graph TB
 
     SPA --> Vite
     Vite --> TQ
-    TQ -->|"REST /api/*"| Fastify
+    TQ --> SharedPkg
+    V2Desktop --> SharedPkg
+    SharedPkg -->|"REST /api/*"| Fastify
     Fastify --> Drizzle
     Drizzle --> PG
     Fastify --> Auth
@@ -185,7 +192,14 @@ Panduan visual lengkap (token warna, tipografi, pola aksesibilitas, dan struktur
 ### Publik
 
 - 🔍 **Pencarian & Filter** — Cari produk/UMKM dengan filter 9 kategori: Kuliner, Sembako & Kebutuhan Harian, Fashion & Konveksi, Bahan Bangunan & Material, Jasa & Otomotif, Pertanian, Peternakan & Perikanan, Ritel & Perabot, Kerajinan & Olahan Kreatif, Lainnya
-- 📱 **WhatsApp Inquiry** — Dialog kontak langsung ke penjual via WhatsApp dengan pesan terstruktur
+- 📱 **WhatsApp Inquiry** — Dialog kontak langsung ke penjual via WhatsApp dengan template topik pertanyaan instan (Ketersediaan, Stok/Preorder, Harga/Ongkir, Pesanan Khusus)
+- 🛍️ **Draft Catatan Pesanan WhatsApp (V2)** — Simpan beberapa produk dari toko yang sama dan kirim format daftar pesanan terstruktur via WhatsApp
+- 🕒 **Status Buka/Tutup Real-Time (V2)** — Indikator live status operasional toko (`Buka Sekarang` / `Tutup`) dan filter toko buka pada direktori
+- 📍 **Geolokasi & Jarak Terdekat (V2)** — Formula Haversine otomatis mengurutkan UMKM terdekat berdasarkan posisi GPS pengunjung
+- 🖨️ **QR Code Generator Etalase (V2)** — Generator kode QR SVG profil UMKM siap cetak untuk ditempel di warung fisik
+- 🎨 **Generator Story WhatsApp (V2)** — Buat dan unduh kartu promosi format 9:16 PNG beresolusi tinggi untuk Status WA
+- 💖 **Koleksi Tersimpan / Favorit (V2)** — Simpan produk & UMKM lokal tanpa login (`localStorage` + `useSyncExternalStore`) di `/v2/tersimpan` dan `/m/tersimpan`
+- 🖼️ **Lightbox Galeri Produk (V2)** — Penampil foto resolusi penuh dengan navigasi keyboard (`Escape`, panah)
 - 🗺️ **Peta Interaktif UMKM** — Visualisasi lokasi seluruh UMKM di `/peta-umkm` dengan Google Maps / OpenStreetMap embed
 - 📄 **Detail Produk & UMKM** — Halaman detail dengan slug canonical (`/produk/:slug`, `/umkm/:slug`)
 - 🏷️ **Produk Terkait** — Rekomendasi produk dari UMKM yang sama
@@ -441,7 +455,7 @@ VITE_PUBLIC_SITE_URL='https://www.loningmaju.my.id' npm run build
 
 ```
 LoningMarketplace/
-├── frontend/                      # React SPA workspace
+├── frontend/                      # React SPA workspace (V1)
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── business/          # BusinessCard, UMKMImage
@@ -456,9 +470,37 @@ LoningMarketplace/
 │   │   ├── lib/                   # API client, analytics, SEO, location, price, auth
 │   │   ├── pages/                 # Route page components (16 pages)
 │   │   ├── App.tsx                # Homepage root
-│   │   ├── main.tsx               # Router & providers
+│   │   ├── main.tsx               # Router & providers (lazy loader V2 desktop/mobile)
 │   │   ├── types.ts               # Shared TypeScript interfaces
 │   │   └── index.css              # Design tokens & global styles
+│   └── package.json
+├── v2/                            # UI V2 workspace (@loning/v2)
+│   ├── desktop/                   # Desktop codebase V2 (/v2/*)
+│   │   └── src/
+│   │       ├── components/        # ProductCard, BusinessCard, CatalogFilter
+│   │       ├── dashboard/         # ManagementForms, Lists, Analytics, Location, Help
+│   │       ├── layout/            # Navbar, Footer (super-compact bar)
+│   │       ├── pages/             # Home, Katalog, Direktori, Detail, Peta, Saved, dll.
+│   │       └── App.tsx            # Desktop shell & routes
+│   ├── mobile/                    # Mobile Web codebase V2 (/m/*)
+│   │   └── src/
+│   │       ├── components/        # Mobile cards, filters
+│   │       ├── layout/            # Header solid, BottomNav 5-item, Footer
+│   │       ├── pages/             # Mobile pages (Catalog, Directory, Detail, Peta, dll.)
+│   │       └── App.tsx            # Mobile shell & routes
+│   ├── shared/                    # Shared V2 components, hooks, UI primitives, tokens
+│   │   ├── components/            # Lightbox, QRCodeModal, StoryCardModal, OrderDraftDrawer, dll.
+│   │   ├── hooks/                 # useFavorites, useOrderDraft
+│   │   ├── lib/                   # favorites, orderDraft, qrcode, distance, businessHours
+│   │   ├── styles/                # tokens.css (Design tokens editorial & dark mode)
+│   │   └── ui/                    # Button, Badge, Field, MediaImage, Skeleton, cn
+│   └── package.json
+├── shared/                        # Package bersama lintas V1/V2/Backend (@loning/shared)
+│   ├── src/
+│   │   ├── config/                # Brand constants
+│   │   ├── content/               # versionHistory, faq
+│   │   ├── hooks/                 # useAuth, useProducts, useUMKMs, useDebouncedValue
+│   │   └── lib/                   # api, auth, management, price, seo, location, share
 │   └── package.json
 ├── backend/                       # Fastify API workspace
 │   ├── src/
@@ -475,7 +517,7 @@ LoningMarketplace/
 │   │   └── index.ts               # Server entry point
 │   ├── drizzle/                   # SQL migration files (18 migrations, 0000–0017, idempotent)
 │   └── package.json
-├── e2e/                           # Playwright E2E tests (9 spec files)
+├── e2e/                           # Playwright E2E tests (10 spec files inc. v2-dual-ui)
 ├── scripts/                       # Build, test, and dev scripts
 ├── assets/                        # Seed source images
 ├── docs/                          # Technical documentation
@@ -483,7 +525,7 @@ LoningMarketplace/
 ├── playwright.config.ts           # E2E config (Desktop + Mobile)
 ├── render.yaml                    # Render deployment config
 ├── vercel.json                    # Vercel deployment config (SPA rewrite + API proxy)
-└── package.json                   # Root workspace config
+└── package.json                   # Root workspace config (4 workspaces)
 ```
 
 ---
