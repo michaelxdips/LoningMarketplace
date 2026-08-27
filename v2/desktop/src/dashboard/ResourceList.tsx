@@ -34,18 +34,6 @@ interface Lifecycle<T> {
   delete: (id: string, csrf?: string) => Promise<{ id: string } | void>;
 }
 
-function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState(() => (typeof window === 'undefined' ? false : window.matchMedia(query).matches));
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(query);
-    const update = () => setMatches(mediaQuery.matches);
-    update();
-    mediaQuery.addEventListener('change', update);
-    return () => mediaQuery.removeEventListener('change', update);
-  }, [query]);
-  return matches;
-}
-
 export default function ResourceList<T extends { id: string; publicationStatus: PublicationStatus }>({
   resource,
   title,
@@ -107,7 +95,6 @@ export default function ResourceList<T extends { id: string; publicationStatus: 
     limit: 100,
   };
   const query = useManagedList('manage', resource, params, (signal) => loader(params, signal));
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const action = useManagedMutation<{ id: string; kind: keyof Lifecycle<T> }, T | { id: string } | void>(
     'manage',
     resource,
@@ -233,49 +220,51 @@ export default function ResourceList<T extends { id: string; publicationStatus: 
         <ErrorNotice error={query.error} />
       ) : !items.length ? (
         <EmptyPanel>Tidak ada {noun} yang cocok.</EmptyPanel>
-      ) : isDesktop ? (
-        <div className="hidden overflow-x-auto lg:block">
-          <table className="w-full table-fixed text-left text-sm">
-            <thead className="border-b border-line-strong text-xs uppercase tracking-wider text-ink-subtle">
-              <tr>
-                {columns.map((c) => (
-                  <th key={c.label} className="px-5 py-3 font-semibold">
-                    {c.label}
-                  </th>
-                ))}
-                <th className="w-[25%] px-5 py-3 text-right font-semibold">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {items.map((item) => (
-                <tr key={item.id} className="transition-colors hover:bg-sunken/50">
-                  {columns.map((c) => (
-                    <td key={c.label} className="px-5 py-4 align-middle">
-                      {c.render(item)}
-                    </td>
-                  ))}
-                  <td className="px-5 py-4">{actions(item)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       ) : (
-        <div className="grid lg:hidden">
-          {items.map((item) => (
-            <article key={item.id} className="min-w-0 border-b border-line py-4">
-              <div className="space-y-3">
-                {columns.map((c) => (
-                  <div key={c.label} className="grid min-w-0 grid-cols-[90px_minmax(0,1fr)] gap-3">
-                    <span className="text-xs font-semibold uppercase text-ink-subtle">{c.label}</span>
-                    <div>{c.render(item)}</div>
-                  </div>
+        <>
+          <div className="hidden overflow-x-auto lg:block">
+            <table className="w-full table-fixed text-left text-sm">
+              <thead className="border-b border-line-strong text-xs uppercase tracking-wider text-ink-subtle">
+                <tr>
+                  {columns.map((c) => (
+                    <th key={c.label} className="px-5 py-3 font-semibold">
+                      {c.label}
+                    </th>
+                  ))}
+                  <th className="w-[25%] px-5 py-3 text-right font-semibold">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {items.map((item) => (
+                  <tr key={item.id} className="transition-colors hover:bg-sunken/50">
+                    {columns.map((c) => (
+                      <td key={c.label} className="px-5 py-4 align-middle">
+                        {c.render(item)}
+                      </td>
+                    ))}
+                    <td className="px-5 py-4">{actions(item)}</td>
+                  </tr>
                 ))}
-              </div>
-              <div className="mt-4 border-t border-line pt-4">{actions(item)}</div>
-            </article>
-          ))}
-        </div>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grid lg:hidden">
+            {items.map((item) => (
+              <article key={item.id} className="min-w-0 border-b border-line py-4">
+                <div className="space-y-3">
+                  {columns.map((c) => (
+                    <div key={c.label} className="grid min-w-0 grid-cols-[90px_minmax(0,1fr)] gap-3">
+                      <span className="text-xs font-semibold uppercase text-ink-subtle">{c.label}</span>
+                      <div>{c.render(item)}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 border-t border-line pt-4">{actions(item)}</div>
+              </article>
+            ))}
+          </div>
+        </>
       )}
 
       <ConfirmDialog

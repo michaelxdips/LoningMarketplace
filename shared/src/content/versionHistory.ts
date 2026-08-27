@@ -187,3 +187,52 @@ export const VERSION_TITLES: Record<string, string> = {
   'v1.0.0': 'Peluncuran Publik Portal & Direktori UMKM Desa Loning',
   'v0.1.0': 'Inisiasi Fondasi & Keandalan Arsitektur (Phase 0)',
 };
+
+export async function fetchGitHubReleaseData(repo = 'michaelxdips/LoningMarketplace'): Promise<ReleaseGroup[]> {
+  const [page1Res, page2Res, tagsRes] = await Promise.all([
+    fetch(`https://api.github.com/repos/${repo}/commits?per_page=100&page=1`, {
+      headers: { Accept: 'application/vnd.github.v3+json' },
+    }),
+    fetch(`https://api.github.com/repos/${repo}/commits?per_page=100&page=2`, {
+      headers: { Accept: 'application/vnd.github.v3+json' },
+    }),
+    fetch(`https://api.github.com/repos/${repo}/tags`, {
+      headers: { Accept: 'application/vnd.github.v3+json' },
+    }),
+  ]);
+  if (!page1Res.ok) throw new Error(`GitHub API HTTP ${page1Res.status}`);
+  const page1Commits: GitHubCommitResponse[] = await page1Res.json();
+  const page2Commits: GitHubCommitResponse[] = page2Res.ok ? await page2Res.json() : [];
+  const rawCommits = [...(Array.isArray(page1Commits) ? page1Commits : []), ...(Array.isArray(page2Commits) ? page2Commits : [])];
+  const rawTags: GitHubTagResponse[] = tagsRes.ok ? await tagsRes.json() : [];
+  if (!Array.isArray(rawCommits) || rawCommits.length === 0) throw new Error('No commit data returned');
+
+  const tagShaMap = new Map<string, string>();
+  for (const t of rawTags) if (t.commit?.sha && t.name) tagShaMap.set(t.commit.sha.slice(0, 7), t.name);
+
+  const parsedCommits: CommitItem[] = rawCommits.map((item) => {
+    const hash = item.sha.slice(0, 7);
+    const { type, scope, message } = parseCommitMessage(item.commit?.message || '');
+    return { hash, date: formatDateISO(item.commit?.committer?.date || item.commit?.author?.date), type, scope, message };
+  });
+
+  const dynamicGroups: ReleaseGroup[] = [];
+  let currentVersion = tagShaMap.get(parsedCommits[0]?.hash) || rawTags[0]?.name || 'v1.7.2';
+  let currentCommits: CommitItem[] = [];
+  for (const c of parsedCommits) {
+    const taggedVersion = tagShaMap.get(c.hash);
+    if (taggedVersion && taggedVersion !== currentVersion && currentCommits.length > 0) {
+      const derivedTitle = VERSION_TITLES[currentVersion] || (currentCommits[0] ? `${currentCommits[0].scope ? `[${currentCommits[0].scope}] ` : ''}${currentCommits[0].message}` : `Release ${currentVersion}`);
+      dynamicGroups.push({ version: currentVersion, title: derivedTitle, date: currentCommits[0]?.date || '2026-08-06', badge: 'Release', commits: currentCommits });
+      currentVersion = taggedVersion;
+      currentCommits = [c];
+    } else {
+      currentCommits.push(c);
+    }
+  }
+  if (currentCommits.length > 0) {
+    const derivedTitle = VERSION_TITLES[currentVersion] || (currentCommits[0] ? `${currentCommits[0].scope ? `[${currentCommits[0].scope}] ` : ''}${currentCommits[0].message}` : `Release ${currentVersion}`);
+    dynamicGroups.push({ version: currentVersion, title: derivedTitle, date: currentCommits[0]?.date || '2026-08-06', badge: 'Release', commits: currentCommits });
+  }
+  return dynamicGroups.length > 0 ? dynamicGroups : STATIC_RELEASES;
+}

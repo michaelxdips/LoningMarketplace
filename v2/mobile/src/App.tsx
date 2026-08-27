@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Outlet, Route, Routes } from 'react-router';
 import { useTheme } from '@v2-shared/lib/useTheme';
+import { PublicOnlyGuard } from '../../desktop/src/dashboard/Guards';
 import BottomNav from './layout/BottomNav';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
@@ -41,7 +42,9 @@ export default function V2MobileApp() {
     >
       <Routes>
         {/* Login — tanpa bottom-nav (fokus penuh ke form). */}
-        <Route path="login" element={<LoginPage />} />
+        <Route element={<PublicOnlyGuard />}>
+          <Route path="login" element={<LoginPage />} />
+        </Route>
 
         {/* Halaman publik — dengan header + bottom-nav. */}
         <Route element={<Shell preference={preference} onCycleTheme={cycle} />}>

@@ -275,11 +275,11 @@ export function UMKMFormPage() {
           <Field label="Nama UMKM" error={errors.name ?? formErrors(save.error).name}>
             <Input name="name" required defaultValue={value?.name} autoCapitalize="words" />
           </Field>
-          <Field label="Nama pemilik usaha" error={errors.owner}>
+          <Field label="Nama pemilik usaha" error={errors.owner ?? formErrors(save.error).owner}>
             <Input name="owner" required defaultValue={value?.owner} autoCapitalize="words" />
           </Field>
           {canAssignOwner && (
-            <Field label="Akun pemilik" hint="Pilih akun dashboard yang bertanggung jawab.">
+            <Field label="Akun pemilik" hint="Pilih akun dashboard yang bertanggung jawab." error={formErrors(save.error).ownerUserId}>
               <Select name="ownerUserId" defaultValue={value?.ownerUserId ?? ''}>
                 <option value="">Belum ditetapkan</option>
                 {pageItems<ManagedUser>(owners.data).map((user) => (
@@ -290,7 +290,7 @@ export function UMKMFormPage() {
               </Select>
             </Field>
           )}
-          <Field label="Kategori" error={errors.category}>
+          <Field label="Kategori" error={errors.category ?? formErrors(save.error).category}>
             <Select name="category" required defaultValue={value?.category}>
               <option value="">Pilih kategori</option>
               {CATEGORIES.map((x) => (
@@ -298,7 +298,7 @@ export function UMKMFormPage() {
               ))}
             </Select>
           </Field>
-          <Field label="Nomor WhatsApp" error={errors.phone}>
+          <Field label="Nomor WhatsApp" error={errors.phone ?? formErrors(save.error).phone}>
             <Input name="phone" inputMode="numeric" required defaultValue={value?.phone} />
           </Field>
           <Field label="Jam buka">
@@ -603,15 +603,15 @@ export function ProductFormPage() {
           </Field>
           {umkmMode === 'standalone' && (
             <>
-              <Field label="Nomor WhatsApp Penjual" error={errors.phone} hint="Contoh: 08123456789 atau 628123456789. Digunakan langsung untuk tombol WhatsApp inquiry.">
+              <Field label="Nomor WhatsApp Penjual" error={errors.phone ?? formErrors(save.error).phone} hint="Contoh: 08123456789 atau 628123456789. Digunakan langsung untuk tombol WhatsApp inquiry.">
                 <Input name="phone" type="tel" required defaultValue={value?.phone ?? ''} placeholder="08xxxxxxxxxx" />
               </Field>
-              <Field label="Nama Penjual / Pemilik (Opsional)" error={errors.sellerName} hint="Akan ditampilkan sebagai penyedia produk di katalog.">
+              <Field label="Nama Penjual / Pemilik (Opsional)" error={errors.sellerName ?? formErrors(save.error).sellerName} hint="Akan ditampilkan sebagai penyedia produk di katalog.">
                 <Input name="sellerName" defaultValue={value?.sellerName ?? ''} placeholder="misal: Pak Ahmad" />
               </Field>
             </>
           )}
-          <Field label="Kategori" error={errors.category}>
+          <Field label="Kategori" error={errors.category ?? formErrors(save.error).category}>
             <Select name="category" required defaultValue={value?.category}>
               <option value="">Pilih kategori</option>
               {CATEGORIES.map((x) => (
@@ -619,7 +619,7 @@ export function ProductFormPage() {
               ))}
             </Select>
           </Field>
-          <Field label="Harga (rupiah)" error={errors.price}>
+          <Field label="Harga (rupiah)" error={errors.price ?? formErrors(save.error).price}>
             <Input name="price" type="number" inputMode="numeric" min="0" step="1" defaultValue={value?.price ?? ''} />
           </Field>
           <Field label="Satuan">
