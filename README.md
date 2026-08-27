@@ -200,6 +200,7 @@ Panduan visual lengkap (token warna, tipografi, pola aksesibilitas, dan struktur
 - 🎨 **Generator Story WhatsApp (V2)** — Buat dan unduh kartu promosi format 9:16 PNG beresolusi tinggi untuk Status WA
 - 💖 **Koleksi Tersimpan / Favorit (V2)** — Simpan produk & UMKM lokal tanpa login (`localStorage` + `useSyncExternalStore`) di `/v2/tersimpan` dan `/m/tersimpan`
 - 🖼️ **Lightbox Galeri Produk (V2)** — Penampil foto resolusi penuh dengan navigasi keyboard (`Escape`, panah)
+- 📶 **PWA & Offline Resilience (V2)** — Service Worker offline cache, banner indikator status offline otomatis, dan instalasi *Add to Home Screen*
 - 🗺️ **Peta Interaktif UMKM** — Visualisasi lokasi seluruh UMKM di `/peta-umkm` dengan Google Maps / OpenStreetMap embed
 - 📄 **Detail Produk & UMKM** — Halaman detail dengan slug canonical (`/produk/:slug`, `/umkm/:slug`)
 - 🏷️ **Produk Terkait** — Rekomendasi produk dari UMKM yang sama
