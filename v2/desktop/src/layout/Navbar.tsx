@@ -49,10 +49,13 @@ export default function Navbar({
       <div className="mx-auto flex h-[72px] max-w-[1400px] items-center gap-8 px-6 lg:px-10">
         <Link
           to="/v2"
-          className="focus-ring-v2 shrink-0 font-display text-2xl font-semibold tracking-tight text-ink"
+          className="focus-ring-v2 flex min-w-0 shrink-0 items-center gap-2.5 rounded text-ink transition-opacity hover:opacity-90"
           aria-label={`${brand.name} — beranda`}
         >
-          Loning<span className="font-light italic text-accent-ink">Maju</span>
+          <img src={brand.logoSvg} alt="" className="h-8 w-8 shrink-0 object-contain" />
+          <span className="font-display text-2xl font-semibold tracking-tight">
+            Loning<span className="font-light italic text-accent-ink">Maju</span>
+          </span>
         </Link>
 
         <nav aria-label="Navigasi utama" className="hidden flex-1 items-center gap-7 md:flex">

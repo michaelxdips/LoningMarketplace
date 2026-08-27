@@ -19,9 +19,12 @@ export default function Header({
         <Link
           to="/m"
           aria-label={`${brand.name} — beranda`}
-          className="focus-ring-v2 font-display text-xl font-semibold tracking-tight text-ink"
+          className="focus-ring-v2 flex min-w-0 items-center gap-2 rounded text-ink transition-opacity hover:opacity-90"
         >
-          Loning<span className="font-light italic text-accent-ink">Maju</span>
+          <img src={brand.logoSvg} alt="" className="h-7 w-7 shrink-0 object-contain" />
+          <span className="font-display text-xl font-semibold tracking-tight">
+            Loning<span className="font-light italic text-accent-ink">Maju</span>
+          </span>
         </Link>
         <ThemeToggle preference={preference} onCycle={onCycleTheme} />
       </div>

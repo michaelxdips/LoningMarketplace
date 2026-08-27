@@ -3,6 +3,7 @@ import { Outlet, Route, Routes } from 'react-router';
 import { useTheme } from '@v2-shared/lib/useTheme';
 import BottomNav from './layout/BottomNav';
 import Header from './layout/Header';
+import Footer from './layout/Footer';
 import HomePage from './pages/HomePage';
 import CatalogPage from './pages/CatalogPage';
 import DirectoryPage from './pages/DirectoryPage';
@@ -81,6 +82,7 @@ function Shell({
       <main id="m-main" tabIndex={-1} className="flex-1 pb-24">
         <Outlet />
       </main>
+      <Footer />
       <BottomNav />
     </>
   );
