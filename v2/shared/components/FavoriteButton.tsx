@@ -34,14 +34,20 @@ export default function FavoriteButton({
       aria-label={saved ? `Hapus ${name} dari tersimpan` : `Simpan ${name}`}
       title={saved ? 'Hapus dari tersimpan' : 'Simpan untuk dilihat nanti'}
       className={cn(
-        'focus-ring-v2 touch-44 relative z-10 inline-flex items-center justify-center rounded-control transition-colors',
+        'focus-ring-v2 touch-44 relative z-10 inline-flex items-center justify-center rounded-control transition-all duration-150 active:scale-90',
         saved
-          ? 'bg-surface text-danger-ink'
+          ? 'bg-surface text-danger-ink border border-danger-ink/30'
           : 'border border-control-border bg-surface text-ink-muted hover:text-danger-ink',
         className,
       )}
     >
-      <Heart size={16} strokeWidth={1.5} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
+      <Heart
+        size={16}
+        strokeWidth={1.5}
+        fill={saved ? 'currentColor' : 'none'}
+        className={cn('transition-transform duration-200', saved && 'scale-110')}
+        aria-hidden="true"
+      />
     </button>
   );
 }
