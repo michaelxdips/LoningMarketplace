@@ -22,6 +22,7 @@ const NAV_ITEMS = [
 export default function BottomNav() {
   return (
     <nav
+      id="m-bottom-nav"
       aria-label="Navigasi utama"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}

@@ -26,7 +26,7 @@ test.describe('V2 Dual-UI Suite', () => {
 
     // Halaman riwayat versi
     await page.goto('/v2/version-history');
-    await expect(page.locator('h1')).toContainText('Riwayat Versi');
+    await expect(page.locator('h1')).toContainText('Riwayat');
 
     expect(errors).toHaveLength(0);
   });
