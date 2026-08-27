@@ -1,3 +1,5 @@
+import { useMemo, useState } from 'react';
+import { ArrowUpDown } from 'lucide-react';
 import { usePageMetadata } from '@loning/shared/lib/seo';
 import { useProducts } from '@loning/shared/hooks/useProducts';
 import { useDebouncedValue } from '@loning/shared/hooks/useDebouncedValue';
@@ -7,6 +9,8 @@ import { EmptyState, ErrorState } from '@v2-shared/ui/EmptyState';
 import { Skeleton } from '@v2-shared/ui/Skeleton';
 import ProductCard from '../components/ProductCard';
 import CatalogFilter from '../components/CatalogFilter';
+
+type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name-asc';
 
 /**
  * Katalog produk V2.
@@ -23,13 +27,26 @@ export default function CatalogPage() {
     description: 'Telusuri produk UMKM Desa Loning menurut kategori dan kata kunci.',
   });
 
+  const [sortBy, setSortBy] = useState<SortOption>('default');
   const discovery = useDiscoveryUrlState();
   const debouncedQuery = useDebouncedValue(discovery.q);
   const apiCategory = discovery.category === 'Semua' ? undefined : discovery.category;
 
   const productsQuery = useProducts({ category: apiCategory, q: debouncedQuery });
-  const products = productsQuery.data ?? [];
+  const rawProducts = productsQuery.data ?? [];
   const hasActiveFilters = discovery.category !== 'Semua' || discovery.q.length > 0;
+
+  const products = useMemo(() => {
+    const list = [...rawProducts];
+    if (sortBy === 'price-asc') {
+      list.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+    } else if (sortBy === 'price-desc') {
+      list.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+    } else if (sortBy === 'name-asc') {
+      list.sort((a, b) => a.name.localeCompare(b.name, 'id'));
+    }
+    return list;
+  }, [rawProducts, sortBy]);
 
   return (
     <>
@@ -95,10 +112,31 @@ export default function CatalogPage() {
           />
         ) : (
           <>
-            {/* Jumlah hasil diumumkan supaya pengguna pembaca layar tahu filter bekerja. */}
-            <p aria-live="polite" className="text-sm text-ink-muted">
-              Menampilkan <span className="numeric">{products.length}</span> produk
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
+              {/* Jumlah hasil diumumkan supaya pengguna pembaca layar tahu filter bekerja. */}
+              <p aria-live="polite" className="text-sm text-ink-muted">
+                Menampilkan <span className="numeric">{products.length}</span> produk
+              </p>
+
+              <div className="flex items-center gap-2">
+                <label htmlFor="catalog-sort-desktop" className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-ink-subtle">
+                  <ArrowUpDown size={14} strokeWidth={1.5} aria-hidden="true" />
+                  Sortir:
+                </label>
+                <select
+                  id="catalog-sort-desktop"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className="focus-ring-v2 h-9 rounded-control border border-control-border bg-surface px-2.5 text-xs font-medium text-ink hover:bg-sunken"
+                >
+                  <option value="default">Terbaru (Default)</option>
+                  <option value="price-asc">Harga Terendah</option>
+                  <option value="price-desc">Harga Tertinggi</option>
+                  <option value="name-asc">Nama A-Z</option>
+                </select>
+              </div>
+            </div>
+
             <div className="mt-8 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />

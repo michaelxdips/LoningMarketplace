@@ -33,6 +33,8 @@ import { buttonClass } from '@v2-shared/ui/buttonStyles';
 import WhatsAppInquiryDialog from '@v2-shared/components/WhatsAppInquiryDialog';
 import ShareButton from '@v2-shared/components/ShareButton';
 import FavoriteButton from '@v2-shared/components/FavoriteButton';
+import QRCodeModal from '@v2-shared/components/QRCodeModal';
+import { QrCode } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
 /**
@@ -46,6 +48,7 @@ export default function UMKMDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
 
   const umkmQuery = useQuery({
     queryKey: ['umkm', identifier],
@@ -200,6 +203,14 @@ export default function UMKMDetailPage() {
               >
                 Tanya via WhatsApp
               </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                leadingIcon={<QrCode size={16} strokeWidth={1.5} />}
+                onClick={() => setQrModalOpen(true)}
+              >
+                QR Code Etalase
+              </Button>
               <ShareButton title={umkm.name} text={`Lihat profil usaha ${umkm.name} di Loning Maju.`} />
               <FavoriteButton kind="umkm" slug={umkm.slug} name={`usaha ${umkm.name}`} />
             </div>
@@ -306,6 +317,14 @@ export default function UMKMDetailPage() {
         onClose={() => setInquiryOpen(false)}
         umkm={umkm}
         source="umkm_detail"
+      />
+
+      <QRCodeModal
+        isOpen={qrModalOpen}
+        onClose={() => setQrModalOpen(false)}
+        title={umkm.name}
+        subtitle={umkm.address}
+        url={window.location.href}
       />
     </>
   );

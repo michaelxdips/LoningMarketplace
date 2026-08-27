@@ -25,6 +25,10 @@ import WhatsAppInquiryDialog from '@v2-shared/components/WhatsAppInquiryDialog';
 import ShareButton from '@v2-shared/components/ShareButton';
 import FavoriteButton from '@v2-shared/components/FavoriteButton';
 import Lightbox from '@v2-shared/components/Lightbox';
+import OrderDraftDrawer from '@v2-shared/components/OrderDraftDrawer';
+import StoryCardModal from '@v2-shared/components/StoryCardModal';
+import { useOrderDraft } from '@v2-shared/hooks/useOrderDraft';
+import { ShoppingBag, Sparkles } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
 /**
@@ -41,6 +45,9 @@ export default function ProductDetailPage() {
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [draftDrawerOpen, setDraftDrawerOpen] = useState(false);
+  const [storyModalOpen, setStoryModalOpen] = useState(false);
+  const { addItem, totalItems } = useOrderDraft();
 
   const productQuery = useQuery({
     queryKey: ['product', identifier],
@@ -270,6 +277,37 @@ export default function ProductDetailPage() {
               >
                 Tanya Produk
               </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                disabled={!merchantData || !detail.isAvailable}
+                leadingIcon={<ShoppingBag size={17} strokeWidth={1.5} />}
+                onClick={() => {
+                  if (detail) {
+                    addItem({
+                      productId: detail.id,
+                      productName: detail.name,
+                      productSlug: detail.slug,
+                      price: detail.price,
+                      unit: detail.unit,
+                      umkmSlug: detail.umkm.slug,
+                      umkmName: detail.umkm.name,
+                      phone: merchantData?.phone || detail.umkm.phone || '',
+                    });
+                    setDraftDrawerOpen(true);
+                  }
+                }}
+              >
+                + Catatan Pesanan {totalItems > 0 ? `(${totalItems})` : ''}
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                leadingIcon={<Sparkles size={16} strokeWidth={1.5} />}
+                onClick={() => setStoryModalOpen(true)}
+              >
+                Buat Story WA
+              </Button>
               <ShareButton title={detail.name} text={`Lihat ${detail.name} dari ${detail.umkm.name} di Loning Maju.`} />
               <FavoriteButton kind="product" slug={detail.slug} name={`produk ${detail.name}`} />
             </div>
@@ -342,6 +380,24 @@ export default function ProductDetailPage() {
           source="product_detail"
         />
       ) : null}
+
+      <OrderDraftDrawer
+        isOpen={draftDrawerOpen}
+        onClose={() => setDraftDrawerOpen(false)}
+      />
+
+      {detail && (
+        <StoryCardModal
+          isOpen={storyModalOpen}
+          onClose={() => setStoryModalOpen(false)}
+          title={detail.name}
+          subtitle={detail.umkm.name}
+          priceText={formatPrice(detail.price)}
+          imageUrl={detail.imageUrl}
+          sellerName={detail.umkm.name}
+          phone={merchantData?.phone || detail.umkm.phone || ''}
+        />
+      )}
     </>
   );
 }

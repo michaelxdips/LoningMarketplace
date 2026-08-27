@@ -10,6 +10,7 @@ import { formatOperatingHours, formatPublicUpdatedAt, getBusinessOpenStatus } fr
 import { trackPublicEvent } from '@loning/shared/lib/analytics';
 import { Button } from '@v2-shared/ui/Button';
 import { ButtonLink } from '@v2-shared/ui/ButtonLink';
+import { Badge } from '@v2-shared/ui/Badge';
 import { EmptyState, ErrorState } from '@v2-shared/ui/EmptyState';
 import { Eyebrow } from '@v2-shared/ui/Eyebrow';
 import { MediaImage } from '@v2-shared/ui/MediaImage';

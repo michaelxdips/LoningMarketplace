@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
-import { Monitor, Moon, Sun } from 'lucide-react';
+import { Monitor, Moon, ShoppingBag, Sun } from 'lucide-react';
 import { brand } from '@loning/shared/config/brand';
 import type { ThemePreference } from '@v2-shared/lib/theme';
 import { cn } from '@v2-shared/ui/cn';
+import { useOrderDraft } from '@v2-shared/hooks/useOrderDraft';
+import OrderDraftDrawer from '@v2-shared/components/OrderDraftDrawer';
 
 /**
  * Navbar V2 (desktop).
@@ -43,60 +46,82 @@ export default function Navbar({
 }) {
   const { pathname } = useLocation();
   const ThemeIcon = THEME_ICON[preference];
+  const { totalItems } = useOrderDraft();
+  const [draftDrawerOpen, setDraftDrawerOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-canvas">
-      <div className="mx-auto flex h-[72px] max-w-[1400px] items-center gap-8 px-6 lg:px-10">
-        <Link
-          to="/v2"
-          className="focus-ring-v2 flex min-w-0 shrink-0 items-center gap-2.5 rounded text-ink transition-opacity hover:opacity-90"
-          aria-label={`${brand.name} — beranda`}
-        >
-          <img src={brand.logoSvg} alt="" className="h-8 w-8 shrink-0 object-contain" />
-          <span className="font-display text-2xl font-semibold tracking-tight">
-            Loning<span className="font-light italic text-accent-ink">Maju</span>
-          </span>
-        </Link>
-
-        <nav aria-label="Navigasi utama" className="hidden flex-1 items-center gap-7 md:flex">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.to || pathname.startsWith(`${item.to}/`);
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                aria-current={isActive ? 'page' : undefined}
-                className={cn(
-                  'focus-ring-v2 whitespace-nowrap text-sm transition-colors',
-                  isActive ? 'font-medium text-ink' : 'text-ink-muted hover:text-ink',
-                )}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onCycleTheme}
-            // Nama aksesibel menyebut keadaan saat ini, bukan cuma "ganti tema".
-            aria-label={`${THEME_LABEL[preference]}. Klik untuk mengganti.`}
-            title={THEME_LABEL[preference]}
-            className="focus-ring-v2 touch-44 inline-flex items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-sunken hover:text-ink"
-          >
-            <ThemeIcon size={18} strokeWidth={1.5} aria-hidden="true" />
-          </button>
-
+    <>
+      <header className="sticky top-0 z-40 border-b border-line bg-canvas">
+        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center gap-8 px-6 lg:px-10">
           <Link
-            to="/v2/login"
-            className="focus-ring-v2 hidden min-h-11 items-center rounded-control border border-control-border px-4 text-sm font-medium text-ink transition-colors hover:bg-sunken sm:inline-flex"
+            to="/v2"
+            className="focus-ring-v2 flex min-w-0 shrink-0 items-center gap-2.5 rounded text-ink transition-opacity hover:opacity-90"
+            aria-label={`${brand.name} — beranda`}
           >
-            Masuk Pengelola
+            <img src={brand.logoSvg} alt="" className="h-8 w-8 shrink-0 object-contain" />
+            <span className="font-display text-2xl font-semibold tracking-tight">
+              Loning<span className="font-light italic text-accent-ink">Maju</span>
+            </span>
           </Link>
+
+          <nav aria-label="Navigasi utama" className="hidden flex-1 items-center gap-7 md:flex">
+            {NAV_ITEMS.map((item) => {
+              const isActive = pathname === item.to || pathname.startsWith(`${item.to}/`);
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={cn(
+                    'focus-ring-v2 whitespace-nowrap text-sm transition-colors',
+                    isActive ? 'font-medium text-ink' : 'text-ink-muted hover:text-ink',
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setDraftDrawerOpen(true)}
+              aria-label={`Buka catatan belanja (${totalItems} item)`}
+              className="focus-ring-v2 touch-44 relative inline-flex items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-sunken hover:text-ink"
+            >
+              <ShoppingBag size={18} strokeWidth={1.5} aria-hidden="true" />
+              {totalItems > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-on-brand">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={onCycleTheme}
+              aria-label={`${THEME_LABEL[preference]}. Klik untuk mengganti.`}
+              title={THEME_LABEL[preference]}
+              className="focus-ring-v2 touch-44 inline-flex items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-sunken hover:text-ink"
+            >
+              <ThemeIcon size={18} strokeWidth={1.5} aria-hidden="true" />
+            </button>
+
+            <Link
+              to="/v2/login"
+              className="focus-ring-v2 hidden min-h-11 items-center rounded-control border border-control-border px-4 text-sm font-medium text-ink transition-colors hover:bg-sunken sm:inline-flex"
+            >
+              Masuk Pengelola
+            </Link>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <OrderDraftDrawer
+        isOpen={draftDrawerOpen}
+        onClose={() => setDraftDrawerOpen(false)}
+      />
+    </>
   );
 }

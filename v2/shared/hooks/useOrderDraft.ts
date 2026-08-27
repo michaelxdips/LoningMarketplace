@@ -90,6 +90,7 @@ export function useOrderDraft() {
     items,
     groups,
     totalCount,
+    totalItems: totalCount,
     addItem,
     updateQuantity,
     removeItem,
