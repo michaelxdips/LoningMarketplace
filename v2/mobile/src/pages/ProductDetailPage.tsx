@@ -17,6 +17,8 @@ import { MediaImage } from '@v2-shared/ui/MediaImage';
 import { Skeleton } from '@v2-shared/ui/Skeleton';
 import WhatsAppInquiryDialog from '@v2-shared/components/WhatsAppInquiryDialog';
 import ShareButton from '@v2-shared/components/ShareButton';
+import FavoriteButton from '@v2-shared/components/FavoriteButton';
+import Lightbox from '@v2-shared/components/Lightbox';
 import ProductCard from '../components/ProductCard';
 
 /**
@@ -28,6 +30,7 @@ export default function ProductDetailPage() {
   const location = useLocation();
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const productQuery = useQuery({ queryKey: ['product', identifier], queryFn: () => getProduct(identifier), enabled: Boolean(identifier), staleTime: PUBLIC_DETAIL_STALE_TIME });
   const merchantQuery = useQuery({ queryKey: ['umkm', productQuery.data?.umkmId], queryFn: () => getUMKM(productQuery.data?.umkmId ?? ''), enabled: Boolean(productQuery.data?.umkmId), staleTime: PUBLIC_DETAIL_STALE_TIME });
@@ -61,11 +64,22 @@ export default function ProductDetailPage() {
 
   const images = detail.images?.length ? detail.images : null;
   const currentImage = images?.[activeImage];
+  // Untuk lightbox: selalu ada minimal gambar utama (cover) walau tanpa galeri.
+  const lightboxImages = images
+    ? images.map((image) => ({ id: image.id, url: image.url, altText: image.altText }))
+    : [{ id: 'cover', url: detail.imageUrl, altText: detail.altText ?? detail.name }];
 
   return (
     <>
       {/* Media */}
-      <MediaImage src={currentImage?.url ?? detail.imageUrl} alt={currentImage?.altText ?? detail.altText ?? detail.name} ratio="aspect-[4/3]" />
+      <button
+        type="button"
+        onClick={() => setLightboxIndex(activeImage)}
+        aria-label="Perbesar gambar produk"
+        className="focus-ring-v2 block w-full text-left"
+      >
+        <MediaImage src={currentImage?.url ?? detail.imageUrl} alt={currentImage?.altText ?? detail.altText ?? detail.name} ratio="aspect-[4/3]" />
+      </button>
       {images && images.length > 1 ? (
         <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto px-4">
           {images.map((image, index) => (
@@ -123,6 +137,7 @@ export default function ProductDetailPage() {
 
         <div className="mt-5 flex gap-3">
           <ShareButton title={detail.name} text={`Lihat ${detail.name} dari ${detail.umkm.name} di Loning Maju.`} />
+          <FavoriteButton kind="product" slug={detail.slug} name={`produk ${detail.name}`} />
         </div>
 
         {merchantQuery.isError ? <p className="mt-3 text-sm text-danger-ink">Kontak usaha belum dapat dimuat. Coba muat ulang halaman.</p> : null}
@@ -159,6 +174,15 @@ export default function ProductDetailPage() {
           Tanya Produk via WhatsApp
         </Button>
       </div>
+
+      {lightboxIndex !== null ? (
+        <Lightbox
+          images={lightboxImages}
+          startIndex={lightboxIndex}
+          onNavigate={setActiveImage}
+          onClose={() => setLightboxIndex(null)}
+        />
+      ) : null}
 
       {merchantData && product ? (
         <WhatsAppInquiryDialog isOpen={inquiryOpen} onClose={() => setInquiryOpen(false)} product={product} umkm={merchantData} source="product_detail" />

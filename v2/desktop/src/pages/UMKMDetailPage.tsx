@@ -31,6 +31,7 @@ import { Skeleton } from '@v2-shared/ui/Skeleton';
 import { buttonClass } from '@v2-shared/ui/buttonStyles';
 import WhatsAppInquiryDialog from '@v2-shared/components/WhatsAppInquiryDialog';
 import ShareButton from '@v2-shared/components/ShareButton';
+import FavoriteButton from '@v2-shared/components/FavoriteButton';
 import ProductCard from '../components/ProductCard';
 
 /**
@@ -189,6 +190,7 @@ export default function UMKMDetailPage() {
                 Tanya via WhatsApp
               </Button>
               <ShareButton title={umkm.name} text={`Lihat profil usaha ${umkm.name} di Loning Maju.`} />
+              <FavoriteButton kind="umkm" slug={umkm.slug} name={`usaha ${umkm.name}`} />
             </div>
           </div>
         </header>
