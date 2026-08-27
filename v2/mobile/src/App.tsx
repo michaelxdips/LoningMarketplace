@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Outlet, Route, Routes } from 'react-router';
 import { useTheme } from '@v2-shared/lib/useTheme';
 import { PublicOnlyGuard } from '../../desktop/src/dashboard/Guards';
+import OfflineIndicator from '@v2-shared/components/OfflineIndicator';
 import BottomNav from './layout/BottomNav';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
@@ -81,6 +82,7 @@ function Shell({
       >
         Lewati ke konten utama
       </a>
+      <OfflineIndicator />
       <Header preference={preference} onCycleTheme={onCycleTheme} />
       <main id="m-main" tabIndex={-1} className="flex-1 pb-24">
         <Outlet />

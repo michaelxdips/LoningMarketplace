@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Outlet, Route, Routes } from 'react-router';
 import { useTheme } from '@v2-shared/lib/useTheme';
+import OfflineIndicator from '@v2-shared/components/OfflineIndicator';
 import Navbar from './layout/Navbar';
 import Footer from './layout/Footer';
 import HomePage from './pages/HomePage';
@@ -78,6 +79,7 @@ function PublicLayout({
       >
         Lewati ke konten utama
       </a>
+      <OfflineIndicator />
       <Navbar preference={preference} onCycleTheme={onCycleTheme} />
       <main id="v2-main" tabIndex={-1} className="flex-1">
         <Outlet />

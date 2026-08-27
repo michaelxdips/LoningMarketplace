@@ -223,3 +223,12 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+
+// Registrasi Progressive Web App (PWA) Service Worker di browser pendukung
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* PWA register offline fallback silent fail */
+    });
+  });
+}
