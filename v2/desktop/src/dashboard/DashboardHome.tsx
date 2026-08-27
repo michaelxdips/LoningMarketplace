@@ -58,8 +58,8 @@ export default function DashboardHome() {
         title={`Selamat datang, ${user.displayName}`}
         description={
           hasCapability(user, 'dashboard:view-global-summary')
-            ? `Ruang Pengelolaan ${user.roleLabel} — Pantau dan kelola seluruh direktori UMKM Desa Loning.`
-            : `Ruang Pengelolaan — Kelola profil usaha dan katalog produk Anda.`
+            ? `Ruang Pengelolaan ${user.roleLabel}. Pantau dan kelola seluruh direktori UMKM Desa Loning.`
+            : 'Ruang Pengelolaan. Kelola profil usaha dan katalog produk Anda.'
         }
       />
 
