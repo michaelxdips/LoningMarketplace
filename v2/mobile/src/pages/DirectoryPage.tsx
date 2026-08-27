@@ -1,11 +1,14 @@
+import { useMemo, useState } from 'react';
 import { usePageMetadata } from '@loning/shared/lib/seo';
 import { useUMKMs } from '@loning/shared/hooks/useUMKMs';
 import { useDebouncedValue } from '@loning/shared/hooks/useDebouncedValue';
 import { useDiscoveryUrlState } from '@loning/shared/hooks/discovery/useDiscoveryUrlState';
+import { isOpenNow } from '@v2-shared/lib/businessHours';
 import { Button } from '@v2-shared/ui/Button';
 import { HairlineList } from '@v2-shared/ui/Card';
 import { EmptyState, ErrorState } from '@v2-shared/ui/EmptyState';
 import { Skeleton } from '@v2-shared/ui/Skeleton';
+import { Clock3 } from 'lucide-react';
 import BusinessCard from '../components/BusinessCard';
 import CatalogFilter from '../components/CatalogFilter';
 
@@ -22,8 +25,23 @@ export default function DirectoryPage() {
   const debouncedQuery = useDebouncedValue(discovery.q);
   const apiCategory = discovery.category === 'Semua' ? undefined : discovery.category;
   const umkmsQuery = useUMKMs({ category: apiCategory, q: debouncedQuery });
-  const umkms = umkmsQuery.data ?? [];
-  const hasActiveFilters = discovery.category !== 'Semua' || discovery.q.length > 0;
+  const [onlyOpen, setOnlyOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'default' | 'name-asc'>('default');
+
+  const rawUmkms = umkmsQuery.data ?? [];
+
+  const umkms = useMemo(() => {
+    let list = [...rawUmkms];
+    if (onlyOpen) {
+      list = list.filter((u) => isOpenNow(u.openingTime, u.closingTime, u.workingHours).isOpen);
+    }
+    if (sortBy === 'name-asc') {
+      list.sort((a, b) => a.name.localeCompare(b.name, 'id'));
+    }
+    return list;
+  }, [rawUmkms, onlyOpen, sortBy]);
+
+  const hasActiveFilters = discovery.category !== 'Semua' || discovery.q.length > 0 || onlyOpen;
 
   return (
     <>
@@ -70,9 +88,39 @@ export default function DirectoryPage() {
           />
         ) : (
           <>
-            <p aria-live="polite" className="text-sm text-ink-muted">
-              Menampilkan <span className="numeric">{umkms.length}</span> usaha
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
+              <p aria-live="polite" className="text-xs text-ink-muted">
+                Menampilkan <span className="numeric">{umkms.length}</span> usaha
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOnlyOpen(!onlyOpen)}
+                  aria-pressed={onlyOpen}
+                  className={`focus-ring-v2 inline-flex h-8 items-center gap-1 rounded border px-2 text-xs font-medium transition-colors ${
+                    onlyOpen
+                      ? 'border-brand bg-brand text-on-brand'
+                      : 'border-control-border bg-surface text-ink hover:bg-sunken'
+                  }`}
+                >
+                  <Clock3 size={12} strokeWidth={1.5} aria-hidden="true" />
+                  Buka
+                </button>
+
+                <select
+                  id="m-directory-sort"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  aria-label="Sortir usaha"
+                  className="focus-ring-v2 h-8 rounded border border-control-border bg-surface px-1.5 text-xs font-medium text-ink hover:bg-sunken"
+                >
+                  <option value="default">Terbaru</option>
+                  <option value="name-asc">Nama A–Z</option>
+                </select>
+              </div>
+            </div>
+
             <HairlineList className="mt-4 border-t border-line">
               {umkms.map((umkm) => (
                 <BusinessCard key={umkm.id} umkm={umkm} />
