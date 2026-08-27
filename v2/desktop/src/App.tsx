@@ -13,6 +13,7 @@ import FaqPage from './pages/FaqPage';
 import AboutVillagePage from './pages/AboutVillagePage';
 import AboutTeamPage from './pages/AboutTeamPage';
 import VersionHistoryPage from './pages/VersionHistoryPage';
+import SavedPage from './pages/SavedPage';
 import NotFoundPage from './pages/NotFoundPage';
 import V2DashboardRoutes from './dashboard/DashboardRoutes';
 
@@ -37,8 +38,10 @@ export default function V2DesktopApp() {
   return (
     <div ref={rootRef} data-ui="v2" className="flex min-h-dvh flex-col bg-canvas text-ink antialiased">
       <Routes>
-        {/* Dashboard & login — layout mandiri, tanpa navbar/footer publik. */}
-        <V2DashboardRoutes />
+        {/* Dashboard & login — layout mandiri, tanpa navbar/footer publik.
+            V2DashboardRoutes adalah FRAGMENT <Route> (bukan komponen), jadi
+            di-render sebagai `{...}`, bukan `<.../>`. */}
+        {V2DashboardRoutes}
 
         {/* Publik — dibungkus chrome editorial. */}
         <Route element={<PublicLayout preference={preference} onCycleTheme={cycle} />}>
@@ -52,6 +55,7 @@ export default function V2DesktopApp() {
           <Route path="tentang-desa" element={<AboutVillagePage />} />
           <Route path="tentang-kami" element={<AboutTeamPage />} />
           <Route path="version-history" element={<VersionHistoryPage />} />
+          <Route path="tersimpan" element={<SavedPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

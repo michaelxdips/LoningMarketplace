@@ -37,12 +37,15 @@ export function useTheme(rootRef: RefObject<HTMLElement | null>): {
     if (element) applyThemePreference(element, preference);
   }, [preference, rootRef]);
 
+  // Tulis preferensi ke storage saat BERUBAH (bukan di dalam updater state):
+  // updater `setState` wajib murni — side-effect di sana bisa dipanggil dua kali
+  // oleh StrictMode dan menimbulkan perilaku tak menentu.
+  useEffect(() => {
+    writeStoredPreference(preference);
+  }, [preference]);
+
   const cycle = useCallback(() => {
-    setPreference((current) => {
-      const next = nextPreference(current);
-      writeStoredPreference(next);
-      return next;
-    });
+    setPreference((current) => nextPreference(current));
   }, []);
 
   return { preference, resolved: resolveTheme(preference, systemDark), cycle };

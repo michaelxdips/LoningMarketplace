@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { to: '/v2/produk', label: 'Produk' },
   { to: '/v2/umkm', label: 'Profil UMKM' },
   { to: '/v2/peta-umkm', label: 'Peta' },
+  { to: '/v2/tersimpan', label: 'Tersimpan' },
   { to: '/v2/tentang-desa', label: 'Tentang Desa' },
   { to: '/v2/faq', label: 'FAQ' },
 ] as const;

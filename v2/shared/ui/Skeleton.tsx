@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { cn } from './cn';
 
 /**
@@ -14,26 +13,4 @@ import { cn } from './cn';
 
 export function Skeleton({ className }: { className?: string }) {
   return <div aria-hidden="true" className={cn('animate-pulse bg-sunken', className)} />;
-}
-
-/**
- * Pembungkus daerah yang sedang memuat.
- * `aria-busy` + teks sr-only supaya pembaca layar tahu ada proses, sementara
- * skeleton-nya sendiri disembunyikan dari accessibility tree.
- */
-export function LoadingRegion({
-  label = 'Memuat konten',
-  className,
-  children,
-}: {
-  label?: string;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div aria-busy="true" role="status" className={cn('relative', className)}>
-      <span className="sr-only">{label}</span>
-      {children}
-    </div>
-  );
 }

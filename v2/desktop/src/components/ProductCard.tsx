@@ -3,6 +3,7 @@ import { getCategoryShortLabel, type Product } from '@loning/shared';
 import { formatPrice } from '@loning/shared/lib/price';
 import { Badge } from '@v2-shared/ui/Badge';
 import { MediaImage } from '@v2-shared/ui/MediaImage';
+import FavoriteButton from '@v2-shared/components/FavoriteButton';
 
 /**
  * ProductCard V2 (desktop).
@@ -11,18 +12,27 @@ import { MediaImage } from '@v2-shared/ui/MediaImage';
  * Struktur editorial -> gambar, lalu blok teks dipisah hairline di atas harga.
  * Seluruh permukaan bisa diklik lewat satu Link yang membungkus judul
  * (pola stretched-link), sehingga hanya ada SATU target untuk pembaca layar,
- * bukan tiga link ke tujuan yang sama.
+ * bukan tiga link ke tujuan yang sama. Tombol favorit di pojok gambar adalah
+ * pengecualian interaksi (z-10, di atas overlay tautan).
  */
 export default function ProductCard({ product }: { product: Product }) {
   const price = formatPrice(product.price);
 
   return (
     <article className="group relative flex flex-col">
-      <MediaImage
-        src={product.imageUrl}
-        alt={product.altText ?? `Foto produk ${product.name}`}
-        ratio="aspect-[4/3]"
-      />
+      <div className="relative">
+        <MediaImage
+          src={product.imageUrl}
+          alt={product.altText ?? `Foto produk ${product.name}`}
+          ratio="aspect-[4/3]"
+        />
+        <FavoriteButton
+          kind="product"
+          slug={product.slug}
+          name={`produk ${product.name}`}
+          className="absolute right-2 top-2"
+        />
+      </div>
 
       <div className="mt-4 flex flex-1 flex-col">
         <div className="flex items-start justify-between gap-3">

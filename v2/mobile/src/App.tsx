@@ -13,6 +13,7 @@ import FaqPage from './pages/FaqPage';
 import AboutVillagePage from './pages/AboutVillagePage';
 import AboutTeamPage from './pages/AboutTeamPage';
 import VersionHistoryPage from './pages/VersionHistoryPage';
+import SavedPage from './pages/SavedPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -53,6 +54,7 @@ export default function V2MobileApp() {
           <Route path="tentang-desa" element={<AboutVillagePage />} />
           <Route path="tentang-kami" element={<AboutTeamPage />} />
           <Route path="version-history" element={<VersionHistoryPage />} />
+          <Route path="tersimpan" element={<SavedPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

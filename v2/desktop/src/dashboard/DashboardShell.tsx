@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { ChevronUp, CircleHelp, ClipboardList, Home, KeyRound, LogOut, Menu, Package, Store, Users, X } from 'lucide-react';
+import { ChevronUp, CircleHelp, ClipboardList, Home, KeyRound, LogOut, Menu, Package, ScrollText, Store, Users, X } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { brand } from '@loning/shared/config/brand';
 import { hasCapability, type Capability } from '@loning/shared/lib/auth';
@@ -20,7 +20,7 @@ const navigation = [
   { to: '/v2/dashboard/products', label: 'Produk', icon: Package, capabilities: ['products:view-all', 'products:view-own'] },
   { to: '/v2/dashboard/users', label: 'Pengguna', icon: Users, capabilities: ['users:view'] },
   { to: '/v2/dashboard/analytics', label: 'Insight inquiry', icon: ClipboardList, capabilities: ['analytics:view-global'] },
-  { to: '/v2/dashboard/audit', label: 'Audit log', icon: ClipboardList, capabilities: ['audit:view-global'] },
+  { to: '/v2/dashboard/audit', label: 'Audit log', icon: ScrollText, capabilities: ['audit:view-global'] },
   { to: '/v2/dashboard/bantuan', label: 'Bantuan', icon: CircleHelp, capabilities: ['dashboard:view'] },
 ] as const satisfies ReadonlyArray<{ to: string; label: string; icon: typeof Home; capabilities: readonly Capability[] }>;
 

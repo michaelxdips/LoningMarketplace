@@ -36,6 +36,7 @@ export default function Footer() {
               <Link to="/v2/produk" className="focus-ring-v2 text-ink-muted transition-colors hover:text-ink">Katalog Produk</Link>
               <Link to="/v2/umkm" className="focus-ring-v2 text-ink-muted transition-colors hover:text-ink">Profil Pelaku UMKM</Link>
               <Link to="/v2/peta-umkm" className="focus-ring-v2 text-ink-muted transition-colors hover:text-ink">Peta Lokasi UMKM</Link>
+              <Link to="/v2/tersimpan" className="focus-ring-v2 text-ink-muted transition-colors hover:text-ink">Tersimpan</Link>
               <Link to="/v2/tentang-desa" className="focus-ring-v2 text-ink-muted transition-colors hover:text-ink">Tentang Desa Loning</Link>
               <Link to="/v2/faq" className="focus-ring-v2 text-ink-muted transition-colors hover:text-ink">Pertanyaan Umum</Link>
             </nav>

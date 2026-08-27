@@ -3,18 +3,23 @@ import { getCategoryShortLabel, type Product } from '@loning/shared';
 import { formatPrice } from '@loning/shared/lib/price';
 import { Badge } from '@v2-shared/ui/Badge';
 import { MediaImage } from '@v2-shared/ui/MediaImage';
+import FavoriteButton from '@v2-shared/components/FavoriteButton';
 
 /**
  * ProductCard V2 mobile — varian mobile dari kartu produk.
  *
  * Satu kolom penuh, gambar 4:3, tap area besar (44px+). Stretched-link tunggal
- * supaya seluruh kartu satu target untuk pembaca layar.
+ * supaya seluruh kartu satu target untuk pembaca layar; tombol favorit di
+ * pojok gambar (z-10) adalah interaksi tambahan.
  */
 export default function ProductCard({ product }: { product: Product }) {
   const price = formatPrice(product.price);
   return (
     <article className="group relative">
-      <MediaImage src={product.imageUrl} alt={product.altText ?? `Foto produk ${product.name}`} ratio="aspect-[4/3]" />
+      <div className="relative">
+        <MediaImage src={product.imageUrl} alt={product.altText ?? `Foto produk ${product.name}`} ratio="aspect-[4/3]" />
+        <FavoriteButton kind="product" slug={product.slug} name={`produk ${product.name}`} className="absolute right-2 top-2" />
+      </div>
       <div className="mt-3">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-display text-base font-semibold leading-snug tracking-tight text-ink">

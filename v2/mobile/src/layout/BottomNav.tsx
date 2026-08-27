@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router';
-import { Home, MapPin, Package, Store, Sun, Moon, Monitor } from 'lucide-react';
+import { Home, MapPin, Package, Store, Heart, Sun, Moon, Monitor } from 'lucide-react';
 import { cn } from '@v2-shared/ui/cn';
 import type { ThemePreference } from '@v2-shared/lib/theme';
 
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { to: '/m/produk', label: 'Produk', icon: Package, end: false },
   { to: '/m/umkm', label: 'UMKM', icon: Store, end: false },
   { to: '/m/peta-umkm', label: 'Peta', icon: MapPin, end: false },
+  { to: '/m/tersimpan', label: 'Simpan', icon: Heart, end: false },
 ] as const;
 
 export default function BottomNav() {
@@ -25,7 +26,7 @@ export default function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="mx-auto grid max-w-md grid-cols-4">
+      <div className="mx-auto grid max-w-md grid-cols-5">
         {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}

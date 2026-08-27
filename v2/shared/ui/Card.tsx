@@ -15,42 +15,6 @@ import { cn } from './cn';
  * untuk kontrol interaktif, bukan untuk wadah konten.
  */
 
-export type SurfaceVariant = 'plain' | 'outline' | 'raised';
-
-const VARIANTS: Record<SurfaceVariant, string> = {
-  plain: 'bg-transparent',
-  outline: 'border border-line bg-surface',
-  // Shadow diberi nada hangat (bukan hitam murni) agar menyatu dengan canvas krem.
-  raised: 'bg-surface shadow-[0_1px_2px_rgba(28,36,33,0.06),0_8px_24px_rgba(28,36,33,0.06)]',
-};
-
-export interface SurfaceProps {
-  variant?: SurfaceVariant;
-  /** Menambah afordansi hover/aktif. Pakai HANYA kalau seluruh area diklik. */
-  interactive?: boolean;
-  className?: string;
-  children: ReactNode;
-}
-
-export function Surface({ variant = 'plain', interactive = false, className, children }: SurfaceProps) {
-  return (
-    <div
-      className={cn(
-        'rounded-none',
-        VARIANTS[variant],
-        interactive &&
-          cn(
-            'transition-[border-color,background-color,transform] duration-200',
-            'hover:border-control-border active:translate-y-px',
-          ),
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
 /**
  * Daftar berpemisah hairline — pengganti tumpukan kartu.
  * Ini pola pengelompokan default arah editorial: satu garis tipis antar baris,

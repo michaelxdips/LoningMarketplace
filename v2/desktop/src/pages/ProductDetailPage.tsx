@@ -69,7 +69,7 @@ export default function ProductDetailPage() {
           name: detail.umkm.name || 'Penjual Mandiri',
           owner: 'Penjual Mandiri',
           description: '',
-          phone: detail.umkm.phone || '6280000000000',
+          phone: detail.umkm.phone || '',
           category: detail.category,
           imageUrl: '',
           address: 'Desa Loning',

@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { MapPin } from 'lucide-react';
 import { getCategoryShortLabel, type UMKM } from '@loning/shared';
 import { MediaImage } from '@v2-shared/ui/MediaImage';
+import FavoriteButton from '@v2-shared/components/FavoriteButton';
 
 /**
  * BusinessCard V2 mobile — daftar UMKM satu kolom, hairline antar item.
@@ -9,7 +10,10 @@ import { MediaImage } from '@v2-shared/ui/MediaImage';
 export default function BusinessCard({ umkm }: { umkm: UMKM }) {
   return (
     <article className="group relative flex gap-4 py-5">
-      <MediaImage src={umkm.imageUrl} alt={umkm.altText ?? `Foto usaha ${umkm.name}`} ratio="aspect-square" className="w-20 shrink-0" />
+      <div className="relative shrink-0">
+        <MediaImage src={umkm.imageUrl} alt={umkm.altText ?? `Foto usaha ${umkm.name}`} ratio="aspect-square" className="w-20" />
+        <FavoriteButton kind="umkm" slug={umkm.slug} name={`usaha ${umkm.name}`} className="absolute right-1 top-1" />
+      </div>
       <div className="min-w-0 flex-1">
         <p className="text-[11px] uppercase tracking-[0.18em] text-accent-ink">{getCategoryShortLabel(umkm.category)}</p>
         <h3 className="mt-1 font-display text-base font-semibold leading-snug tracking-tight text-ink">
