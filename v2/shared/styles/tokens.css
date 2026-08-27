@@ -83,9 +83,10 @@
   --color-warning-ink: #8a5e15;
 
   /* -- Radius: SATU skala (shape consistency lock) ---------------------- */
-  /* Editorial = tajam (0). Kontrol interaktif = pill. Tidak ada nilai lain. */
+  /* Editorial = tajam (0). Kontrol interaktif = 6px (crisp). */
   --radius-none: 0px;
-  --radius-control: 999px;
+  --radius-control: 6px;
+  --radius-pill: 9999px;
 
   /* -- Lain-lain -------------------------------------------------------- */
   --spacing-hairline: 1px;

@@ -1,29 +1,20 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Code2, Send, X } from 'lucide-react';
-import { Button } from '@v2-shared/ui/Button';
 import { TextAreaField, TextField } from '@v2-shared/ui/Field';
+import { Button } from '@v2-shared/ui/Button';
 import { cn } from '@v2-shared/ui/cn';
-
-/**
- * Dialog "Hubungi Developer" V2 — pasangan fitur dari UI lama.
- *
- * Mengirim laporan error / pertanyaan langsung ke WhatsApp developer. Format
- * pesan dipertahankan dari UI lama supaya developer menerima struktur yang sama.
- * Kategori disederhanakan menjadi deretan tombol pilihan (bukan ikon), dan
- * seluruh styling memakai token V2.
- */
 
 const DEVELOPER_WHATSAPP = '62818139410';
 
 const CATEGORIES = [
-  { id: 'error', label: 'Laporan error / kendala teknikal' },
-  { id: 'question', label: 'Pertanyaan seputar platform' },
-  { id: 'feature', label: 'Usulan fitur & pengembangan' },
-  { id: 'other', label: 'Lainnya' },
+  { id: 'bug', label: 'Laporan Kendala / Bug' },
+  { id: 'question', label: 'Pertanyaan Platform' },
+  { id: 'feature', label: 'Usulan Fitur Baru' },
+  { id: 'other', label: 'Keperluan Lainnya' },
 ] as const;
 
-type ContactCategory = (typeof CATEGORIES)[number]['id'];
+type CategoryId = (typeof CATEGORIES)[number]['id'];
 
 export default function DeveloperContactDialog({
   isOpen,
@@ -32,48 +23,23 @@ export default function DeveloperContactDialog({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const headingId = useId();
   const [senderName, setSenderName] = useState('');
-  const [category, setCategory] = useState<ContactCategory>('error');
+  const [category, setCategory] = useState<CategoryId>('bug');
   const [message, setMessage] = useState('');
   const [nameError, setNameError] = useState('');
   const [messageError, setMessageError] = useState('');
 
   const panelRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const returnFocusRef = useRef<HTMLElement | null>(null);
-
-  useLayoutEffect(() => {
-    if (!isOpen) return;
-    returnFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const root = document.getElementById('root');
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    if (root) {
-      root.inert = true;
-      root.setAttribute('aria-hidden', 'true');
-    }
-    window.setTimeout(() => nameInputRef.current?.focus(), 50);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      if (root) {
-        root.inert = false;
-        root.removeAttribute('aria-hidden');
-      }
-      const trigger = returnFocusRef.current;
-      if (trigger?.isConnected) trigger.focus();
-    };
-  }, [isOpen]);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!isOpen) {
-      setSenderName('');
-      setCategory('error');
-      setMessage('');
-      setNameError('');
-      setMessageError('');
-    }
+    if (!isOpen) return;
+    const timer = setTimeout(() => {
+      nameInputRef.current?.focus();
+    }, 50);
+    return () => clearTimeout(timer);
   }, [isOpen]);
 
   useEffect(() => {
@@ -125,28 +91,29 @@ export default function DeveloperContactDialog({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="absolute inset-0 bg-ink/50" aria-hidden="true" />
+      <div className="absolute inset-0 bg-ink/60" aria-hidden="true" />
 
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="v2-dev-dialog-title"
+        aria-labelledby={headingId}
         tabIndex={-1}
-        className="relative flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden border border-line bg-surface text-ink shadow-sm"
+        className="relative flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden border border-line bg-surface text-ink shadow-md"
       >
+        {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-line p-5">
           <div className="flex items-start gap-3">
             <Code2 size={18} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent-ink" aria-hidden="true" />
             <div>
               <h2
-                id="v2-dev-dialog-title"
-                className="font-display text-lg font-semibold leading-snug tracking-tight text-ink"
+                id={headingId}
+                className="font-display text-base font-semibold tracking-tight text-ink"
               >
                 Hubungi Developer
               </h2>
-              <p className="mt-0.5 text-sm text-ink-muted">
-                Laporan error & bantuan teknikal platform
+              <p className="mt-0.5 text-xs text-ink-muted">
+                Laporan error & bantuan teknikal platform Loning Maju
               </p>
             </div>
           </div>
@@ -157,11 +124,12 @@ export default function DeveloperContactDialog({
             aria-label="Tutup form kontak pengembang"
             className="focus-ring-v2 touch-44 -mr-2 -mt-2 inline-flex items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-sunken hover:text-ink"
           >
-            <X size={18} strokeWidth={1.5} aria-hidden="true" />
+            <X size={18} strokeWidth={1.5} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 overflow-y-auto p-5">
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto p-5 text-xs">
           <TextField
             ref={nameInputRef}
             label="Nama Anda"
@@ -176,10 +144,10 @@ export default function DeveloperContactDialog({
           />
 
           <div>
-            <p className="mb-2 text-sm font-medium text-ink">
+            <label className="mb-1.5 block font-medium text-ink">
               Kategori keperluan <span aria-hidden="true" className="text-accent-ink">*</span>
-            </p>
-            <div className="grid gap-2 sm:grid-cols-2">
+            </label>
+            <div className="grid grid-cols-2 gap-2">
               {CATEGORIES.map((cat) => {
                 const isSelected = category === cat.id;
                 return (
@@ -189,9 +157,9 @@ export default function DeveloperContactDialog({
                     onClick={() => setCategory(cat.id)}
                     aria-pressed={isSelected}
                     className={cn(
-                      'focus-ring-v2 min-h-11 rounded-control border px-4 text-left text-sm transition-colors',
+                      'focus-ring-v2 min-h-10 rounded-control border px-3 text-left text-xs transition-colors',
                       isSelected
-                        ? 'border-brand bg-brand text-on-brand'
+                        ? 'border-brand bg-brand font-medium text-on-brand'
                         : 'border-control-border text-ink hover:bg-sunken',
                     )}
                   >
@@ -207,7 +175,7 @@ export default function DeveloperContactDialog({
             required
             rows={4}
             errorText={messageError || undefined}
-            placeholder="Tuliskan detail error yang ditemui atau pertanyaan pengembangan di sini…"
+            placeholder="Tuliskan detail kendala atau pertanyaan Anda di sini…"
             value={message}
             onChange={(event) => {
               setMessage(event.target.value);
@@ -215,15 +183,15 @@ export default function DeveloperContactDialog({
             }}
           />
 
-          <p className="border border-line bg-sunken p-3.5 text-sm leading-relaxed text-ink-muted">
-            Pesan yang diisi akan diformat otomatis dan dikirim langsung ke WhatsApp developer.
+          <p className="border border-line bg-sunken p-3 text-[11px] leading-relaxed text-ink-muted">
+            Pesan yang diisi akan diformat otomatis dan diteruskan langsung ke WhatsApp developer.
           </p>
 
-          <div className="flex items-center justify-end gap-3">
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex items-center justify-end gap-2.5 pt-2">
+            <Button variant="outline" size="md" onClick={onClose}>
               Batal
             </Button>
-            <Button type="submit" leadingIcon={<Send size={15} strokeWidth={1.5} />}>
+            <Button type="submit" size="md" leadingIcon={<Send size={14} strokeWidth={1.5} />}>
               Kirim via WhatsApp
             </Button>
           </div>

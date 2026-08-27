@@ -105,24 +105,24 @@ export default function VersionHistoryPage() {
           <div className="mt-6 flex flex-col gap-3 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
               <div className="flex items-center gap-1.5">
-                <Tag size={14} strokeWidth={1.5} className="text-brand" aria-hidden="true" />
-                <span className="text-ink-muted">Versi:</span>
-                <span className="numeric rounded-sm bg-sunken px-2 py-0.5 font-medium text-brand">{releases[0]?.version || 'v1.7.2'}</span>
+                <Tag size={13} strokeWidth={1.5} className="text-brand" aria-hidden="true" />
+                <span className="text-ink-muted">Versi Aktif:</span>
+                <span className="numeric rounded bg-sunken px-2 py-0.5 font-medium text-brand">{releases[0]?.version || 'v2.2.0'}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <GitCommit size={14} strokeWidth={1.5} className="text-accent-ink" aria-hidden="true" />
+                <GitCommit size={13} strokeWidth={1.5} className="text-accent-ink" aria-hidden="true" />
                 <span className="text-ink-muted">Total:</span>
                 <span className="numeric font-medium text-ink">{totalCommitsCount} Commit</span>
               </div>
               <div className="flex items-center gap-1.5">
                 {isLive ? (
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success-ink">
-                    <Wifi size={14} strokeWidth={1.5} aria-hidden="true" />
-                    GitHub Live{lastFetchedAt ? <span className="font-normal text-ink-muted">({lastFetchedAt})</span> : null}
+                    <Wifi size={13} strokeWidth={1.5} aria-hidden="true" />
+                    GitHub Live {lastFetchedAt ? <span className="font-normal text-ink-muted">({lastFetchedAt})</span> : null}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted">
-                    <WifiOff size={14} strokeWidth={1.5} aria-hidden="true" />
+                    <WifiOff size={13} strokeWidth={1.5} aria-hidden="true" />
                     Data Lokal
                   </span>
                 )}
@@ -134,38 +134,38 @@ export default function VersionHistoryPage() {
                 type="button"
                 onClick={fetchGitHubData}
                 disabled={isLoading}
-                className="focus-ring-v2 inline-flex min-h-11 items-center gap-1.5 rounded-control border border-control-border px-3 py-2 text-sm font-medium text-ink hover:bg-sunken disabled:opacity-50"
+                className="focus-ring-v2 inline-flex h-9 items-center gap-1.5 rounded-control border border-control-border px-3 text-xs font-medium text-ink hover:bg-sunken disabled:opacity-50"
                 title="Segarkan commit langsung dari GitHub API"
               >
-                <RotateCw size={14} strokeWidth={1.5} className={cn('text-brand', isLoading && 'animate-spin')} aria-hidden="true" />
+                <RotateCw size={13} strokeWidth={1.5} className={cn('text-brand', isLoading && 'animate-spin')} aria-hidden="true" />
                 {isLoading ? 'Syncing...' : 'Segarkan'}
               </button>
               <a
                 href="https://github.com/michaelxdips/LoningMarketplace"
                 target="_blank"
                 rel="noreferrer"
-                className="focus-ring-v2 inline-flex min-h-11 items-center gap-1.5 rounded-control border border-control-border px-3 py-2 text-sm font-medium text-ink hover:bg-sunken"
+                className="focus-ring-v2 inline-flex h-9 items-center gap-1.5 rounded-control border border-control-border px-3 text-xs font-medium text-ink hover:bg-sunken"
               >
-                Repo
-                <ExternalLink size={14} strokeWidth={1.5} className="shrink-0" aria-hidden="true" />
+                Repo GitHub
+                <ExternalLink size={12} strokeWidth={1.5} className="shrink-0" aria-hidden="true" />
               </a>
             </div>
           </div>
 
-          {/* Search & filter */}
+          {/* Search & filter toolbar */}
           <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <label htmlFor="v2-version-search" className="sr-only">
                 Cari commit
               </label>
-              <Search size={15} strokeWidth={1.5} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle" aria-hidden="true" />
+              <Search size={14} strokeWidth={1.5} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle" aria-hidden="true" />
               <input
                 id="v2-version-search"
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari commit (contoh: media, fix, auth, commit hash)..."
-                className="focus-ring-v2 min-h-11 w-full rounded-control border border-control-border bg-surface pl-9 pr-3 text-base text-ink placeholder:text-ink-subtle"
+                className="focus-ring-v2 h-9 w-full rounded-control border border-control-border bg-surface pl-8 pr-3 text-xs text-ink placeholder:text-ink-subtle"
               />
             </div>
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
@@ -181,7 +181,7 @@ export default function VersionHistoryPage() {
                   onClick={() => setSelectedType(value)}
                   aria-pressed={selectedType === value}
                   className={cn(
-                    'focus-ring-v2 min-h-11 shrink-0 whitespace-nowrap rounded-control border px-3 py-1 text-sm font-medium transition-colors',
+                    'focus-ring-v2 h-9 shrink-0 whitespace-nowrap rounded-control border px-3 text-xs font-medium transition-colors',
                     selectedType === value ? 'border-brand bg-brand text-on-brand' : 'border-control-border text-ink hover:bg-sunken',
                   )}
                 >
