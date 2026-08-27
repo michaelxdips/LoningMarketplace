@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import {
-  FAVORITES_MAX,
   readFavorites,
+  toggleFavorite,
   writeFavorites,
   type FavoriteEntry,
   type FavoriteKind,
@@ -10,28 +10,54 @@ import {
 /**
  * Binding React untuk favorit V2.
  *
- * State dimuat sekali dari localStorage (lazy init), lalu setiap perubahan
- * di-persist lewat effect — pola yang sama dengan useTheme. Seluruh keputusan
- * logika (parse, dedupe, toggle) ada di favorites.ts (fungsi murni, teruji).
+ * MEMAKAI SHARED STORE (module singleton) + useSyncExternalStore, BUKAN useState
+ * lokal per-hook. Alasannya: tombol favorit yang sama bisa muncul beberapa kali
+ * di satu halaman (mis. produk di grid utama DAN di "produk terkait"). Kalau
+ * tiap tombol punya state sendiri, klik di satu tempat tidak memperbarui yang
+ * lain. Store bersama memastikan semua pemakai re-render bersamaan.
  */
-export function useFavorites() {
-  const [favorites, setFavorites] = useState<FavoriteEntry[]>(() => readFavorites());
 
-  // Persist saat BERUBAH (bukan di dalam updater state): updater wajib murni.
-  useEffect(() => {
-    writeFavorites(favorites);
-  }, [favorites]);
+let cache: FavoriteEntry[] = readFavorites();
+const listeners = new Set<() => void>();
+
+function emit() {
+  for (const listener of listeners) listener();
+}
+
+function getSnapshot(): FavoriteEntry[] {
+  return cache;
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function setFavorites(next: FavoriteEntry[]) {
+  cache = next;
+  writeFavorites(next);
+  emit();
+}
+
+/**
+ * Reset store in-memory. Hanya untuk isolasi test (cache module-level
+ * persisten antar test; localStorage di-clear saja tidak cukup).
+ */
+export function resetFavoritesStoreForTests() {
+  cache = readFavorites();
+  emit();
+}
+
+export function useFavorites() {
+  const favorites = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   const toggle = useCallback((kind: FavoriteKind, slug: string) => {
-    setFavorites((current) =>
-      current.some((e) => e.kind === kind && e.slug === slug)
-        ? current.filter((e) => !(e.kind === kind && e.slug === slug))
-        : [{ kind, slug }, ...current].slice(0, FAVORITES_MAX),
-    );
+    setFavorites(toggleFavorite(getSnapshot(), kind, slug));
   }, []);
 
   const isSaved = useCallback(
-    (kind: FavoriteKind, slug: string) => favorites.some((e) => e.kind === kind && e.slug === slug),
+    (kind: FavoriteKind, slug: string) =>
+      favorites.some((entry) => entry.kind === kind && entry.slug === slug),
     [favorites],
   );
 
