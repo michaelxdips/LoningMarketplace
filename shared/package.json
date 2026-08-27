@@ -1,6 +1,6 @@
 {
   "name": "@loning/shared",
-  "version": "2.1.0",
+  "version": "2.3.0",
   "private": true,
   "type": "module",
   "description": "Logika non-UI bersama (types, api client, hooks data, brand) untuk UI lama dan V2.",

@@ -1,11 +1,11 @@
 /**
- * Loning Maju — Progressive Web App Service Worker (v1.0.0)
+ * Loning Maju — Progressive Web App Service Worker (v2.3.0)
  * Strategi Cache:
  * - Static Assets (HTML, JS, CSS, Fonts, Images): Cache-First dengan Network Fallback
  * - API Data (/api/products, /api/umkms): Network-First dengan Cache Fallback untuk offline reading
  */
 
-const CACHE_NAME = 'loning-maju-v1.0.0';
+const CACHE_NAME = 'loning-maju-v2.3.0';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

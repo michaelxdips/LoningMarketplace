@@ -37,7 +37,7 @@ export interface GitHubTagResponse {
 
 export const STATIC_RELEASES: ReleaseGroup[] = [
   {
-    version: 'v2.1.0-LTS',
+    version: 'v2.3.0-LTS',
     title: 'Rilis Final LTS: Dual-UI V2, PWA Offline, Multi-Product WA Draft, Real-Time Open Status, GPS & QR Code Etalase',
     date: '27 Agustus 2026',
     badge: 'LTS (Final Stable)',
@@ -173,7 +173,7 @@ export function formatDateISO(isoStr?: string): string {
 }
 
 export const VERSION_TITLES: Record<string, string> = {
-  'v2.1.0-LTS': 'Rilis Final LTS: Dual-UI V2, PWA Offline, Multi-Product WA Draft, Real-Time Open Status, GPS & QR Code Etalase',
+  'v2.3.0-LTS': 'Rilis Final LTS: Dual-UI V2, PWA Offline, Multi-Product WA Draft, Real-Time Open Status, GPS & QR Code Etalase',
   'v2.0.0': 'Desain Ulang Editorial Heritage & Responsif Lintas Perangkat',
   'v1.9.0': 'Galeri Multi-Foto Produk & Aksesibilitas',
   'v1.8.0': 'Penguatan Keamanan Data & Status Operasional',

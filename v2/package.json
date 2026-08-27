@@ -1,6 +1,6 @@
 {
   "name": "@loning/v2",
-  "version": "2.1.0",
+  "version": "2.3.0",
   "private": true,
   "type": "module",
   "description": "UI V2 (Minimalist Editorial) — desktop & mobile web, codebase terpisah dari UI lama.",
